@@ -1,0 +1,14 @@
+---
+- name: number_of_entries
+  type: int
+  internal: true
+- name: entries
+  count: number_of_entries
+  structure:
+    - name: name
+      type: trim
+      size: 25
+    - name: min
+      type: minute
+    - name: sec
+      type: int

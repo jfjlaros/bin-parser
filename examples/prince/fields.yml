@@ -1,0 +1,7 @@
+---
+delimiters:
+  trim:
+    - 0x00
+sizeof:
+  int: 2
+  minute: 2
