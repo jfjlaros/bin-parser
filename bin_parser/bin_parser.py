@@ -39,20 +39,18 @@ class BinParser(object):
         self._experimental = experimental | bool(debug)
         self._log = log
 
-        f = functions(fields_handle)
-        fields_handle.seek(0)
-
-        self._fields = yaml.load(fields_handle)
-        self._functions = {}
-        for i in zip(*inspect.getmembers(f, predicate=inspect.ismethod))[0]:
-            self._functions[i] = getattr(f, i)
+        self._functions = functions(fields_handle)
+        self._fields = self._functions._fields     # Move to functions.py
 
         self._offset = 0
         self._raw_byte_count = 0
-        self._relationship_keys = set([])
 
         structure = yaml.load(structure_handle)
         self._parse(structure, self.parsed)
+
+
+    def _call(self, name, data, *args):
+        return getattr(self._functions, name)(data, *args)
 
 
     def _get_field(self, size=0):
@@ -137,7 +135,7 @@ class BinParser(object):
                         self._parse(item['structure'], d)
                         dest[item['name']].append(d)
                 elif 'delimiter' in item:
-                    while (self._functions['int'](self._get_field(1)) !=
+                    while (self._call('int', self._get_field(1)) !=
                             self._fields['delimiters'][item['delimiter']]):
                         d = {}
                         self._parse(item['structure'], d)
@@ -154,25 +152,31 @@ class BinParser(object):
                     size = item['size']
 
                 if 'type' in item:
-                    if item['type'] in ('int', 'short', 'date', 'colour'):
-                        size = self._fields['sizeof'][item['type']]
+                    if item['type'] not in ('raw', 'conditional'):
+                        if 'size' in self._fields['types'][item['type']]:
+                            size = self._fields['types'][item['type']]['size']
 
-                    if item['type'] == 'map':
-                        d[item['name']] = self._functions['map'](
-                            self._get_field(self._fields['sizeof']['map']),
-                            item['map'])
+                    if item['type'] in ('map', 'text'):
+                        if 'arg' in self._fields['types'][item['type']]:
+                            d[item['name']] = self._call(item['type'],
+                                self._get_field(size), 
+                                item[self._fields['types'][item['type']]['arg']])
+
                     elif item['type'] == 'flags':
-                        d.update(self._functions['flags'](self._get_field(
-                            self._fields['sizeof']['flags']), item['flags']))
-                    elif item['type'] == 'text':
-                        d[item['name']] = self._functions['text'](
-                            self._get_field(), item['split'])
+                        d.update(self._call('flags', self._get_field(
+                            self._fields['types']['flags']['size']),
+                            item['flags']))
                     elif item['type'] == 'conditional':
                         if d[item['condition']]:
                             d[item['name']] = self._get_field(size)
                     else:
-                        d[item['name']] = self._functions[item['type']](
-                            self._get_field(size))
+                        f = item['type']
+                        if item['type'] not in ('raw'):
+                            if 'function' in self._fields['types'][
+                                    item['type']]:
+                                f = self._fields['types'][item['type']][
+                                    'function']
+                        d[item['name']] = self._call(f, self._get_field(size))
                 else:
                     if item['name']:
                         d[item['name']] = self._get_field(size)
@@ -209,7 +213,3 @@ class BinParser(object):
                 self._offset, data_length))
             output_handle.write('{} bytes parsed ({:d}%)\n'.format(
                 parsed, parsed * 100 // len(self.data)))
-
-
-#def bin_parser(input_handle, output_handle, experimental=False, debug=0):
-#    pass
