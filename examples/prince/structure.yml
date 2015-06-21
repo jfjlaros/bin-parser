@@ -11,4 +11,4 @@
     - name: min
       type: minute
     - name: sec
-      type: int
+      type: sec

@@ -66,14 +66,14 @@ class BinParser(object):
             field = self.data[self._offset:self._offset + size]
             extracted = size
         else:
-            field = self.data[self._offset:].split(
-                chr(self._fields['delimiters']['field']))[0]
+            field = self._call('text', self.data[self._offset:])
             extracted = len(field) + 1
 
         if self._debug > 1:
             self._log.write('0x{:06x}: '.format(self._offset))
             if size:
-                self._log.write('{} ({})'.format(_raw(field), size))
+                self._log.write('{} ({})'.format(self._call('raw', field),
+                    size))
             else:
                 self._log.write('{}'.format(field))
             if self._debug < 3:
@@ -101,36 +101,70 @@ class BinParser(object):
         if self._experimental:
             if not key in destination:
                 destination[key] = []
-            destination[key].append(_raw(self._get_field(size)))
+            destination[key].append(self._call('raw', self._get_field(size)))
         else:
             self._get_field(size)
 
         self._raw_byte_count += size
 
 
+    def _set(self, item, field, default):
+        """
+        """
+        if field in item:
+            return item[field]
+        return default
+
+
     def _parse(self, structure, dest):
         """
-        Parse a FAM file.
+        Parse a binary file.
 
         :arg dict structure:
         :arg dict dest:
         """
         for item in structure:
-            if 'structure' in item:
+            if 'structure' not in item:
+                name = self._set(item, 'name', '')
+                dtype = self._set(item, 'type', self._fields['default'])
+                size = self._set(self._fields[dtype], 'size',
+                    self._set(item, 'size', 0))
+                func = self._set(self._fields[dtype], 'function', dtype)
+
+                args = self._set(item,
+                    self._set(self._fields[dtype], 'arg', ''), ())
+                if args:
+                    args = (args, )
+
+                d = self._internal if 'internal' in item else dest
+                if dtype == 'flags':
+                    d.update(self._call('flags', self._get_field(size),
+                        item['flags']))
+                elif dtype == 'conditional':
+                    if d[item['condition']]:
+                        d[name] = self._get_field(size)
+                elif name:
+                    d[name] = self._call(func, self._get_field(size), *args)
+                else:
+                    self._parse_raw(d, size)
+            else:
                 if self._debug > 2:
                     self._log.write('-- {}\n'.format(item['name']))
+
                 if item['name'] not in dest:
                     if set(['size', 'delimiter', 'count']) & set(item):
                         dest[item['name']] = []
                     else:
                         dest[item['name']] = {}
-                if 'size' in item:
-                    for index in range(item['size']):
-                        d = {}
-                        self._parse(item['structure'], d)
-                        dest[item['name']].append(d)
-                elif 'count' in item:
-                    for index in range(self._internal[item['count']]):
+
+                # TODO: We need a loop until a value is equal to something.
+                if set(['size', 'count']) & set(item):
+                    if 'count' in item:
+                        term = self._internal[item['count']]
+                    else:
+                        term = item['size']
+
+                    for index in range(term):
                         d = {}
                         self._parse(item['structure'], d)
                         dest[item['name']].append(d)
@@ -142,46 +176,7 @@ class BinParser(object):
                         dest[item['name']].append(d)
                 else:
                     self._parse(item['structure'], dest[item['name']])
-            else:
-                d = dest
-                if 'internal' in item:
-                    d = self._internal
 
-                size = 0
-                if 'size' in item:
-                    size = item['size']
-
-                if 'type' in item:
-                    if item['type'] not in ('raw', 'conditional'):
-                        if 'size' in self._fields['types'][item['type']]:
-                            size = self._fields['types'][item['type']]['size']
-
-                    if item['type'] in ('map', 'text'):
-                        if 'arg' in self._fields['types'][item['type']]:
-                            d[item['name']] = self._call(item['type'],
-                                self._get_field(size), 
-                                item[self._fields['types'][item['type']]['arg']])
-
-                    elif item['type'] == 'flags':
-                        d.update(self._call('flags', self._get_field(
-                            self._fields['types']['flags']['size']),
-                            item['flags']))
-                    elif item['type'] == 'conditional':
-                        if d[item['condition']]:
-                            d[item['name']] = self._get_field(size)
-                    else:
-                        f = item['type']
-                        if item['type'] not in ('raw'):
-                            if 'function' in self._fields['types'][
-                                    item['type']]:
-                                f = self._fields['types'][item['type']][
-                                    'function']
-                        d[item['name']] = self._call(f, self._get_field(size))
-                else:
-                    if item['name']:
-                        d[item['name']] = self._get_field(size)
-                    else:
-                        self._parse_raw(d, size)
             if self._debug > 2:
                 self._log.write(' --> {}\n'.format(item['name']))
 

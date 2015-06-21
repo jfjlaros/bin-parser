@@ -1,7 +1,10 @@
 ---
-delimiters:
-  trim:
+trim:
+  delimiter:
     - 0x00
-sizeof:
-  int: 2
-  minute: 2
+int:
+  size: 2
+minute:
+  size: 2
+sec:
+  size: 2
