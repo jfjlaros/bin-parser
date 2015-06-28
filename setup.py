@@ -45,6 +45,6 @@ setup(
     packages=['bin_parser'],
     install_requires=requires,
     entry_points={
-        'console_scripts': ['bin_parser = bin_parser.bin_parser:main']
+        'console_scripts': ['bin_parser = bin_parser.cli:main']
     }
 )

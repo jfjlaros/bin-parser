@@ -1,2 +1,5 @@
-bin_parser.egg-info
 *.pyc
+*.swp
+*.egg-info
+dist
+build

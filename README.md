@@ -53,7 +53,7 @@ we name `structure.yml`.
 
 We can now call the command line interface as follows:
 
-    bin-parser balance.dat structure.yml types.yml balance.yml
+    bin_parser balance.dat structure.yml types.yml balance.yml
 
 This will result in a new file, named `balance.yml`, which contains the content
 of the input file (`balance.dat`) in a human (and machine) readable format:
