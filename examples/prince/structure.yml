@@ -3,7 +3,7 @@
   type: int
   internal: true
 - name: entries
-  count: number_of_entries
+  size: number_of_entries
   structure:
     - name: name
       type: trim

@@ -151,23 +151,29 @@ class BinParser(object):
                 if self._debug > 2:
                     self._log.write('-- {}\n'.format(item['name']))
 
+                size = self._set(item, 'size', 0)
+                if type(size) != int:
+                    size = self._internal[size]
+
                 if item['name'] not in dest:
-                    if set(['size', 'delimiter', 'count']) & set(item):
+                    if set(['size', 'term', 'delimiter']) & set(item):
                         dest[item['name']] = []
                     else:
                         dest[item['name']] = {}
 
-                # TODO: We need a loop until a value is equal to something.
-                if set(['size', 'count']) & set(item):
-                    if 'count' in item:
-                        term = self._internal[item['count']]
-                    else:
-                        term = item['size']
-
-                    for index in range(term):
+                # FIXME: This is still a bit hairy.
+                if 'size' in item:
+                    for index in range(size):
                         d = {}
                         self._parse(item['structure'], d)
                         dest[item['name']].append(d)
+                elif 'term' in item:
+                    while True:
+                        d = {}
+                        self._parse(item['structure'], d)
+                        dest[item['name']].append(d)
+                        if d[item['match']] == self._internal[item['term']]:
+                            break
                 elif 'delimiter' in item:
                     while (self._call('int', self._get_field(1)) !=
                             self._types['delimiters'][item['delimiter']]):
