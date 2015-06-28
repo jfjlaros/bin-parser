@@ -20,13 +20,13 @@ class BinParser(object):
     """
     General binary file parser.
     """
-    def __init__(self, input_handle, structure_handle, fields_handle,
+    def __init__(self, input_handle, structure_handle, types_handle,
             functions=BinParseFunctions, experimental=False, debug=0,
             log=sys.stdout):
         """
         Constructor.
 
-        :arg stream input_handle: Open readable handle to a FAM file.
+        :arg stream input_handle: Open readable handle to a binary file.
         :arg bool experimental: Enable experimental features.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
@@ -39,8 +39,8 @@ class BinParser(object):
         self._experimental = experimental | bool(debug)
         self._log = log
 
-        self._functions = functions(fields_handle)
-        self._fields = self._functions._fields     # Move to functions.py
+        self._functions = functions(types_handle)
+        self._types = self._functions._types     # Move to functions.py
 
         self._offset = 0
         self._raw_byte_count = 0
@@ -126,13 +126,13 @@ class BinParser(object):
         for item in structure:
             if 'structure' not in item:
                 name = self._set(item, 'name', '')
-                dtype = self._set(item, 'type', self._fields['default'])
-                size = self._set(self._fields[dtype], 'size',
+                dtype = self._set(item, 'type', self._types['default'])
+                size = self._set(self._types[dtype], 'size',
                     self._set(item, 'size', 0))
-                func = self._set(self._fields[dtype], 'function', dtype)
+                func = self._set(self._types[dtype], 'function', dtype)
 
                 args = self._set(item,
-                    self._set(self._fields[dtype], 'arg', ''), ())
+                    self._set(self._types[dtype], 'arg', ''), ())
                 if args:
                     args = (args, )
 
@@ -170,7 +170,7 @@ class BinParser(object):
                         dest[item['name']].append(d)
                 elif 'delimiter' in item:
                     while (self._call('int', self._get_field(1)) !=
-                            self._fields['delimiters'][item['delimiter']]):
+                            self._types['delimiters'][item['delimiter']]):
                         d = {}
                         self._parse(item['structure'], d)
                         dest[item['name']].append(d)
@@ -183,7 +183,7 @@ class BinParser(object):
 
     def write(self, output_handle):
         """
-        Write the parsed FAM file to a stream.
+        Write the parsed binary file to a stream.
 
         :arg stream output_handle: Open writable handle.
         """

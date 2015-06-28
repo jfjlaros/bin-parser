@@ -11,19 +11,19 @@ import argparse
 from .bin_parser import BinParser
 
 
-def bin_parser(input_handle, structure_handle, fields_handle, output_handle,
+def bin_parser(input_handle, structure_handle, types_handle, output_handle,
         experimental=False, debug=0):
     """
     Main entry point.
 
     :arg stream input_handle: Open readable handle to a binary file.
     :arg stream structure_handle: Open readable handle to the structure file.
-    :arg stream fields_handle: Open readable handle to the fields file.
+    :arg stream types_handle: Open readable handle to the types file.
     :arg stream output_handle: Open writable handle.
     :arg bool experimental: Enable experimental features.
     :arg int debug: Debugging level.
     """
-    parser = BinParser(input_handle, structure_handle, fields_handle,
+    parser = BinParser(input_handle, structure_handle, types_handle,
         experimental=experimental, debug=debug)
     parser.write(output_handle)
 
@@ -40,8 +40,8 @@ def main():
         type=argparse.FileType('r'), help='input file')
     parser.add_argument('structure_handle', metavar='STRUCTURE',
         type=argparse.FileType('r'), help='structure definition file')
-    parser.add_argument('fields_handle', metavar='FIELDS',
-        type=argparse.FileType('r'), help='fields definition file')
+    parser.add_argument('types_handle', metavar='TYPES',
+        type=argparse.FileType('r'), help='type definition file')
     parser.add_argument('output_handle', metavar='OUTPUT',
         type=argparse.FileType('w'), help='output file')
     parser.add_argument('-d', dest='debug', type=int, help='debugging level')

@@ -10,18 +10,18 @@ import yaml
 
 
 class BinParseFunctions(object):
-    def __init__(self, fields_handle):
+    def __init__(self, types_handle):
         """
         """
-        self._fields = yaml.load(fields_handle)
+        self._types = yaml.load(types_handle)
 
         # Add standard data types.
-        self._fields['raw'] = {}
-        self._fields['conditional'] = {}
+        self._types['raw'] = {}
+        self._types['conditional'] = {}
 
         # Set default data type.
-        if 'default' not in self._fields:
-            self._fields['default'] = 'text'
+        if 'default' not in self._types:
+            self._types['default'] = 'text'
 
 
     def raw(self, data):
@@ -64,18 +64,18 @@ class BinParseFunctions(object):
 
     def trim(self, data):
         return data.split(
-            ''.join(map(chr, self._fields['trim']['delimiter'])))[0]
+            ''.join(map(chr, self._types['trim']['delimiter'])))[0]
 
 
     def text(self, data, delimiter=''):
         """
         """
         field = data.split(''.join(map(chr,
-            self._fields['text']['delimiter'])))[0]
+            self._types['text']['delimiter'])))[0]
 
         if delimiter:
             return '\n'.join(field.split(''.join(map(chr,
-                self._fields['text']['data'][delimiter]))))
+                self._types['text']['data'][delimiter]))))
         return field
 
 
@@ -92,8 +92,8 @@ class BinParseFunctions(object):
         """
         date_int = self.int(data)
 
-        if date_int in self._fields['date']['data']:
-            return self._fields['date']['data'][date_int]
+        if date_int in self._types['date']['data']:
+            return self._types['date']['data'][date_int]
         return str(date_int)
 
 
@@ -108,8 +108,8 @@ class BinParseFunctions(object):
         """
         index = ord(data)
 
-        if index in self._fields['map']['data'][annotation]:
-            return self._fields['map']['data'][annotation][index]
+        if index in self._types['map']['data'][annotation]:
+            return self._types['map']['data'][annotation][index]
         return '{:02x}'.format(index)
 
 
@@ -128,10 +128,10 @@ class BinParseFunctions(object):
         for flag in map(lambda x: 2 ** x, range(8)):
             value = bool(flag & bitfield)
 
-            if flag not in self._fields['flags']['data'][annotation]:
+            if flag not in self._types['flags']['data'][annotation]:
                 if value:
                     flags['flags_{}_{:02x}'.format(annotation, flag)] = value
             else:
-                flags[self._fields['flags']['data'][annotation][flag]] = value
+                flags[self._types['flags']['data'][annotation][flag]] = value
 
         return flags

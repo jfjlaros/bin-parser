@@ -14,7 +14,7 @@ except ImportError:
 # since that's recipe for disaster (it might have some uninstalled
 # dependencies, or we might import another already installed version).
 distmeta = {}
-for line in open(os.path.join('python', '__init__.py')):
+for line in open(os.path.join('bin_parser', '__init__.py')):
     try:
         field, value = (x.strip() for x in line.split('='))
     except ValueError:
@@ -33,9 +33,9 @@ except IOError:
     long_description = 'See ' + distmeta['__homepage__']
 
 setup(
-    name='bin_parser',
+    name='bin-parser',
     version=distmeta['__version_info__'],
-    description='FAM file parser',
+    description='General binary file parser',
     long_description=long_description,
     author=distmeta['__author__'],
     author_email=distmeta['__contact__'],
@@ -49,7 +49,6 @@ setup(
     platforms=['any'],
     packages=['bin_parser'],
     install_requires=requires,
-    package_dir={'bin_parser': 'python'},
     entry_points={
         'console_scripts': ['bin_parser = bin_parser.bin_parser:main']
     }
