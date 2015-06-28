@@ -18,6 +18,7 @@ class BinParseFunctions(object):
         # Add standard data types.
         self._types['raw'] = {}
         self._types['conditional'] = {}
+        self._types['list'] = {}
 
         # Set default data type.
         if 'default' not in self._types:

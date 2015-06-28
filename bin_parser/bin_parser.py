@@ -115,6 +115,12 @@ class BinParser(object):
             return item[field]
         return default
 
+    def _parse_structure(self, item, dest, name):
+        """
+        """
+        structure_dict = {}
+        self._parse(item['structure'], structure_dict)
+        dest[name].append(structure_dict)
 
     def _parse(self, structure, dest):
         """
@@ -124,11 +130,18 @@ class BinParser(object):
         :arg dict dest:
         """
         for item in structure:
-            if 'structure' not in item:
-                name = self._set(item, 'name', '')
-                dtype = self._set(item, 'type', self._types['default'])
-                size = self._set(self._types[dtype], 'size',
-                    self._set(item, 'size', 0))
+            name = self._set(item, 'name', '')
+
+            dtype = self._set(item, 'type', self._types['default'])
+            if 'structure' in item:
+                dtype = 'list'
+
+            size = self._set(self._types[dtype], 'size',
+                self._set(item, 'size', 0))
+            if type(size) != int:
+                size = self._internal[size]
+
+            if dtype != 'list':
                 func = self._set(self._types[dtype], 'function', dtype)
 
                 args = self._set(item,
@@ -149,42 +162,33 @@ class BinParser(object):
                     self._parse_raw(d, size)
             else:
                 if self._debug > 2:
-                    self._log.write('-- {}\n'.format(item['name']))
+                    self._log.write('-- {}\n'.format(name))
 
-                size = self._set(item, 'size', 0)
-                if type(size) != int:
-                    size = self._internal[size]
-
-                if item['name'] not in dest:
+                if name not in dest:
                     if set(['size', 'term', 'delimiter']) & set(item):
-                        dest[item['name']] = []
+                        dest[name] = []
                     else:
-                        dest[item['name']] = {}
+                        dest[name] = {}
 
                 # FIXME: This is still a bit hairy.
                 if 'size' in item:
                     for index in range(size):
-                        d = {}
-                        self._parse(item['structure'], d)
-                        dest[item['name']].append(d)
+                        self._parse_structure(item, dest, name)
                 elif 'term' in item:
                     while True:
-                        d = {}
-                        self._parse(item['structure'], d)
-                        dest[item['name']].append(d)
-                        if d[item['match']] == self._internal[item['term']]:
+                        self._parse_structure(item, dest, name)
+                        if (dest[name][-1][item['match']] ==
+                                self._internal[item['term']]):
                             break
                 elif 'delimiter' in item:
                     while (self._call('int', self._get_field(1)) !=
                             self._types['delimiters'][item['delimiter']]):
-                        d = {}
-                        self._parse(item['structure'], d)
-                        dest[item['name']].append(d)
+                        self._parse_structure(item, dest, name)
                 else:
-                    self._parse(item['structure'], dest[item['name']])
+                    self._parse(item['structure'], dest[name])
 
             if self._debug > 2:
-                self._log.write(' --> {}\n'.format(item['name']))
+                self._log.write(' --> {}\n'.format(name))
 
 
     def write(self, output_handle):
