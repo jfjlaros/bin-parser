@@ -40,11 +40,6 @@ setup(
     author=distmeta['__author__'],
     author_email=distmeta['__contact__'],
     url=distmeta['__homepage__'],
-    data_files=[
-        'fields.yml',
-        'structure.yml',
-        'groups.yml'
-    ],
     license='MIT License',
     platforms=['any'],
     packages=['bin_parser'],

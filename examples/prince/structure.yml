@@ -8,7 +8,7 @@
     - name: name
       type: trim
       size: 25
-    - name: min
-      type: minute
-    - name: sec
+    - name: minutes
+      type: min
+    - name: seconds
       type: sec

@@ -53,7 +53,7 @@ we name `structure.yml`.
 
 We can now call the command line interface as follows:
 
-    bin-parser balance.dat structure.yml fields.yml balance.yml
+    bin-parser balance.dat structure.yml types.yml balance.yml
 
 This will result in a new file, named `balance.yml`, which contains the content
 of the input file (`balance.dat`) in a human (and machine) readable format:
@@ -65,11 +65,11 @@ of the input file (`balance.dat`) in a human (and machine) readable format:
 ## Using the library
 To use the library from our own code, we need to use the following:
 
-    from bin_parser import BinParser
+    import bin_parser
 
-    parser = BinParser(open('balance.dat'), open('types.yml'),
-        open('structure.yml')
-    print parser.fields['name']
+    parser = bin_parser.BinParser(open('balance.dat'), open('structure.yml'),
+        open('types.yml'))
+    print parser.parsed['name']
 
 The `BinParser` object contains the original data in `data` and the parsed data
 in `parsed`. Furthermore it contains the function `write` to write the content

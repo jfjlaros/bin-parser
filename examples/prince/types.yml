@@ -4,7 +4,7 @@ trim:
     - 0x00
 int:
   size: 2
-minute:
+min:
   size: 2
 sec:
   size: 2
