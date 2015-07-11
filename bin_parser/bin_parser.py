@@ -115,12 +115,21 @@ class BinParser(object):
             return item[field]
         return default
 
+
+    def _store(self, dest, name, value):
+        """
+        """
+        dest[name] = value
+        self._internal[name] = value
+
+
     def _parse_structure(self, item, dest, name):
         """
         """
         structure_dict = {}
         self._parse(item['structure'], structure_dict)
         dest[name].append(structure_dict)
+
 
     def _parse(self, structure, dest):
         """
@@ -149,17 +158,19 @@ class BinParser(object):
                 if args:
                     args = (args, )
 
-                d = self._internal if 'internal' in item else dest
                 if dtype == 'flags':
-                    d.update(self._call('flags', self._get_field(size),
-                        item['flags']))
+                    flags = self._call('flags', self._get_field(size),
+                        item['flags'])
+                    for name in flags:
+                        self._store(dest, name, flags[name])
                 elif dtype == 'conditional':
-                    if d[item['condition']]:
-                        d[name] = self._get_field(size)
+                    if self._internal[item['condition']]:
+                        self._store(dest, name, value)
                 elif name:
-                    d[name] = self._call(func, self._get_field(size), *args)
+                    self._store(dest, name,
+                        self._call(func, self._get_field(size), *args))
                 else:
-                    self._parse_raw(d, size)
+                    self._parse_raw(dest, size)
             else:
                 if self._debug > 2:
                     self._log.write('-- {}\n'.format(name))
