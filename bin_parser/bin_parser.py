@@ -134,12 +134,14 @@ class BinParser(object):
         return name
 
 
-    def _evaluate(self, operator, operands):
+    def _evaluate(self, condition):
         """
         """
-        operands = map(lambda x: self._get_value(x), operands)
-        return getattr(op, operator,)(*operands)
+        operands = map(lambda x: self._get_value(x), condition['operands'])
 
+        if len(operands) == 1 and 'operator' not in condition:
+            return operands[0]
+        return getattr(op, condition['operator'])(*operands)
 
 
     def _parse_structure(self, item, dest, name):
@@ -171,8 +173,7 @@ class BinParser(object):
 
             # Conditional statement.
             if 'if' in item:
-                if not self._evaluate(item['if']['operator'],
-                        item['if']['operands']):
+                if not self._evaluate(item['if']):
                     continue
 
             if dtype != 'list':
@@ -208,8 +209,7 @@ class BinParser(object):
                 elif 'do_while' in item:
                     while True:
                         self._parse_structure(item, dest, name)
-                        if not self._evaluate(item['do_while']['operator'],
-                                item['do_while']['operands']):
+                        if not self._evaluate(item['do_while']):
                             break
 
                 # TODO: while
