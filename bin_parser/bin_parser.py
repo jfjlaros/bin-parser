@@ -8,6 +8,7 @@ General binary file parser.
 
 import argparse
 import inspect
+import operator as op
 import os
 import sys
 
@@ -123,6 +124,24 @@ class BinParser(object):
         self._internal[name] = value
 
 
+    def _get_value(self, name):
+        """
+        """
+        if name in self._internal:
+            return self._internal[name]
+        if name in self._types['delimiters']:
+            return self._types['delimiters'][name]
+        return name
+
+
+    def _evaluate(self, operator, operands):
+        """
+        """
+        operands = map(lambda x: self._get_value(x), operands)
+        return getattr(op, operator,)(*operands)
+
+
+
     def _parse_structure(self, item, dest, name):
         """
         """
@@ -150,6 +169,12 @@ class BinParser(object):
             if type(size) != int:
                 size = self._internal[size]
 
+            # Conditional statement.
+            if 'if' in item:
+                if not self._evaluate(item['if']['operator'],
+                        item['if']['operands']):
+                    continue
+
             if dtype != 'list':
                 func = self._set(self._types[dtype], 'function', dtype)
 
@@ -163,9 +188,6 @@ class BinParser(object):
                         item['flags'])
                     for name in flags:
                         self._store(dest, name, flags[name])
-                elif dtype == 'conditional':
-                    if self._internal[item['condition']]:
-                        self._store(dest, name, value)
                 elif name:
                     self._store(dest, name,
                         self._call(func, self._get_field(size), *args))
