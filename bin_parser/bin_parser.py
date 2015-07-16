@@ -177,7 +177,6 @@ class BinParser(object):
 
             if dtype != 'list':
                 func = self._set(self._types[dtype], 'function', dtype)
-
                 args = self._set(item,
                     self._set(self._types[dtype], 'arg', ''), ())
                 if args:
@@ -198,21 +197,22 @@ class BinParser(object):
                     self._log.write('-- {}\n'.format(name))
 
                 if name not in dest:
-                    if set(['size', 'term', 'delimiter']) & set(item):
+                    if set(['size', 'do_while', 'delimiter']) & set(item):
                         dest[name] = []
                     else:
                         dest[name] = {}
 
-                # FIXME: This is still a bit hairy.
-                if 'size' in item:
-                    for index in range(size):
+                if 'size' in item: # Rename to `length`?
+                    for _ in range(size):
                         self._parse_structure(item, dest, name)
-                elif 'term' in item:
+                elif 'do_while' in item:
                     while True:
                         self._parse_structure(item, dest, name)
-                        if (dest[name][-1][item['match']] ==
-                                self._internal[item['term']]):
+                        if not self._evaluate(item['do_while']['operator'],
+                                item['do_while']['operands']):
                             break
+
+                # TODO: while
                 elif 'delimiter' in item:
                     while (self._call('int', self._get_field(1)) !=
                             self._types['delimiters'][item['delimiter']]):
