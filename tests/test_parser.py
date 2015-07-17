@@ -23,7 +23,10 @@ class TestParser(object):
         self.while_ = BinParser(open('examples/lists/while.dat'),
             open('examples/lists/structure_while.yml'),
             open('examples/lists/types.yml')).parsed
-        self.if_ = BinParser(open('examples/conditional/conditional.dat'),
+        self.if_a = BinParser(open('examples/conditional/a.dat'),
+            open('examples/conditional/structure.yml'),
+            open('examples/conditional/types.yml')).parsed
+        self.if_b = BinParser(open('examples/conditional/b.dat'),
             open('examples/conditional/structure.yml'),
             open('examples/conditional/types.yml')).parsed
 
@@ -61,11 +64,11 @@ class TestParser(object):
 
 
     def test_do_while_2(self):
-        assert self.do_while['lines'][0]['id'] == 1
+        assert self.do_while['lines'][0]['id'] == 0x01
 
 
     def test_do_while_3(self):
-        assert self.do_while['lines'][4]['id'] == 2
+        assert self.do_while['lines'][4]['id'] == 0x02
 
 
     def test_while_1(self):
@@ -73,16 +76,24 @@ class TestParser(object):
 
 
     def test_while_2(self):
-        assert self.while_['lines'][4]['id'] == 1
+        assert self.while_['lines'][4]['id'] == 0x01
 
 
     def test_while_3(self):
-        assert self.while_['lines_term'] == 2
+        assert self.while_['lines_term'] == 0x02
 
 
     def test_if_1(self):
-        assert 'related_to_a' not in self.if_
+        assert 'related_to_b' not in self.if_a
 
 
     def test_if_2(self):
-        assert self.if_['related_to_b'] == 'not skipped'
+        assert self.if_a['related_to_a'] == 'not skipped'
+
+
+    def test_if_3(self):
+        assert 'related_to_a' not in self.if_b
+
+
+    def test_if_4(self):
+        assert self.if_b['related_to_b'] == 'not skipped'
