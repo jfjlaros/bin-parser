@@ -166,17 +166,17 @@ class BinParser(object):
             if 'structure' in item:
                 dtype = 'list'
 
-            size = self._set(self._types[dtype], 'size',
-                self._set(item, 'size', 0))
-            if type(size) != int:
-                size = self._internal[size]
-
             # Conditional statement.
             if 'if' in item:
                 if not self._evaluate(item['if']):
                     continue
 
             if dtype != 'list':
+                size = self._set(self._types[dtype], 'size',
+                    self._set(item, 'size', 0))
+                if type(size) != int:
+                    size = self._internal[size]
+
                 func = self._set(self._types[dtype], 'function', dtype)
                 args = self._set(item,
                     self._set(self._types[dtype], 'arg', ''), ())
@@ -198,13 +198,16 @@ class BinParser(object):
                     self._log.write('-- {}\n'.format(name))
 
                 if name not in dest:
-                    if set(['size', 'while', 'do_while']) & set(item):
+                    if set(['for', 'while', 'do_while']) & set(item):
                         dest[name] = []
                     else:
                         dest[name] = {}
 
-                if 'size' in item: # Rename to `length`?
-                    for _ in range(size):
+                if 'for' in item:
+                    length = item['for']
+                    if type(length) != int:
+                        length = self._internal[length]
+                    for _ in range(length):
                         self._parse_structure(item, dest, name)
                 elif 'do_while' in item:
                     while True:
