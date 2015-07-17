@@ -28,6 +28,10 @@ class BinParser(object):
         Constructor.
 
         :arg stream input_handle: Open readable handle to a binary file.
+        :arg stream structure_handle: Open readable handle to the structure
+            definition.
+        :arg stream types_handle: Open readable handle to the types definition.
+        :arg object functions: Object containing parsing functions.
         :arg bool experimental: Enable experimental features.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
@@ -41,7 +45,7 @@ class BinParser(object):
         self._log = log
 
         self._functions = functions(types_handle)
-        self._types = self._functions._types     # Move to functions.py
+        self._types = self._functions._types
 
         self._offset = 0
         self._raw_byte_count = 0
@@ -111,6 +115,13 @@ class BinParser(object):
 
     def _set(self, item, field, default):
         """
+        Return `field[name]` if it exists, otherwise return `default`.
+
+        :arg dict item: A dictionary.
+        :arg str field: A field that may or may not be present in `item`.
+        :arg any default: Default value if `field[name]` does not exist.
+
+        :returns any: `field[name]` or `default`.
         """
         if field in item:
             return item[field]
@@ -119,6 +130,12 @@ class BinParser(object):
 
     def _store(self, dest, name, value):
         """
+        Store a value both in the destination dictionary, as well as in the
+        internal cache.
+
+        :arg dict dest: Destination dictionary.
+        :arg str name: Field name used in the destination dictionary.
+        :arg any value: Value to store.
         """
         dest[name] = value
         self._internal[name] = value
@@ -126,26 +143,51 @@ class BinParser(object):
 
     def _get_value(self, name):
         """
+        Resolve the value of a variable.
+
+        First look in the cache to see if `name` is defined, then check the set
+        of constants. If nothing can be found, the variable is considered to be
+        a literal.
+
+        :arg any name: The name or value of a variable.
+        :returns: The resolved value.
         """
         if name in self._internal:
             return self._internal[name]
-        if 'delimiters' in self._types and name in self._types['delimiters']:
-            return self._types['delimiters'][name]
+        if 'constants' in self._types and name in self._types['constants']:
+            return self._types['constants'][name]
         return name
 
 
-    def _evaluate(self, condition):
+    def _evaluate(self, expression):
         """
-        """
-        operands = map(lambda x: self._get_value(x), condition['operands'])
+        Evaluate an expression.
 
-        if len(operands) == 1 and 'operator' not in condition:
+        An expression is represented by a dictionary with the following
+        structure:
+
+            expression = {
+                'operator': '',
+                'operands': []
+            }
+
+        :arg dict expression: An expression.
+        :returns any: Result of the evaluation.
+        """
+        operands = map(lambda x: self._get_value(x), expression['operands'])
+
+        if len(operands) == 1 and 'operator' not in expression:
             return operands[0]
-        return getattr(op, condition['operator'])(*operands)
+        return getattr(op, expression['operator'])(*operands)
 
 
     def _parse_structure(self, item, dest, name):
         """
+        Convenience function for nested structures.
+
+        :arg dict item: A dictionary.
+        :arg dict dest: Destination dictionary.
+        :arg str name: Field name used in the destination dictionary.
         """
         structure_dict = {}
         self._parse(item['structure'], structure_dict)
@@ -156,8 +198,8 @@ class BinParser(object):
         """
         Parse a binary file.
 
-        :arg dict structure:
-        :arg dict dest:
+        :arg dict structure: Structure of the binary file.
+        :arg dict dest: Destination dictionary.
         """
         for item in structure:
             name = self._set(item, 'name', '')
@@ -172,16 +214,11 @@ class BinParser(object):
                     continue
 
             if dtype != 'list':
+                # Primitive data types.
                 size = self._set(self._types[dtype], 'size',
                     self._set(item, 'size', 0))
                 if type(size) != int:
                     size = self._internal[size]
-
-                func = self._set(self._types[dtype], 'function', dtype)
-                args = self._set(item,
-                    self._set(self._types[dtype], 'arg', ''), ())
-                if args:
-                    args = (args, )
 
                 if dtype == 'flags':
                     flags = self._call('flags', self._get_field(size),
@@ -189,16 +226,22 @@ class BinParser(object):
                     for name in flags:
                         self._store(dest, name, flags[name])
                 elif name:
+                    function = self._set(self._types[dtype], 'function', dtype)
+                    args = self._set(item,
+                        self._set(self._types[dtype], 'arg', ''), ())
+                    if args:
+                        args = (args, )
                     self._store(dest, name,
-                        self._call(func, self._get_field(size), *args))
+                        self._call(function, self._get_field(size), *args))
                 else:
                     self._parse_raw(dest, size)
             else:
+                # Nested structures.
                 if self._debug > 2:
                     self._log.write('-- {}\n'.format(name))
 
                 if name not in dest:
-                    if set(['for', 'while', 'do_while']) & set(item):
+                    if set(['for', 'do_while', 'while']) & set(item):
                         dest[name] = []
                     else:
                         dest[name] = {}
