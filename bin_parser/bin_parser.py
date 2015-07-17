@@ -129,7 +129,7 @@ class BinParser(object):
         """
         if name in self._internal:
             return self._internal[name]
-        if name in self._types['delimiters']:
+        if 'delimiters' in self._types and name in self._types['delimiters']:
             return self._types['delimiters'][name]
         return name
 
@@ -198,7 +198,7 @@ class BinParser(object):
                     self._log.write('-- {}\n'.format(name))
 
                 if name not in dest:
-                    if set(['size', 'do_while', 'delimiter']) & set(item):
+                    if set(['size', 'while', 'do_while']) & set(item):
                         dest[name] = []
                     else:
                         dest[name] = {}
@@ -211,12 +211,15 @@ class BinParser(object):
                         self._parse_structure(item, dest, name)
                         if not self._evaluate(item['do_while']):
                             break
-
-                # TODO: while
-                elif 'delimiter' in item:
-                    while (self._call('int', self._get_field(1)) !=
-                            self._types['delimiters'][item['delimiter']]):
+                elif 'while' in item:
+                    delimiter = item['structure'].pop(0)
+                    dest[name] = [{}]
+                    self._parse([delimiter], dest[name][0])
+                    while True:
+                        if not self._evaluate(item['while']):
+                            break
                         self._parse_structure(item, dest, name)
+                        self._parse([delimiter], dest[name][-1])
                 else:
                     self._parse(item['structure'], dest[name])
 
