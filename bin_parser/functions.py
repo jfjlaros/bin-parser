@@ -6,7 +6,24 @@ Field unpacking functions for the general binary parser.
 """
 
 
+import operator
 import yaml
+
+
+operators = {
+    'not': operator.not_,
+    'and': operator.and_,
+    'or': operator.or_,
+    'xor': operator.xor,
+    'eq': operator.eq,
+    'ne': operator.ne,
+    'ge': operator.ge,
+    'gt': operator.gt,
+    'le': operator.le,
+    'lt': operator.lt,
+    'mod': operator.mod,
+    'contains': operator.contains
+}
 
 
 class BinParseFunctions(object):

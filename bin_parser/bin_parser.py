@@ -8,13 +8,12 @@ General binary file parser.
 
 import argparse
 import inspect
-import operator as op
 import os
 import sys
 
 import yaml
 
-from functions import BinParseFunctions
+from functions import BinParseFunctions, operators
 
 
 class BinParser(object):
@@ -178,7 +177,7 @@ class BinParser(object):
 
         if len(operands) == 1 and 'operator' not in expression:
             return operands[0]
-        return getattr(op, expression['operator'])(*operands)
+        return operators[expression['operator']](*operands)
 
 
     def _parse_structure(self, item, dest, name):
