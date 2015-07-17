@@ -257,13 +257,13 @@ class BinParser(object):
                         if not self._evaluate(item['do_while']):
                             break
                 elif 'while' in item:
-                    delimiter = item['structure'].pop(0)
+                    delimiter = item['structure'][0]
                     dest[name] = [{}]
                     self._parse([delimiter], dest[name][0])
                     while True:
                         if not self._evaluate(item['while']):
                             break
-                        self._parse(item['structure'], dest[name][-1])
+                        self._parse(item['structure'][1:], dest[name][-1])
                         dest[name].append({})
                         self._parse([delimiter], dest[name][-1])
                     dest[item['while']['term']] = dest[name].pop(
