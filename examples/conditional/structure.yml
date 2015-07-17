@@ -1,0 +1,13 @@
+---
+- name: a
+  type: short
+- name: related_to_a
+  if:
+    operands:
+      - a
+- name: b
+  type: short
+- name: related_to_b
+  if:
+    operands:
+      - b
