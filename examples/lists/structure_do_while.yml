@@ -1,0 +1,11 @@
+---
+- name: lines
+  do_while:
+    operands:
+      - id
+      - 0x02
+    operator: ne
+  structure:
+    - name: content
+    - name: id
+      type: short

@@ -1,0 +1,7 @@
+---
+- name: size_of_list
+  type: short
+- name: lines
+  for: size_of_list
+  structure:
+    - name: content
