@@ -86,6 +86,8 @@ function update(target, source) {
 }
 
 function BinParseFunctions(typesHandle) {
+  var types = yaml.load(typesHandle);
+
   this.raw = function(data) {
     return convertToHex(data);
   };
@@ -124,39 +126,21 @@ function BinParseFunctions(typesHandle) {
   };
 
   this.colour = function(data) {
-    return '0x' + pad(hex(integer(data)), 6);
+    return '0x' + pad(hex(this.int(data)), 6);
   };
 
-  // TODO: Make this construction of the delimiters a bit more general.
   this.trim = function(data) {
-    var delimiter = '',
-        index;
+    var delimiter = String.fromCharCode(types.trim.delimiter);
 
-    for (index = 0; index < types['trim']['delimiter'].length; index++) {
-      delimiter += String.fromCharCode(types['trim']['delimiter'][index]);
-    }
-    
     return data.split(delimiter)[0];
   };
 
   this.text = function(data, delimiter) {
-    var endOfText = '',
-        separator = '',
-        field,
-        index;
+    var field = data.split(String.fromCharCode(types.text.delimiter))[0];
 
-    for (index = 0; index < types['text']['delimiter'].length; index++) {
-      endOfText += String.fromCharCode(types['text']['delimiter'][index]);
-    }
-    field = data.split(delimiter)[0];
-
-    if (delimiter !== undefined) {
-      for (index = 0; index < types['text']['data'][delimmiter].length;
-          index++) {
-        separator += String.fromCharCode(
-          types['text']['data'][delimiter][index]);
-      }
-      return field.split(separator).join('\n');
+    if (delimiter) {
+      return field.split(String.fromCharCode(
+        types.text.data[delimiter])).join('\n');
     }
     return field;
   };
@@ -172,10 +156,10 @@ function BinParseFunctions(typesHandle) {
   :return str: Date in format '%Y%j', 'defined' or 'unknown'.
   */
   this.date = function(data) {
-    var dateInt = integer(data);
+    var dateInt = this.int(data);
 
-    if (dateInt in fields.maps.date) {
-      return fields.maps.date[dateInt];
+    if (dateInt in types.date.data) {
+      return types.date.data[dateInt];
     }
     return dateInt.toString();
   };
@@ -191,8 +175,8 @@ function BinParseFunctions(typesHandle) {
   this.map = function(data, annotation) {
     var index = ord(data);
 
-    if (index in fields.maps[annotation]) {
-      return fields.maps[annotation][index];
+    if (index in types.map.data[annotation]) {
+      return types.map.data[annotation][index];
     }
     return convertToHex(data);
   };
@@ -204,7 +188,7 @@ function BinParseFunctions(typesHandle) {
   :arg str annotation: Annotation of {data}.
   */
   this.flags = function(data, annotation) {
-    var bitfield = integer(data),
+    var bitfield = this.int(data),
         destination = {},
         flag,
         value;
@@ -212,29 +196,31 @@ function BinParseFunctions(typesHandle) {
     for (flag = 0x01; flag < 0x100; flag <<= 1) {
       value = Boolean(flag & bitfield);
 
-      if (!(flag in fields.flags[annotation])) {
+      if (!types.flags.data[annotation][flag]) {
         if (value) {
           destination['flags_' + annotation + '_' + pad(hex(flag), 2)] = value;
         }
       }
       else {
-        destination[fields.flags[annotation][flag]] = value;
+        destination[types.flags.data[annotation][flag]] = value;
       }
     }
     return destination;
   };
 
-  var types = yaml.load(typesHandle);
+  this.getTypes = function() {
+    return types;
+  };
 
   // Add standard data types.
-  types['raw'] = {};
-  types['list'] = {};
-  types['trim'] = { 'delimiter': [0x00] };
-  //types['text'] = { 'delimiter': [0x00], 'data': {} };
+  update(types, {
+    'raw': {},
+    'list': {}
+  });
 
   // Set default data type.
-  if (!('default' in types)) {
-    types['default'] = 'text';
+  if (!types.default) {
+    types.default = 'text';
   }
 }
 

@@ -4,23 +4,21 @@
 
 var fs = require('fs'),
     path = require('path');
-    //BinParser = require('./index');
 
-var Functions = require('./functions');
+var BinParser = require('./index');
 
-var main = function(filename) {
-  var f = new Functions.BinParseFunctions(
-    fs.readFileSync(filename).toString('binary'));
+var main = function(filename, structure, types) {
+  var parser = new BinParser(fs.readFileSync(filename).toString('binary'),
+    fs.readFileSync(structure).toString('binary'),
+    fs.readFileSync(types).toString('binary'));
 
-  console.log(f.bit('a'));
-
-  //var BP = new BinParser(fs.readFileSync(filename).toString('binary'));
-
-  //BP.dump();
+  parser.dump();
 };
 
 var exitCode = main(
-  path.resolve(process.cwd(), process.argv[2])
+  path.resolve(process.cwd(), process.argv[2]),
+  path.resolve(process.cwd(), process.argv[3]),
+  path.resolve(process.cwd(), process.argv[4])
 );
 
 /*

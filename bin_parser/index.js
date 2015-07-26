@@ -8,20 +8,29 @@ General binary file parser.
 // NOTE: All integers are probably 2 bytes.
 // NOTE: Colours may be 4 bytes.
 
-var yaml = require('js-yaml'),
-    requireFile = require('require-file');
+var yaml = require('js-yaml');
+
+var Functions = require('./functions');
+
+function getOneValue(dictionary) {
+  var item;
+
+  for (item in dictionary) {
+    return dictionary[item];
+  }
+}
 
 /*
 General binary file parser.
 */
-function FamParser(fileContent) {
+function BinParser(fileContent, structureHandle, typesHandle, functions) {
   var data = fileContent,
       parsed = {},
       internal = {},
-      functions = Functions(types_handle),
-      types = functions.types
+      functions = new Functions.BinParseFunctions(typesHandle),
+      types = functions.getTypes(),
       offset = 0,
-      structure = yaml.load(structure_handle);
+      structure = yaml.load(structureHandle);
 
   /*
   Extract a field from {data} using either a fixed size, or a delimiter. After
@@ -39,8 +48,7 @@ function FamParser(fileContent) {
       extracted = size;
     }
     else {
-      field = data.slice(offset, -1).split(
-        String.fromCharCode(fields.delimiters.field))[0];
+      field = functions.text(data.slice(offset, -1));
       extracted = field.length + 1;
     }
 
@@ -89,11 +97,11 @@ function FamParser(fileContent) {
   :returns: The resolved value.
   */
   function getValue(name) {
-    if (name in internal) {
+    if (internal[name] !== undefined) {
       return internal[name];
     }
-    if ('constants' in types && name in types['constants']) {
-      return types['constants'][name];
+    if (types.constants && types.constants[name]) {
+      return types.constants[name];
     }
     return name;
   }
@@ -113,12 +121,12 @@ function FamParser(fileContent) {
   :returns any: Result of the evaluation.
   */
   function evaluate(expression) {
-    var operands = map(lambda x: get_value(x), expression['operands']);
+    var operands = expression.operands.map(getValue);
 
-    if (len(operands) == 1 and 'operator' not in expression) {
+    if (operands.length === 1 && !expression.operator) {
       return operands[0];
     }
-    return operators[expression['operator']](*operands);
+    return Functions.operators[expression.operator].apply(this, operands);
   }
 
   /*
@@ -129,10 +137,10 @@ function FamParser(fileContent) {
   :arg str name: Field name used in the destination dictionary.
   */
   function parseStructure(item, dest, name) {
-    var structure_dict = {};
+    var structureDict = {};
 
-    parse(item['structure'], structure_dict);
-    dest[name].append(structure_dict);
+    parse(item['structure'], structureDict);
+    dest[name].push(structureDict);
   }
 
 
@@ -143,49 +151,60 @@ function FamParser(fileContent) {
   :arg dict dest: Destination dictionary.
   */
   function parse(structure, dest) {
-    for (item in structure) {
+    var item,
+        name,
+        dtype,
+        size,
+        func,
+        args,
+        length,
+        delimiter,
+        flags,
+        index,
+        jndex;
+
+    for (index = 0; index < structure.length; index++) {
+      item = structure[index];
       name = set(item, 'name', '');
 
-      dtype = set(item, 'type', types['default']);
+      dtype = set(item, 'type', types.default);
       if ('structure' in item) {
         dtype = 'list';
       }
 
       // Conditional statement.
-      if ('if' in item) {
-        if (not evaluate(item['if'])) {
+      if (item.if) {
+        if (!evaluate(item.if)) {
           continue;
         }
       }
 
       // Primitive data types.
-      if (dtype != 'list') {
+      if (dtype !== 'list') {
         size = set(types[dtype], 'size', set(item, 'size', 0));
-        if (type(size) != int) {
+        if (size.constructor !== Number) {
           size = internal[size];
         }
 
-        if (dtype == 'flags') {
-          flags = call('flags', get_field(size), item['flags']);
-          for name in flags {
+        if (dtype === 'flags') {
+          flags = functions.flags(getField(size), item.flags);
+          for (name in flags) {
             store(dest, name, flags[name]);
+          }
         }
         else if (name) {
-          function = set(types[dtype], 'function', dtype);
-          args = set(item, set(types[dtype], 'arg', ''), ());
-          if (args) {
-            args = (args, );
-          }
-          store(dest, name, call(function, get_field(size), *args));
+          func = set(types[dtype], 'function', dtype);
+          args = set(item, set(types[dtype], 'arg', ''), []);
+          store(dest, name, functions[func](getField(size), args));
         }
         else {
-          parse_raw(dest, size);
+          getField(size);
         }
       }
       // Nested structures.
       else {
-        if (name not in dest) {
-          if (set(['for', 'do_while', 'while']) & set(item)) {
+        if (!dest[name]) {
+          if (item.for || item.do_while || item.while) {
             dest[name] = [];
           }
           else {
@@ -193,45 +212,46 @@ function FamParser(fileContent) {
           }
         }
 
-        if ('for' in item) {
-          length = item['for'];
-          if (type(length) != int) {
+        if (item.for) {
+          length = item.for;
+          if (length.constructor !== Number) {
             length = internal[length];
           }
-          for (_ in range(length)) {
-            parse_structure(item, dest, name);
+          for (jndex = 0; jndex < length; jndex++) {
+            parseStructure(item, dest, name);
           }
         }
-        else if ('do_while' in item) {
-          while (True) {
-            parse_structure(item, dest, name);
-            if not evaluate(item['do_while']) {
+        else if (item.do_while) {
+          while (true) {
+            parseStructure(item, dest, name);
+            if (!evaluate(item.do_while)) {
               break;
             }
           }
         }
-        else if ('while' in item) {
-          delimiter = item['structure'][0];
+        else if (item.while) {
+          delimiter = item.structure[0];
           dest[name] = [{}];
           parse([delimiter], dest[name][0]);
-          while True {
-            if not evaluate(item['while']) {
+          while (true) {
+            if (!evaluate(item.while)) {
               break;
             }
-            parse(item['structure'][1:], dest[name][-1]);
-            dest[name].append({});
-            parse([delimiter], dest[name][-1]);
+            parse(item.structure.slice(1, -1), dest[name].slice(-1)[0]);
+            dest[name].push({});
+            parse([delimiter], dest[name].slice(-1)[0]);
           }
-          dest[item['while']['term']] = dest[name].pop(-1).values()[0];
+          dest[item.while.term] = getOneValue(dest[name].pop(-1));
+        }
         else {
-          parse(item['structure'], dest[name]);
+          parse(item.structure, dest[name]);
         }
       }
     }
   }
 
   /*
-  Write the parsed FAM file to the console.
+  Write the parsed binary file to the console.
   */
   this.dump = function() {
     console.log('--- YAML DUMP ---');
@@ -247,7 +267,7 @@ function FamParser(fileContent) {
     return parsed;
   };
 
-  parse(yaml.load(requireFile('../structure.yml')), parsed);
+  parse(structure, parsed);
 }
 
-module.exports = FamParser;
+module.exports = BinParser;
