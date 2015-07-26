@@ -127,6 +127,7 @@ function BinParseFunctions(typesHandle) {
     return '0x' + pad(hex(integer(data)), 6);
   };
 
+  // TODO: Make this construction of the delimiters a bit more general.
   this.trim = function(data) {
     var delimiter = '',
         index;
@@ -138,12 +139,24 @@ function BinParseFunctions(typesHandle) {
     return data.split(delimiter)[0];
   };
 
-  this.text = function(data, delimiter) { // FIXME
-    var field = data.split(''.join(map(chr, types['text']['delimiter'])))[0];
+  this.text = function(data, delimiter) {
+    var endOfText = '',
+        separator = '',
+        field,
+        index;
+
+    for (index = 0; index < types['text']['delimiter'].length; index++) {
+      endOfText += String.fromCharCode(types['text']['delimiter'][index]);
+    }
+    field = data.split(delimiter)[0];
 
     if (delimiter !== undefined) {
-      return '\n'.join(field.split(''.join(map(chr,
-        types['text']['data'][delimiter]))));
+      for (index = 0; index < types['text']['data'][delimmiter].length;
+          index++) {
+        separator += String.fromCharCode(
+          types['text']['data'][delimiter][index]);
+      }
+      return field.split(separator).join('\n');
     }
     return field;
   };
@@ -217,6 +230,7 @@ function BinParseFunctions(typesHandle) {
   types['raw'] = {};
   types['list'] = {};
   types['trim'] = { 'delimiter': [0x00] };
+  //types['text'] = { 'delimiter': [0x00], 'data': {} };
 
   // Set default data type.
   if (!('default' in types)) {
