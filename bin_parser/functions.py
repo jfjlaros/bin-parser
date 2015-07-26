@@ -34,7 +34,6 @@ class BinParseFunctions(object):
 
         # Add standard data types.
         self._types['raw'] = {}
-        self._types['conditional'] = {}
         self._types['list'] = {}
 
         # Set default data type.
@@ -85,7 +84,7 @@ class BinParseFunctions(object):
             ''.join(map(chr, self._types['trim']['delimiter'])))[0]
 
 
-    def text(self, data, delimiter=''):
+    def text(self, data, delimiter=[]):
         """
         """
         field = data.split(''.join(map(chr,

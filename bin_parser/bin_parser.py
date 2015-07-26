@@ -6,9 +6,6 @@ General binary file parser.
 """
 
 
-import argparse
-import inspect
-import os
 import sys
 
 import yaml
@@ -212,8 +209,8 @@ class BinParser(object):
                 if not self._evaluate(item['if']):
                     continue
 
+            # Primitive data types.
             if dtype != 'list':
-                # Primitive data types.
                 size = self._set(self._types[dtype], 'size',
                     self._set(item, 'size', 0))
                 if type(size) != int:
@@ -234,8 +231,8 @@ class BinParser(object):
                         self._call(function, self._get_field(size), *args))
                 else:
                     self._parse_raw(dest, size)
+            # Nested structures.
             else:
-                # Nested structures.
                 if self._debug > 2:
                     self._log.write('-- {}\n'.format(name))
 
