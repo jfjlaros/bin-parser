@@ -14,7 +14,7 @@ except ImportError:
 # since that's recipe for disaster (it might have some uninstalled
 # dependencies, or we might import another already installed version).
 distmeta = {}
-for line in open(os.path.join('bin_parser', '__init__.py')):
+for line in open(os.path.join('python', '__init__.py')):
     try:
         field, value = (x.strip() for x in line.split('='))
     except ValueError:
@@ -44,6 +44,7 @@ setup(
     platforms=['any'],
     packages=['bin_parser'],
     install_requires=requires,
+    package_dir={'bin_parser': 'python'},
     entry_points={
         'console_scripts': ['bin_parser = bin_parser.cli:main']
     }
