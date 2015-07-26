@@ -91,9 +91,9 @@ function BinParseFunctions(typesHandle) {
   };
 
   this.bit = function(data) {
-    var bitField = this.int(data),
-        mask,
-        result = '';
+    var bitField = data.charCodeAt(0),
+        result = '',
+        mask;
 
     for (mask = 0x80; mask; mask >>= 1) {
       result += (+Boolean(bitField & mask)).toString();
@@ -127,8 +127,15 @@ function BinParseFunctions(typesHandle) {
     return '0x' + pad(hex(integer(data)), 6);
   };
 
-  this.trim = function(data) { // FIXME
-    return data.split(''.join(map(chr, types['trim']['delimiter'])))[0];
+  this.trim = function(data) {
+    var delimiter = '',
+        index;
+
+    for (index = 0; index < types['trim']['delimiter'].length; index++) {
+      delimiter += String.fromCharCode(types['trim']['delimiter'][index]);
+    }
+    
+    return data.split(delimiter)[0];
   };
 
   this.text = function(data, delimiter) { // FIXME
@@ -209,6 +216,7 @@ function BinParseFunctions(typesHandle) {
   // Add standard data types.
   types['raw'] = {};
   types['list'] = {};
+  types['trim'] = { 'delimiter': [0x00] };
 
   // Set default data type.
   if (!('default' in types)) {
