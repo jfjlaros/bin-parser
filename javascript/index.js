@@ -5,8 +5,6 @@ General binary file parser.
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 */
-// NOTE: All integers are probably 2 bytes.
-// NOTE: Colours may be 4 bytes.
 
 var yaml = require('js-yaml');
 
@@ -20,6 +18,31 @@ function getOneValue(dictionary) {
   }
 }
 
+function isEmpty(obj) {
+  var prop;
+
+  for(prop in obj) {
+    if(obj.hasOwnProperty(prop)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/*
+Update a dictionary with the properties of another dictionary.
+
+:arg dict target: Target dictionary.
+:arg dict source: Source dictionary.
+*/
+function update(target, source) {
+  var item;
+
+  for (item in source) {
+    target[item] = source[item];
+  }
+}
+
 /*
 General binary file parser.
 */
@@ -27,8 +50,8 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   var data = fileContent,
       parsed = {},
       internal = {},
-      functions = new Functions.BinParseFunctions(typesHandle),
-      types = functions.getTypes(),
+      functions = new Functions.BinParseFunctions(),
+      types = yaml.load(typesHandle),
       offset = 0,
       structure = yaml.load(structureHandle);
 
@@ -39,16 +62,20 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   :arg int size: Size of fixed size field.
   :return str: Content of the requested field.
   */
-  function getField(size) {
+  function getField(size, delimiter) {
     var field,
         extracted;
+
+    if (offset >= data.length) {
+      throw('StopIteration');
+    }
 
     if (size) {
       field = data.slice(offset, offset + size);
       extracted = size;
     }
     else {
-      field = functions.text(data.slice(offset, -1));
+      field = functions.text(data.slice(offset, -1), {'delimiter': delimiter});
       extracted = field.length + 1;
     }
 
@@ -82,6 +109,7 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   :arg any value: Value to store.
   */
   function store(dest, name, value) {
+    //console.log(name + ': ' + value);
     dest[name] = value;
     internal[name] = value;
   }
@@ -159,8 +187,11 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
         args,
         length,
         delimiter,
+        options,
+        result,
         flags,
         index,
+        x,
         jndex;
 
     for (index = 0; index < structure.length; index++) {
@@ -186,16 +217,21 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
           size = internal[size];
         }
 
-        if (dtype === 'flags') {
-          flags = functions.flags(getField(size), item.flags);
-          for (name in flags) {
-            store(dest, name, flags[name]);
-          }
-        }
-        else if (name) {
+        if (name) {
           func = set(types[dtype], 'function', dtype);
-          args = set(item, set(types[dtype], 'arg', ''), []);
-          store(dest, name, functions[func](getField(size), args));
+          
+          options = set(types[dtype], 'args', {});
+          delimiter = set(options, 'delimiter', []);
+          
+          result = functions[func](getField(size, delimiter), options);
+          if (result.constructor === Object) {
+            for (x in result) {
+              store(dest, x, result[x]);
+            }
+          }
+          else {
+            store(dest, name, result);
+          }
         }
         else {
           getField(size);
@@ -267,7 +303,25 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
     return parsed;
   };
 
-  parse(structure, parsed);
+  // Add standard data types.
+  update(types, {
+    'raw': {},
+    'list': {}
+  });
+
+  // Set default data type.
+  if (!types.default) {
+    types.default = 'text';
+  }
+
+  try {
+    parse(structure, parsed);
+  }
+  catch(err) {
+    if (err !== 'StopIteration') {
+      throw(err);
+    }
+  }
 }
 
 module.exports = BinParser;

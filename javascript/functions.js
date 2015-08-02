@@ -71,20 +71,6 @@ function convertToHex(data) {
   return result;
 }
 
-/*
-Update a dictionary with the properties of another dictionary.
-
-:arg dict target: Target dictionary.
-:arg dict source: Source dictionary.
-*/
-function update(target, source) {
-  var item;
-
-  for (item in source) {
-    target[item] = source[item];
-  }
-}
-
 function BinParseFunctions(typesHandle) {
   var types = yaml.load(typesHandle);
 
@@ -129,18 +115,17 @@ function BinParseFunctions(typesHandle) {
     return '0x' + pad(hex(this.int(data)), 6);
   };
 
-  this.trim = function(data) {
-    var delimiter = String.fromCharCode(types.trim.delimiter);
-
-    return data.split(delimiter)[0];
+  this.trim = function(data, delimiter) {
+    return data.split(String.fromCharCode.apply(this, delimiter))[0];
   };
 
-  this.text = function(data, delimiter) {
-    var field = data.split(String.fromCharCode(types.text.delimiter))[0];
+  this.text = function(data, options) {
+    var delimiter = options.delimiter || [],
+        split = options.split,
+        field = data.split(String.fromCharCode.apply(this, delimiter))[0];
 
-    if (delimiter) {
-      return field.split(String.fromCharCode(
-        types.text.data[delimiter])).join('\n');
+    if (split) {
+      return field.split(String.fromCharCode.apply(this, split)).join('\n');
     }
     return field;
   };
@@ -155,11 +140,12 @@ function BinParseFunctions(typesHandle) {
 
   :return str: Date in format '%Y%j', 'defined' or 'unknown'.
   */
-  this.date = function(data) {
-    var dateInt = this.int(data);
+  this.date = function(data, options) {
+    var annotation = options.annotation,
+        dateInt = this.int(data);
 
-    if (dateInt in types.date.data) {
-      return types.date.data[dateInt];
+    if (dateInt in annotation) {
+      return annotation[dateInt];
     }
     return dateInt.toString();
   };
@@ -172,11 +158,12 @@ function BinParseFunctions(typesHandle) {
 
   :return str: Annotated representation of {data}.
   */
-  this.map = function(data, annotation) {
-    var index = ord(data);
+  this.map = function(data, options) {
+    var annotation = options.annotation,
+        index = ord(data);
 
-    if (index in types.map.data[annotation]) {
-      return types.map.data[annotation][index];
+    if (index in annotation) {
+      return annotation[index];
     }
     return convertToHex(data);
   };
@@ -187,8 +174,10 @@ function BinParseFunctions(typesHandle) {
   :arg int data: Bit field.
   :arg str annotation: Annotation of {data}.
   */
-  this.flags = function(data, annotation) {
-    var bitfield = this.int(data),
+  this.flags = function(data, options) {
+    var deft = options.default,
+        annotation = options.annotation,
+        bitfield = this.int(data),
         destination = {},
         flag,
         value;
@@ -196,32 +185,17 @@ function BinParseFunctions(typesHandle) {
     for (flag = 0x01; flag < 0x100; flag <<= 1) {
       value = Boolean(flag & bitfield);
 
-      if (!types.flags.data[annotation][flag]) {
+      if (!annotation[flag]) {
         if (value) {
-          destination['flags_' + annotation + '_' + pad(hex(flag), 2)] = value;
+          destination['flags_' + deft + '_' + pad(hex(flag), 2)] = value;
         }
       }
       else {
-        destination[types.flags.data[annotation][flag]] = value;
+        destination[annotation[flag]] = value;
       }
     }
     return destination;
   };
-
-  this.getTypes = function() {
-    return types;
-  };
-
-  // Add standard data types.
-  update(types, {
-    'raw': {},
-    'list': {}
-  });
-
-  // Set default data type.
-  if (!types.default) {
-    types.default = 'text';
-  }
 }
 
 module.exports.BinParseFunctions = BinParseFunctions;
