@@ -1,0 +1,15 @@
+---
+text:
+  args:
+    delimiter:
+      - 0x0a
+field:
+  function: text
+  args:
+    delimiter:
+      - 0x09
+last_field:
+  function: text
+  args:
+    delimiter:
+      - 0x0a

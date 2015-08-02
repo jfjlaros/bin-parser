@@ -3,5 +3,6 @@ short:
   size: 1
   function: int
 text:
-  delimiter:
-    - 0x00
+  args:
+    delimiter:
+      - 0x00
