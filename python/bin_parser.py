@@ -40,14 +40,26 @@ class BinParser(object):
         self._experimental = experimental | bool(debug)
         self._log = log
 
-        self._functions = functions(types_handle)
-        self._types = self._functions._types
+        self._functions = functions()
+
+        self._types = yaml.load(types_handle)
+
+        # Add standard data types.
+        self._types['raw'] = {}
+        self._types['list'] = {}
+        
+        # Set default data type.
+        if 'default' not in self._types:
+            self._types['default'] = 'text'
 
         self._offset = 0
         self._raw_byte_count = 0
 
         structure = yaml.load(structure_handle)
-        self._parse(structure, self.parsed)
+        try:
+            self._parse(structure, self.parsed)
+        except StopIteration:
+            pass
 
 
     def _call(self, name, data, *args, **kwargs):
@@ -64,6 +76,9 @@ class BinParser(object):
 
         :return str: Content of the requested field.
         """
+        if self._offset >= len(self.data):
+            raise StopIteration
+
         if size:
             field = self.data[self._offset:self._offset + size]
             extracted = size
@@ -217,24 +232,19 @@ class BinParser(object):
                 if type(size) != int:
                     size = self._internal[size]
 
-                if dtype == 'flags':
-                    flags = self._call('flags', self._get_field(size),
-                        item['flags'])
-                    for name in flags:
-                        self._store(dest, name, flags[name])
-                elif name:
+                if name:
                     function = self._set(self._types[dtype], 'function', dtype)
 
                     kwargs = self._set(self._types[dtype], 'args', {})
                     delim = self._set(kwargs, 'delimiter', [])
 
-                    args = self._set(item,
-                        self._set(self._types[dtype], 'arg', ''), ())
-                    if args:
-                        args = (args, )
-
-                    self._store(dest, name, self._call(function,
-                        self._get_field(size, delim), *args, **kwargs))
+                    result = self._call(function, self._get_field(size, delim),
+                        **kwargs)
+                    if type(result) == dict:
+                        for x in result:
+                            self._store(dest, x, result[x])
+                    else:
+                        self._store(dest, name, result)
                 else:
                     self._parse_raw(dest, size)
             # Nested structures.

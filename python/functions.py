@@ -27,20 +27,6 @@ operators = {
 
 
 class BinParseFunctions(object):
-    def __init__(self, types_handle):
-        """
-        """
-        self._types = yaml.load(types_handle)
-
-        # Add standard data types.
-        self._types['raw'] = {}
-        self._types['list'] = {}
-
-        # Set default data type.
-        if 'default' not in self._types:
-            self._types['default'] = 'text'
-
-
     def raw(self, data):
         """
         Return the input data in hexadecimal, grouped by bit.
@@ -79,9 +65,8 @@ class BinParseFunctions(object):
         return '0x{:06x}'.format(self.int(data))
 
 
-    def trim(self, data):
-        return data.split(
-            ''.join(map(chr, self._types['trim']['delimiter'])))[0]
+    def trim(self, data, delimiter):
+        return data.split(''.join(map(chr, delimiter)))[0]
 
 
     def text(self, data, delimiter=[], split=[]):
@@ -94,7 +79,7 @@ class BinParseFunctions(object):
         return field
 
 
-    def date(self, data):
+    def date(self, data, annotation):
         """
         Decode a date.
 
@@ -107,8 +92,8 @@ class BinParseFunctions(object):
         """
         date_int = self.int(data)
 
-        if date_int in self._types['date']['data']:
-            return self._types['date']['data'][date_int]
+        if date_int in annotation:
+            return annotation[date_int]
         return str(date_int)
 
 
@@ -123,12 +108,12 @@ class BinParseFunctions(object):
         """
         index = ord(data)
 
-        if index in self._types['map']['data'][annotation]:
-            return self._types['map']['data'][annotation][index]
+        if index in annotation:
+            return annotation[index]
         return '{:02x}'.format(index)
 
 
-    def flags(self, data, annotation):
+    def flags(self, data, default, annotation):
         """
         Explode a bitfield into flags.
 
@@ -143,10 +128,10 @@ class BinParseFunctions(object):
         for flag in map(lambda x: 2 ** x, range(8)):
             value = bool(flag & bitfield)
 
-            if flag not in self._types['flags']['data'][annotation]:
+            if flag not in annotation:
                 if value:
-                    flags['flags_{}_{:02x}'.format(annotation, flag)] = value
+                    flags['flags_{}_{:02x}'.format(default, flag)] = value
             else:
-                flags[self._types['flags']['data'][annotation][flag]] = value
+                flags[annotation[flag]] = value
 
         return flags

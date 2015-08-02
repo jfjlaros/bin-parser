@@ -1,7 +1,8 @@
 ---
 trim:
-  delimiter:
-    - 0x00
+  args:
+    delimiter:
+      - 0x00
 int:
   size: 2
 min:

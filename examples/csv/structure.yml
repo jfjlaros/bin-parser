@@ -1,0 +1,11 @@
+---
+- name: header
+- name: body
+  do_while:
+    operands:
+      - true
+  structure:
+    - name: name
+      type: field
+    - name: date
+      type: last_field

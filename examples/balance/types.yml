@@ -2,5 +2,6 @@
 int:
   size: 2
 text:
-  delimiter:
-    - 0x00
+  args:
+    delimiter:
+      - 0x00
