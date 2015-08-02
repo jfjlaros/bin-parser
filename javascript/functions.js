@@ -119,9 +119,9 @@ function BinParseFunctions(typesHandle) {
     return data.split(String.fromCharCode.apply(this, delimiter))[0];
   };
 
-  this.text = function(data, options) {
-    var delimiter = options.delimiter || [],
-        split = options.split,
+  this.text = function(data, kwargs) {
+    var delimiter = kwargs.delimiter || [],
+        split = kwargs.split,
         field = data.split(String.fromCharCode.apply(this, delimiter))[0];
 
     if (split) {
@@ -140,8 +140,8 @@ function BinParseFunctions(typesHandle) {
 
   :return str: Date in format '%Y%j', 'defined' or 'unknown'.
   */
-  this.date = function(data, options) {
-    var annotation = options.annotation,
+  this.date = function(data, kwargs) {
+    var annotation = kwargs.annotation,
         dateInt = this.int(data);
 
     if (dateInt in annotation) {
@@ -158,8 +158,8 @@ function BinParseFunctions(typesHandle) {
 
   :return str: Annotated representation of {data}.
   */
-  this.map = function(data, options) {
-    var annotation = options.annotation,
+  this.map = function(data, kwargs) {
+    var annotation = kwargs.annotation,
         index = ord(data);
 
     if (index in annotation) {
@@ -174,9 +174,9 @@ function BinParseFunctions(typesHandle) {
   :arg int data: Bit field.
   :arg str annotation: Annotation of {data}.
   */
-  this.flags = function(data, options) {
-    var deft = options.default,
-        annotation = options.annotation,
+  this.flags = function(data, kwargs) {
+    var deft = kwargs.default,
+        annotation = kwargs.annotation,
         bitfield = this.int(data),
         destination = {},
         flag,

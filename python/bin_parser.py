@@ -202,6 +202,7 @@ class BinParser(object):
         :arg str name: Field name used in the destination dictionary.
         """
         structure_dict = {}
+
         self._parse(item['structure'], structure_dict)
         dest[name].append(structure_dict)
 
@@ -241,8 +242,8 @@ class BinParser(object):
                     result = self._call(function, self._get_field(size, delim),
                         **kwargs)
                     if type(result) == dict:
-                        for x in result:
-                            self._store(dest, x, result[x])
+                        for member in result:
+                            self._store(dest, member, result[member])
                     else:
                         self._store(dest, name, result)
                 else:

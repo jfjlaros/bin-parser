@@ -18,17 +18,6 @@ function getOneValue(dictionary) {
   }
 }
 
-function isEmpty(obj) {
-  var prop;
-
-  for(prop in obj) {
-    if(obj.hasOwnProperty(prop)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 /*
 Update a dictionary with the properties of another dictionary.
 
@@ -184,15 +173,13 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
         dtype,
         size,
         func,
-        args,
         length,
         delimiter,
-        options,
+        kwargs,
         result,
-        flags,
         index,
-        x,
-        jndex;
+        member,
+        _;
 
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
@@ -220,13 +207,13 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
         if (name) {
           func = set(types[dtype], 'function', dtype);
           
-          options = set(types[dtype], 'args', {});
-          delimiter = set(options, 'delimiter', []);
+          kwargs = set(types[dtype], 'args', {});
+          delimiter = set(kwargs, 'delimiter', []);
           
-          result = functions[func](getField(size, delimiter), options);
+          result = functions[func](getField(size, delimiter), kwargs);
           if (result.constructor === Object) {
-            for (x in result) {
-              store(dest, x, result[x]);
+            for (member in result) {
+              store(dest, member, result[member]);
             }
           }
           else {
@@ -253,7 +240,7 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
           if (length.constructor !== Number) {
             length = internal[length];
           }
-          for (jndex = 0; jndex < length; jndex++) {
+          for (_ = 0; _ < length; _++) {
             parseStructure(item, dest, name);
           }
         }
@@ -303,6 +290,9 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
     return parsed;
   };
 
+  /*
+  Initialisation.
+  */
   // Add standard data types.
   update(types, {
     'raw': {},
