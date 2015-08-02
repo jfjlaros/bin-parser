@@ -84,15 +84,13 @@ class BinParseFunctions(object):
             ''.join(map(chr, self._types['trim']['delimiter'])))[0]
 
 
-    def text(self, data, delimiter=[]):
+    def text(self, data, delimiter=[], split=[]):
         """
         """
-        field = data.split(''.join(map(chr,
-            self._types['text']['delimiter'])))[0]
+        field = data.split(''.join(map(chr, delimiter)))[0]
 
-        if delimiter:
-            return '\n'.join(field.split(''.join(map(chr,
-                self._types['text']['data'][delimiter]))))
+        if split:
+            return '\n'.join(field.split(''.join(map(chr, split))))
         return field
 
 

@@ -50,16 +50,17 @@ class BinParser(object):
         self._parse(structure, self.parsed)
 
 
-    def _call(self, name, data, *args):
-        return getattr(self._functions, name)(data, *args)
+    def _call(self, name, data, *args, **kwargs):
+        return getattr(self._functions, name)(data, *args, **kwargs)
 
 
-    def _get_field(self, size=0):
+    def _get_field(self, size=0, delimiter=[]):
         """
         Extract a field from {self.data} using either a fixed size, or a
         delimiter. After reading, {self._offset} is set to the next field.
 
         :arg int size: Size of fixed size field.
+        :arg list(char) delimiter: Delimiter for variable sized fields.
 
         :return str: Content of the requested field.
         """
@@ -67,7 +68,7 @@ class BinParser(object):
             field = self.data[self._offset:self._offset + size]
             extracted = size
         else:
-            field = self._call('text', self.data[self._offset:])
+            field = self._call('text', self.data[self._offset:], delimiter)
             extracted = len(field) + 1
 
         if self._debug > 1:
@@ -223,12 +224,17 @@ class BinParser(object):
                         self._store(dest, name, flags[name])
                 elif name:
                     function = self._set(self._types[dtype], 'function', dtype)
+
+                    kwargs = self._set(self._types[dtype], 'args', {})
+                    delim = self._set(kwargs, 'delimiter', [])
+
                     args = self._set(item,
                         self._set(self._types[dtype], 'arg', ''), ())
                     if args:
                         args = (args, )
-                    self._store(dest, name,
-                        self._call(function, self._get_field(size), *args))
+
+                    self._store(dest, name, self._call(function,
+                        self._get_field(size, delim), *args, **kwargs))
                 else:
                     self._parse_raw(dest, size)
             # Nested structures.
