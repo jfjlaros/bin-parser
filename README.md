@@ -88,6 +88,129 @@ of the following fields:
 
 # `structure.yml`
 
+# Loops and conditionals
+    - name: fixed_size_list
+      for: 10
+      structure:
+        - name: bla
+          value: something
+
+    - name: size_of_x
+      type: int
+    - name: x
+      for: size_of_x
+      structure:
+        - name: bla
+          value: something
+
+    - name: something_to_match
+      type: int
+    - name: x
+      while:
+        operands:
+          - something_to_match
+          - something_else_to_match
+        operator: equal
+      structure:
+        - name: bla
+          value: something
+        - name: something_else_to_match
+          type: int
+
+    - name: something_to_match
+      type: int
+    - name: x
+      do_while:
+        operands:
+          - something_to_match
+          - something_else_to_match
+        operator: equal
+      structure:
+        - name: bla
+          value: something
+        - name: something_else_to_match
+          type: int
+
+    - name: something_to_match
+      type: int
+    - name: something_else_to_match
+      type: int
+    - name: x
+      if:
+        operands:
+          - something_to_match
+          - something_else_to_match
+        operator: equal
+      structure:
+        - name: bla
+          value: something
+
 # Defaults
 
 # Defining new types
+
+# Types
+A type consists of two subunits controlling two stages; the acquirement stage
+and the processing stage.
+
+The acquirement stage is controlled by the `read` parameter, which is either
+an integer or a list of characters. If an integer is passed, the parser will
+read this amount of bytes, if a list is passed, the parser will read until the
+supplied characters are encountered. Once the data is acquired, it is passed to
+the processing stage.
+
+The processing stage is controlled by the `function` parameter, it denotes the
+function that is responsible for the processing of the acquired data.
+Additional parameters for this function can be supplied by the `args`
+parameter.
+
+## Examples
+The following type is stored in two bytes and is processed by the `int`
+function:
+
+    short:
+      read: 2
+      function: int
+
+This type is stored in a variable size array delimited by `0x00` and is
+processed by the `text` function:
+
+    comment:
+      read:
+        - 0x00
+      function: text
+
+And if we need to pass additional parameters to the `text` function, in this
+case split on the character `0x09`:
+
+    comment:
+      read:
+        - 0x00
+      function: text
+      args:
+        split:
+          - 0x09
+
+## Defaults
+To save some space and time writing our types definitions, the following
+default values are used:
+
+- `read` defaults to `1`.
+- `function` defaults to the name of the type.
+- The type itself defaults to `function`.
+
+So, for example, since a byte is of size 1, we can omit the `read` parameter:
+
+    byte:
+      function: int
+
+In the next example the function `int` will be used.
+
+    int:
+      size: 2
+
+And if we need an integer of size one which we want to name `int`, we do not
+need to define anything.
+
+### Overrides
+Default values can be overridden by providing ...
