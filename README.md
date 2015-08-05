@@ -17,6 +17,7 @@ in a parser.
 Since the bulk of the types stored in binary files are standard, dedicated
 parsers contain a lot of boiler plate code. {{MORE}}
 
+
 # Approach
 In order to parse a binary file, the library needs two pieces of information:
 it needs to know what the structure of the binary file is and it needs to know
@@ -34,11 +35,12 @@ To make a parser for this type of file, we need to create a file that contains
 the type definitions. We name this file `types.yml`.
 
     ---
-    int:
-      read: 2
-    text:
-      read:
-        - 0x00
+    types:
+      int:
+        read: 2
+      text:
+        read:
+          - 0x00
 
 Then we create a file that contains the definition of the structure. This file
 we name `structure.yml`.
@@ -75,20 +77,11 @@ The `BinParser` object contains the original data in `data` and the parsed data
 in `parsed`. Furthermore it contains the function `write` to write the content
 of `parsed` in YAML format to a file handle.
 
-# `types.yml`
-This file contains the types used in `structure.yml`. A type contains a subset
-of the following fields:
 
-- name
-- size
-- function
-- delimiter
-- data
-- arg
+# `structure.yml`: The structure of the binary file
+The file `structure.yml` contains the general structure of the binary file. 
 
-# `structure.yml`
-
-# Loops and conditionals
+## Loops and conditionals
     - name: fixed_size_list
       for: 10
       structure:
@@ -110,7 +103,8 @@ of the following fields:
         operands:
           - something_to_match
           - something_else_to_match
-        operator: equal
+        operator: eq
+
       structure:
         - name: bla
           value: something
@@ -124,7 +118,7 @@ of the following fields:
         operands:
           - something_to_match
           - something_else_to_match
-        operator: equal
+        operator: eq
       structure:
         - name: bla
           value: something
@@ -140,16 +134,31 @@ of the following fields:
         operands:
           - something_to_match
           - something_else_to_match
-        operator: equal
+        operator: eq
       structure:
         - name: bla
           value: something
 
-# Defaults
 
-# Defining new types
+# `types.yml`: Constants, defaults and types
+The file `types.yml` consists of three (optional) sections; `types`,
+`constants` and `defaults`. In general the types file will look something like
+this:
 
-# Types
+    ---
+    constants:
+      const: 10
+    defaults:
+      read: 2
+    types:
+      int:
+        read: 3
+
+## Constants
+A constant can be used as an alias in `structure.yml`. Using constants can make
+conditional statements and loops more readable.
+
+## Types
 A type consists of two subunits controlling two stages; the acquirement stage
 and the processing stage.
 
@@ -164,7 +173,7 @@ function that is responsible for the processing of the acquired data.
 Additional parameters for this function can be supplied by the `args`
 parameter.
 
-## Examples
+### Examples
 The following type is stored in two bytes and is processed by the `int`
 function:
 
@@ -194,6 +203,25 @@ case split on the character `0x09`:
           split:
             - 0x09
 
+### Defining new types
+Types can be added by subclassing the BinParseFunctions class. Suppose we need
+a function that inverts all bits in a byte. We first have to make a subclass
+that implements this function:
+
+    class Invert(BinParseFunctions):
+        def inv(self, data):
+            return data ^ 0xff
+
+By default, the new type will read one byte and process it with the `inv`
+function. In this case there is no need to define the type in `types.yml`.
+
+Now we can initiate the parser with this new class:
+
+    parser = bin_parser.BinParser(open('something.dat'), open('structure.yml'),
+        open('types.yml'), functions=Invert)
+
+See `examples/prince/` for a working example.
+
 ## Defaults
 To save some space and time writing our types definitions, the following
 default values are used:
@@ -201,6 +229,7 @@ default values are used:
 - `read` defaults to `1`.
 - `function` defaults to the name of the type.
 - The type itself defaults to `function`.
+- If no name is given, the type defaults to `raw`.
 
 So, for example, since a byte is of size 1, we can omit the `read` parameter:
 
@@ -217,4 +246,8 @@ And if we need an integer of size one which we want to name `int`, we do not
 need to define anything.
 
 ### Overrides
-Default values can be overridden by providing ...
+The following defaults can be overridden by adding an entry in the `defaults`
+section:
+
+- `read`
+- `type`
