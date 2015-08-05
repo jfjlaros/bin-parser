@@ -69,14 +69,12 @@ class BinParseFunctions(object):
         return data.split(''.join(map(chr, delimiter)))[0]
 
 
-    def text(self, data, delimiter=[], split=[]):
+    def text(self, data, split=[]):
         """
         """
-        field = data.split(''.join(map(chr, delimiter)))[0]
-
         if split:
-            return '\n'.join(field.split(''.join(map(chr, split))))
-        return field
+            return '\n'.join(data.split(''.join(map(chr, split))))
+        return data
 
 
     def date(self, data, annotation):

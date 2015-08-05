@@ -1,15 +1,14 @@
 ---
 text:
-  args:
-    delimiter:
-      - 0x0a
+  read:
+    - 0x0a
 field:
-  function: text
-  args:
-    delimiter:
-      - 0x09
+  read:
+    - 0x09
+  function:
+    name: text
 last_field:
-  function: text
-  args:
-    delimiter:
-      - 0x0a
+  read:
+    - 0x0a
+  function:
+    name: text
