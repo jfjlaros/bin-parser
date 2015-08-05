@@ -1,11 +1,14 @@
 ---
 trim:
-  args:
-    delimiter:
-      - 0x00
+  read: 25
+  function:
+    name: trim
+    args:
+      delimiter:
+        - 0x00
 int:
-  size: 2
+  read: 2
 min:
-  size: 2
+  read: 2
 sec:
-  size: 2
+  read: 2

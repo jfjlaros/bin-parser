@@ -1,8 +1,7 @@
 ---
 short:
-  size: 1
-  function: int
+  function:
+    name: int
 text:
-  args:
-    delimiter:
-      - 0x00
+  read:
+    - 0x00

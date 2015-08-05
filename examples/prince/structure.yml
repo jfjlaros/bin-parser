@@ -1,13 +1,11 @@
 ---
 - name: number_of_entries
   type: int
-  internal: true
 - name: entries
-  size: number_of_entries
+  for: number_of_entries
   structure:
     - name: name
       type: trim
-      size: 25
     - name: minutes
       type: min
     - name: seconds

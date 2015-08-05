@@ -1,7 +1,6 @@
 ---
 int:
-  size: 2
+  read: 2
 text:
-  args:
-    delimiter:
-      - 0x00
+  read:
+    - 0x00

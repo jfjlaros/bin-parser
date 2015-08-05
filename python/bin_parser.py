@@ -83,7 +83,9 @@ class BinParser(object):
             field = self.data[self._offset:self._offset + size]
             extracted = size
         else:
-            field = self._call('text', self.data[self._offset:], delimiter)
+            #field = self._call('text', self.data[self._offset:], delimiter)
+            field = self.data[self._offset:].split(
+                ''.join(map(chr, delimiter)))[0]
             extracted = len(field) + 1
 
         if self._debug > 1:
@@ -123,21 +125,6 @@ class BinParser(object):
             self._get_field(size)
 
         self._raw_byte_count += size
-
-
-    def _set(self, item, field, default):
-        """
-        Return `field[name]` if it exists, otherwise return `default`.
-
-        :arg dict item: A dictionary.
-        :arg str field: A field that may or may not be present in `item`.
-        :arg any default: Default value if `field[name]` does not exist.
-
-        :returns any: `field[name]` or `default`.
-        """
-        if field in item:
-            return item[field]
-        return default
 
 
     def _store(self, dest, name, value):
@@ -214,9 +201,9 @@ class BinParser(object):
         :arg dict dest: Destination dictionary.
         """
         for item in structure:
-            name = self._set(item, 'name', '')
+            name = item['name'] if 'name' in item else ''
 
-            dtype = self._set(item, 'type', self._types['default'])
+            dtype = item['type'] if 'type' in item else self._types['default']
             if 'structure' in item:
                 dtype = 'list'
 
@@ -227,17 +214,28 @@ class BinParser(object):
 
             # Primitive data types.
             if dtype != 'list':
-                size = self._set(self._types[dtype], 'size',
-                    self._set(item, 'size', 0))
-                if type(size) != int:
-                    size = self._internal[size]
+                # Determine whether to read a fixed or variable amount.
+                delim = []
+                size = 1
+                if 'read' in self._types[dtype]:
+                    if type(self._types[dtype]['read']) == list:
+                        size = 0
+                        delim = self._types[dtype]['read']
+                    elif type(self._types[dtype]['read']) == str:
+                        size = self._internal[self._types[dtype]['read']]
+                    else:
+                        size = self._types[dtype]['read']
 
                 if name:
-                    function = self._set(self._types[dtype], 'function', dtype)
+                    # Determine the function and its arguments.
+                    function = dtype
+                    kwargs = {}
+                    if 'function' in self._types[dtype]:
+                        function = self._types[dtype]['function']['name']
+                        if 'args' in self._types[dtype]['function']:
+                            kwargs = self._types[dtype]['function']['args']
 
-                    kwargs = self._set(self._types[dtype], 'args', {})
-                    delim = self._set(kwargs, 'delimiter', [])
-
+                    # Read and process the data.
                     result = self._call(function, self._get_field(size, delim),
                         **kwargs)
                     if type(result) == dict:
