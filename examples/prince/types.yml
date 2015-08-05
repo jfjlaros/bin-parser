@@ -1,14 +1,14 @@
 ---
-trim:
-  read: 25
-  function:
-    name: trim
-    args:
-      delimiter:
-        - 0x00
-int:
-  read: 2
-min:
-  read: 2
-sec:
-  read: 2
+types:
+  trim:
+    read: 25
+    function:
+      args:
+        delimiter:
+          - 0x00
+  int:
+    read: 2
+  min:
+    read: 2
+  sec:
+    read: 2

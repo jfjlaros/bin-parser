@@ -1,7 +1,8 @@
 ---
-short:
-  function:
-    name: int
-text:
-  read:
-    - 0x00
+types:
+  short:
+    function:
+      name: int
+  text:
+    read:
+      - 0x00

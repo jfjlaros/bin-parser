@@ -35,9 +35,9 @@ the type definitions. We name this file `types.yml`.
 
     ---
     int:
-      size: 2
+      read: 2
     text:
-      delimiter:
+      read:
         - 0x00
 
 Then we create a file that contains the definition of the structure. This file
@@ -170,7 +170,8 @@ function:
 
     short:
       read: 2
-      function: int
+      function:
+        name: int
 
 This type is stored in a variable size array delimited by `0x00` and is
 processed by the `text` function:
@@ -178,7 +179,8 @@ processed by the `text` function:
     comment:
       read:
         - 0x00
-      function: text
+      function:
+        name: text
 
 And if we need to pass additional parameters to the `text` function, in this
 case split on the character `0x09`:
@@ -186,10 +188,11 @@ case split on the character `0x09`:
     comment:
       read:
         - 0x00
-      function: text
-      args:
-        split:
-          - 0x09
+      function:
+        name: text
+        args:
+          split:
+            - 0x09
 
 ## Defaults
 To save some space and time writing our types definitions, the following
@@ -202,12 +205,13 @@ default values are used:
 So, for example, since a byte is of size 1, we can omit the `read` parameter:
 
     byte:
-      function: int
+      function:
+        name: int
 
 In the next example the function `int` will be used.
 
     int:
-      size: 2
+      read: 2
 
 And if we need an integer of size one which we want to name `int`, we do not
 need to define anything.

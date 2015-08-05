@@ -42,15 +42,18 @@ class BinParser(object):
 
         self._functions = functions()
 
-        self._types = yaml.load(types_handle)
+        types = yaml.load(types_handle)
+        self._types = types['types'] if 'types' in types else {}
+        self._constants = types['constants'] if 'constants' in types else {}
+        self._defaults = types['defaults'] if 'defaults' in types else {}
 
         # Add standard data types.
         self._types['raw'] = {}
         self._types['list'] = {}
         
         # Set default data type.
-        if 'default' not in self._types:
-            self._types['default'] = 'text'
+        if 'type' not in self._defaults:
+            self._defaults['type'] = 'text'
 
         self._offset = 0
         self._raw_byte_count = 0
@@ -83,7 +86,6 @@ class BinParser(object):
             field = self.data[self._offset:self._offset + size]
             extracted = size
         else:
-            #field = self._call('text', self.data[self._offset:], delimiter)
             field = self.data[self._offset:].split(
                 ''.join(map(chr, delimiter)))[0]
             extracted = len(field) + 1
@@ -153,8 +155,8 @@ class BinParser(object):
         """
         if name in self._internal:
             return self._internal[name]
-        if 'constants' in self._types and name in self._types['constants']:
-            return self._types['constants'][name]
+        if name in self._constants:
+            return self._constants[name]
         return name
 
 
@@ -202,28 +204,28 @@ class BinParser(object):
         :arg dict dest: Destination dictionary.
         """
         for item in structure:
-            name = item['name'] if 'name' in item else ''
-
-            dtype = item['type'] if 'type' in item else self._types['default']
-            if 'structure' in item:
-                dtype = 'list'
-
             # Conditional statement.
             if 'if' in item:
                 if not self._evaluate(item['if']):
                     continue
 
+            name = item['name'] if 'name' in item else ''
+            dtype = item['type'] if 'type' in item else self._defaults['type']
+            if 'structure' in item:
+                dtype = 'list'
+
             # Primitive data types.
             if dtype != 'list':
                 # Determine whether to read a fixed or variable amount.
                 delim = []
-                size = 1
-                if 'read' in self._types[dtype]:
+                size = (self._defaults['read'] if 'read' in self._defaults
+                    else 1)
+                if 'read' in item:
+                    size = item['read']
+                elif 'read' in self._types[dtype]:
                     if type(self._types[dtype]['read']) == list:
                         size = 0
                         delim = self._types[dtype]['read']
-                    elif type(self._types[dtype]['read']) == str:
-                        size = self._internal[self._types[dtype]['read']]
                     else:
                         size = self._types[dtype]['read']
 
@@ -232,7 +234,8 @@ class BinParser(object):
                     function = dtype
                     kwargs = {}
                     if 'function' in self._types[dtype]:
-                        function = self._types[dtype]['function']['name']
+                        if 'name' in self._types[dtype]['function']:
+                            function = self._types[dtype]['function']['name']
                         if 'args' in self._types[dtype]['function']:
                             kwargs = self._types[dtype]['function']['args']
 

@@ -1,6 +1,7 @@
 ---
-int:
-  read: 2
-text:
-  read:
-    - 0x00
+types:
+  int:
+    read: 2
+  text:
+    read:
+      - 0x00

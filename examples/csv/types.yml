@@ -1,14 +1,15 @@
 ---
-text:
-  read:
-    - 0x0a
-field:
-  read:
-    - 0x09
-  function:
-    name: text
-last_field:
-  read:
-    - 0x0a
-  function:
-    name: text
+types:
+  text:
+    read:
+      - 0x0a
+  field:
+    read:
+      - 0x09
+    function:
+      name: text
+  last_field:
+    read:
+      - 0x0a
+    function:
+      name: text
