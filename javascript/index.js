@@ -267,7 +267,7 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
             if (!evaluate(item.while)) {
               break;
             }
-            parse(item.structure.slice(1, -1), dest[name].slice(-1)[0]);
+            parse(item.structure.slice(1), dest[name].slice(-1)[0]);
             dest[name].push({});
             parse([delim], dest[name].slice(-1)[0]);
           }
