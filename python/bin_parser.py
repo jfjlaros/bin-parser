@@ -42,10 +42,10 @@ class BinParser(object):
 
         self._functions = functions()
 
-        types = yaml.load(types_handle)
-        self._types = types['types'] if 'types' in types else {}
-        self._constants = types['constants'] if 'constants' in types else {}
-        self._defaults = types['defaults'] if 'defaults' in types else {}
+        tdata = yaml.load(types_handle)
+        self._types = tdata['types'] if 'types' in tdata else {}
+        self._constants = tdata['constants'] if 'constants' in tdata else {}
+        self._defaults = tdata['defaults'] if 'defaults' in tdata else {}
 
         # Add standard data types.
         self._types['raw'] = {}
@@ -231,20 +231,20 @@ class BinParser(object):
 
                 if name:
                     # Determine the function and its arguments.
-                    function = dtype
+                    func = dtype
                     kwargs = {}
                     if 'function' in self._types[dtype]:
                         if 'name' in self._types[dtype]['function']:
-                            function = self._types[dtype]['function']['name']
+                            func = self._types[dtype]['function']['name']
                         if 'args' in self._types[dtype]['function']:
                             kwargs = self._types[dtype]['function']['args']
 
                     # Read and process the data.
-                    result = self._call(function, self._get_field(size, delim),
+                    result = self._call(func, self._get_field(size, delim),
                         **kwargs)
                     if type(result) == dict:
-                        for x in result:
-                            self._store(dest, x, result[x])
+                        for member in result:
+                            self._store(dest, member, result[member])
                     else:
                         self._store(dest, name, result)
                 else:
@@ -272,15 +272,15 @@ class BinParser(object):
                         if not self._evaluate(item['do_while']):
                             break
                 elif 'while' in item:
-                    delimiter = item['structure'][0]
+                    delim = item['structure'][0]
                     dest[name] = [{}]
-                    self._parse([delimiter], dest[name][0])
+                    self._parse([delim], dest[name][0])
                     while True:
                         if not self._evaluate(item['while']):
                             break
                         self._parse(item['structure'][1:], dest[name][-1])
                         dest[name].append({})
-                        self._parse([delimiter], dest[name][-1])
+                        self._parse([delim], dest[name][-1])
                     dest[item['while']['term']] = dest[name].pop(
                         -1).values()[0]
                 else:
@@ -301,6 +301,7 @@ class BinParser(object):
 
         if self._debug:
             output_handle.write('--- YAML DUMP ---\n\n')
+        output_handle.write('---\n')
         yaml.dump(self.parsed, output_handle, width=76,
             default_flow_style=False)
 

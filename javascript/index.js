@@ -39,8 +39,11 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   var data = fileContent,
       parsed = {},
       internal = {},
-      functions = new Functions.BinParseFunctions(),
-      types = yaml.load(typesHandle),
+      functions = functions || new Functions.BinParseFunctions(),
+      tdata = yaml.load(typesHandle),
+      types = tdata.types || {},
+      constants = tdata.constants || {},
+      defaults = tdata.defaults || {},
       offset = 0,
       structure = yaml.load(structureHandle);
 
@@ -64,30 +67,14 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
       extracted = size;
     }
     else {
-      field = functions.text(data.slice(offset, -1), {'delimiter': delimiter});
+      field = data.slice(offset, -1).split(String.fromCharCode.apply(
+        this, delimiter))[0];
       extracted = field.length + 1;
     }
 
     offset += extracted;
     return field;
   }
-
-  /*
-  Return `field[name]` if it exists, otherwise return `default`.
-
-  :arg dict item: A dictionary.
-  :arg str field: A field that may or may not be present in `item`.
-  :arg any default: Default value if `field[name]` does not exist.
-
-  :returns any: `field[name]` or `default`.
-  */
-  function set(item, field, deft) {
-    if (field in item) {
-      return item[field];
-    }
-    return deft;
-  }
-
 
   /*
   Store a value both in the destination dictionary, as well as in the
@@ -98,7 +85,7 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   :arg any value: Value to store.
   */
   function store(dest, name, value) {
-    //console.log(name + ': ' + value);
+    //console.log(name + ': ' + value + '\n');
     dest[name] = value;
     internal[name] = value;
   }
@@ -117,8 +104,8 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
     if (internal[name] !== undefined) {
       return internal[name];
     }
-    if (types.constants && types.constants[name]) {
-      return types.constants[name];
+    if (constants[name] !== undefined) {
+      return constants[name];
     }
     return name;
   }
@@ -173,8 +160,9 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
         dtype,
         size,
         func,
+        args,
         length,
-        delimiter,
+        delim,
         kwargs,
         result,
         index,
@@ -183,12 +171,6 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
 
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
-      name = set(item, 'name', '');
-
-      dtype = set(item, 'type', types.default);
-      if ('structure' in item) {
-        dtype = 'list';
-      }
 
       // Conditional statement.
       if (item.if) {
@@ -197,20 +179,45 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
         }
       }
 
+      name = item.name || '';
+      dtype = item.type || types.default;
+      if ('structure' in item) {
+        dtype = 'list';
+      }
+
       // Primitive data types.
       if (dtype !== 'list') {
-        size = set(types[dtype], 'size', set(item, 'size', 0));
-        if (size.constructor !== Number) {
-          size = internal[size];
+        // Determine whether to read a fixed or variable amount.
+        delim = [];
+        size = defaults.read || 1;
+        if (item.read) {
+          size = item.read;
+        }
+        else if (types[dtype].read) {
+          if (types[dtype].read.constructor === Array) {
+            size = 0;
+            delim = types[dtype].read;
+          }
+          else {
+            size = types[dtype].read;
+          }
         }
 
         if (name) {
-          func = set(types[dtype], 'function', dtype);
-          
-          kwargs = set(types[dtype], 'args', {});
-          delimiter = set(kwargs, 'delimiter', []);
-          
-          result = functions[func](getField(size, delimiter), kwargs);
+          // Determine the function and its arguments.
+          func = dtype;
+          kwargs = {};
+          if (types[dtype].function) {
+            if (types[dtype].function.name) {
+              func = types[dtype].function.name;
+            }
+            if (types[dtype].function.args) {
+              kwargs = types[dtype].function.args;
+            }
+          }
+
+          // Read and process the data.
+          result = functions[func](getField(size, delim), kwargs);
           if (result.constructor === Object) {
             for (member in result) {
               store(dest, member, result[member]);
@@ -253,16 +260,16 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
           }
         }
         else if (item.while) {
-          delimiter = item.structure[0];
+          delim = item.structure[0];
           dest[name] = [{}];
-          parse([delimiter], dest[name][0]);
+          parse([delim], dest[name][0]);
           while (true) {
             if (!evaluate(item.while)) {
               break;
             }
             parse(item.structure.slice(1, -1), dest[name].slice(-1)[0]);
             dest[name].push({});
-            parse([delimiter], dest[name].slice(-1)[0]);
+            parse([delim], dest[name].slice(-1)[0]);
           }
           dest[item.while.term] = getOneValue(dest[name].pop(-1));
         }
@@ -277,10 +284,8 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   Write the parsed binary file to the console.
   */
   this.dump = function() {
-    console.log('--- YAML DUMP ---');
+    console.log('---');
     console.log(yaml.dump(parsed));
-    console.log('\n--- DEBUG INFO ---\n');
-    console.log(yaml.dump(internal));
   };
 
   /*

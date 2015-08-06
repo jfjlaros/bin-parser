@@ -71,11 +71,9 @@ function convertToHex(data) {
   return result;
 }
 
-function BinParseFunctions(typesHandle) {
-  var types = yaml.load(typesHandle);
-
+function BinParseFunctions() {
   this.raw = function(data) {
-    return convertToHex(data);
+    return convertToHex(data).match(/.{1,2}/g).join(' ');
   };
 
   this.bit = function(data) {
@@ -115,19 +113,19 @@ function BinParseFunctions(typesHandle) {
     return '0x' + pad(hex(this.int(data)), 6);
   };
 
-  this.trim = function(data, delimiter) {
+  this.trim = function(data, kwargs) {
+    var delimiter = kwargs.delimiter;
+
     return data.split(String.fromCharCode.apply(this, delimiter))[0];
   };
 
   this.text = function(data, kwargs) {
-    var delimiter = kwargs.delimiter || [],
-        split = kwargs.split,
-        field = data.split(String.fromCharCode.apply(this, delimiter))[0];
+    var split = kwargs.split;
 
     if (split) {
-      return field.split(String.fromCharCode.apply(this, split)).join('\n');
+      return data.split(String.fromCharCode.apply(this, split)).join('\n');
     }
-    return field;
+    return data;
   };
 
   /*
