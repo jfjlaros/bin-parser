@@ -57,16 +57,16 @@ function numerical(a, b) {
 /*
 General binary file parser.
 */
-function BinParser(fileContent, structureHandle, typesHandle, functions) {
+function BinParser(fileContent, structureContent, typesContent, functions) {
   var data = fileContent,
       internal = {},
       functions = functions || new Functions.BinParseFunctions(),
-      tdata = yaml.load(typesHandle),
+      tdata = typesContent,
       types = tdata.types || {},
       constants = tdata.constants || {},
       defaults = tdata.defaults || {},
       offset = 0,
-      structure = yaml.load(structureHandle);
+      structure = structureContent;
 
   /*
   Extract a field from {data} using either a fixed size, or a delimiter. After

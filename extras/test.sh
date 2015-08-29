@@ -9,7 +9,7 @@ test_cli() {
   nodejs javascript/cli.js $1 $2 $3 > $js
 
   echo $1
-  python extras/compare_yaml.py $py $js
+  python -m extras.compare_yaml $py $js
 
   rm $py $js
 }
