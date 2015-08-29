@@ -1,13 +1,6 @@
-"""
-General binary file parser.
-
-
-(C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
-"""
-
-
 import argparse
 
+from . import usage, version
 from .bin_parser import BinParser
 
 
@@ -32,7 +25,6 @@ def main():
     """
     Command line argument parsing.
     """
-    usage = __doc__.split('\n\n\n')
     parser = argparse.ArgumentParser(description=usage[0], epilog=usage[1],
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
@@ -47,6 +39,7 @@ def main():
     parser.add_argument('-d', dest='debug', type=int, help='debugging level')
     parser.add_argument('-e', dest='experimental', action='store_true',
         help='enable experimental features')
+    parser.add_argument('-v', action='version', version=version(parser.prog))
 
     try:
         arguments = parser.parse_args()

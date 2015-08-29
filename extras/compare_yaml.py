@@ -1,16 +1,8 @@
-#!/usr/bin/env python
-
-"""
-Compare two YAML files.
-
-
-(C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
-"""
-
-
 import argparse
 
 import yaml
+
+from . import usage, version
 
 
 def dict_compare(d1, d2):
@@ -36,12 +28,12 @@ def yaml_compare(input_handle_1, input_handle_2):
 
 
 def main():
-    usage = __doc__.split('\n\n\n')
     parser = argparse.ArgumentParser(description=usage[0], epilog=usage[1],
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('input_handle', metavar='INPUT',
         type=argparse.FileType('r'), nargs=2, help='input file in YAML format')
+    parser.add_argument('-v', action='version', version=version(parser.prog))
 
     try:
         arguments = parser.parse_args()

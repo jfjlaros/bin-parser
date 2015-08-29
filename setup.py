@@ -42,10 +42,16 @@ setup(
     url=distmeta['__homepage__'],
     license='MIT License',
     platforms=['any'],
-    packages=['bin_parser'],
+    packages=['bin_parser', 'bin_parser_extras'],
     install_requires=requires,
-    package_dir={'bin_parser': 'python'},
+    package_dir={
+        'bin_parser': 'python',
+        'bin_parser_extras': 'extras'
+    },
     entry_points={
-        'console_scripts': ['bin_parser = bin_parser.cli:main']
+        'console_scripts': [
+            'bin_parser = bin_parser.cli:main',
+            'compare_yaml = bin_parser_extras.compare_yaml:main'
+        ]
     }
 )
