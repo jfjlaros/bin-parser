@@ -1,11 +1,15 @@
 {
   "name": "bin-parser",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "General binary file parser",
   "homepage": "https://github.com/jfjlaros/bin-parser",
-  "files": [ "javascript" ],
+  "files": [
+    "javascript"
+  ],
   "main": "javascript/index.js",
-  "bin": "javascript/cli.js",
+  "bin": {
+    "bin-parser": "javascript/cli.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,13 +22,17 @@
     "binary",
     "parser"
   ],
-  "author": {
-    "name": "Jeroen F.J. Laros",
-    "email": "J.F.J.Laros@lumc.nl"
-  },
+  "author": "Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>",
   "license": "MIT",
   "dependencies": {
-    "js-yaml": "^3.3.1",
-    "require-file": "^1.0.2"
-  }
+    "js-yaml": "^3.3.1"
+  },
+  "bugs": {
+    "url": "https://github.com/jfjlaros/bin-parser/issues"
+  },
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "devDependencies": {}
 }

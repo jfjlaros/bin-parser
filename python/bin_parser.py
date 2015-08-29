@@ -43,17 +43,17 @@ class BinParser(object):
         self._functions = functions()
 
         tdata = yaml.load(types_handle)
-        self._types = tdata['types'] if 'types' in tdata else {}
-        self._constants = tdata['constants'] if 'constants' in tdata else {}
-        self._defaults = tdata['defaults'] if 'defaults' in tdata else {}
+        self.types = tdata['types'] if 'types' in tdata else {}
+        self.constants = tdata['constants'] if 'constants' in tdata else {}
+        self.defaults = tdata['defaults'] if 'defaults' in tdata else {}
 
         # Add standard data types.
-        self._types['raw'] = {}
-        self._types['list'] = {}
+        self.types['raw'] = {}
+        self.types['list'] = {}
         
         # Set default data type.
-        if 'type' not in self._defaults:
-            self._defaults['type'] = 'text'
+        if 'type' not in self.defaults:
+            self.defaults['type'] = 'text'
 
         self._offset = 0
         self._raw_byte_count = 0
@@ -155,8 +155,8 @@ class BinParser(object):
         """
         if name in self._internal:
             return self._internal[name]
-        if name in self._constants:
-            return self._constants[name]
+        if name in self.constants:
+            return self.constants[name]
         return name
 
 
@@ -210,7 +210,7 @@ class BinParser(object):
                     continue
 
             name = item['name'] if 'name' in item else ''
-            dtype = item['type'] if 'type' in item else self._defaults['type']
+            dtype = item['type'] if 'type' in item else self.defaults['type']
             if 'structure' in item:
                 dtype = 'list'
 
@@ -218,26 +218,26 @@ class BinParser(object):
             if dtype != 'list':
                 # Determine whether to read a fixed or variable amount.
                 delim = []
-                size = (self._defaults['read'] if 'read' in self._defaults
+                size = (self.defaults['read'] if 'read' in self.defaults
                     else 1)
                 if 'read' in item:
                     size = item['read']
-                elif 'read' in self._types[dtype]:
-                    if type(self._types[dtype]['read']) == list:
+                elif 'read' in self.types[dtype]:
+                    if type(self.types[dtype]['read']) == list:
                         size = 0
-                        delim = self._types[dtype]['read']
+                        delim = self.types[dtype]['read']
                     else:
-                        size = self._types[dtype]['read']
+                        size = self.types[dtype]['read']
 
                 if name:
                     # Determine the function and its arguments.
                     func = dtype
                     kwargs = {}
-                    if 'function' in self._types[dtype]:
-                        if 'name' in self._types[dtype]['function']:
-                            func = self._types[dtype]['function']['name']
-                        if 'args' in self._types[dtype]['function']:
-                            kwargs = self._types[dtype]['function']['args']
+                    if 'function' in self.types[dtype]:
+                        if 'name' in self.types[dtype]['function']:
+                            func = self.types[dtype]['function']['name']
+                        if 'args' in self.types[dtype]['function']:
+                            kwargs = self.types[dtype]['function']['args']
 
                     # Read and process the data.
                     result = self._call(func, self._get_field(size, delim),

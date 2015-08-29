@@ -8,7 +8,8 @@ var fs = require('fs'),
 var BinParser = require('./index');
 
 var main = function(filename, structure, types) {
-  var parser = new BinParser(fs.readFileSync(filename).toString('binary'),
+  var parser = new BinParser.BinParser(
+    fs.readFileSync(filename).toString('binary'),
     fs.readFileSync(structure).toString('binary'),
     fs.readFileSync(types).toString('binary'));
 

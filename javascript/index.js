@@ -10,19 +10,22 @@ var yaml = require('js-yaml');
 
 var Functions = require('./functions');
 
-function getOneValue(dictionary) {
-  var item;
+/*
+Get the first value in an object.
 
-  for (item in dictionary) {
-    return dictionary[item];
-  }
+:arg object object: An object.
+
+:returns object: The first value encountered in an object.
+*/
+function getOneValue(object) {
+  return object[Object.keys(object)[0]];
 }
 
 /*
-Update a dictionary with the properties of another dictionary.
+Update an object with the properties of an other object.
 
-:arg dict target: Target dictionary.
-:arg dict source: Source dictionary.
+:arg object target: Target object.
+:arg object source: Source object.
 */
 function update(target, source) {
   var item;
@@ -33,11 +36,29 @@ function update(target, source) {
 }
 
 /*
+Pop an item from an object.
+
+:arg object object: An object.
+:arg str key: Name of an item.
+
+:returns object: The desired item.
+*/
+function pop(object, key) {
+  var result = object[key];
+
+  delete object[key];
+  return result;
+}
+
+function numerical(a, b) {
+  return a - b;
+}
+
+/*
 General binary file parser.
 */
 function BinParser(fileContent, structureHandle, typesHandle, functions) {
   var data = fileContent,
-      parsed = {},
       internal = {},
       functions = functions || new Functions.BinParseFunctions(),
       tdata = yaml.load(typesHandle),
@@ -77,11 +98,11 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   }
 
   /*
-  Store a value both in the destination dictionary, as well as in the
+  Store a value both in the destination object, as well as in the
   internal cache.
 
-  :arg dict dest: Destination dictionary.
-  :arg str name: Field name used in the destination dictionary.
+  :arg object dest: Destination object.
+  :arg str name: Field name used in the destination object.
   :arg any value: Value to store.
   */
   function store(dest, name, value) {
@@ -113,7 +134,7 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   /*
   Evaluate an expression.
 
-  An expression is represented by a dictionary with the following
+  An expression is represented by an object with the following
   structure:
 
       expression = {
@@ -121,7 +142,7 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
           'operands': []
       }
 
-  :arg dict expression: An expression.
+  :arg object expression: An expression.
   :returns any: Result of the evaluation.
   */
   function evaluate(expression) {
@@ -136,9 +157,9 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   /*
   Convenience function for nested structures.
 
-  :arg dict item: A dictionary.
-  :arg dict dest: Destination dictionary.
-  :arg str name: Field name used in the destination dictionary.
+  :arg object item: An object.
+  :arg object dest: Destination object.
+  :arg str name: Field name used in the destination object.
   */
   function parseStructure(item, dest, name) {
     var structureDict = {};
@@ -151,8 +172,8 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   /*
   Parse a binary file.
 
-  :arg dict structure: Structure of the binary file.
-  :arg dict dest: Destination dictionary.
+  :arg object structure: Structure of the binary file.
+  :arg object dest: Destination object.
   */
   function parse(structure, dest) {
     var item,
@@ -285,15 +306,16 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   */
   this.dump = function() {
     console.log('---');
-    console.log(yaml.dump(parsed));
+    console.log(yaml.dump(this.parsed));
   };
 
   /*
   Get parsed object.
-  */
   this.getParsed = function() {
     return parsed;
   };
+  */
+  this.parsed = {};
 
   /*
   Initialisation.
@@ -310,13 +332,21 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
   }
 
   try {
-    parse(structure, parsed);
+    parse(structure, this.parsed);
   }
   catch(err) {
     if (err !== 'StopIteration') {
       throw(err);
     }
   }
+
+  this.types = types;
+  this.constants = constants;
+  this.defaults = defaults;
 }
 
-module.exports = BinParser;
+module.exports.BinParser = BinParser;
+module.exports.update = update;
+module.exports.pop = pop;
+module.exports.numerical = numerical;
+module.exports.getOneValue = getOneValue;

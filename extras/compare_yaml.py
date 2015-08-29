@@ -19,7 +19,7 @@ def dict_compare(d1, d2):
             if key in d1 and key in d2:
                 dict_compare(d1[key], d2[key])
             else:
-                print 'missing key'
+                print 'missing key: {}'.format(key)
     elif type(d1) == list:
         if len(d1) != len(d2):
             print 'lists of different length'

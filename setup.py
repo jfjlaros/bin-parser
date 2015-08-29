@@ -26,11 +26,11 @@ for line in open(os.path.join('python', '__init__.py')):
         value = value.strip('\'"')
     distmeta[field] = value
 
-try:
-    with open('README.md') as readme:
-        long_description = readme.read()
-except IOError:
-    long_description = 'See ' + distmeta['__homepage__']
+#try:
+#    with open('README.md') as readme:
+#        long_description = readme.read()
+#except IOError:
+long_description = 'See ' + distmeta['__homepage__']
 
 setup(
     name='bin-parser',
