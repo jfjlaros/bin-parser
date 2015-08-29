@@ -181,7 +181,6 @@ function BinParser(fileContent, structureHandle, typesHandle, functions) {
         dtype,
         size,
         func,
-        args,
         length,
         delim,
         kwargs,

@@ -6,8 +6,6 @@ Field unpacking functions for the general binary parser.
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 */
 
-var yaml = require('js-yaml');
-
 module.exports.operators = {
   'not': function(a) { return !a; },
   'and': function(a, b) { return a && b; },
