@@ -12,7 +12,7 @@ from .bin_parser import BinParser
 from .functions  import BinParseFunctions
 
 
-__version_info__ = ('0', '0', '4')
+__version_info__ = ('0', '0', '5')
 __date__ = '7 Aug 2015'
 
 
