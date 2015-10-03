@@ -104,44 +104,6 @@ class BinParser(object):
         return field
 
 
-    def _parse_raw(self, destination, size, key='raw'):
-        """
-        Stow unknown data away in a list.
-
-        This function is needed to skip data of which the function is unknown.
-        If `self._experimental` is set to `True`,  the data is placed in an
-        appropriate place. This is mainly for debugging purposes.
-
-        Ideally, this function will become obsolete (when we have finished the
-        reverse engineering completely).
-
-        :arg dict destination: Destination dictionary.
-        :arg int size: Bytes to be stowed away (see `_get_field`).
-        :arg str key: Name of the list to store the data in.
-        """
-        if self._experimental:
-            if not key in destination:
-                destination[key] = []
-            destination[key].append(self._call('raw', self._get_field(size)))
-        else:
-            self._get_field(size)
-
-        self._raw_byte_count += size
-
-
-    def _store(self, dest, name, value):
-        """
-        Store a value both in the destination dictionary, as well as in the
-        internal cache.
-
-        :arg dict dest: Destination dictionary.
-        :arg str name: Field name used in the destination dictionary.
-        :arg any value: Value to store.
-        """
-        dest[name] = value
-        self._internal[name] = value
-
-
     def _get_value(self, name):
         """
         Resolve the value of a variable.
@@ -181,20 +143,125 @@ class BinParser(object):
             return operands[0]
         return operators[expression['operator']](*operands)
 
-
-    def _parse_structure(self, item, dest, name):
+    def _parse_raw(self, destination, size, key='raw'):
         """
-        Convenience function for nested structures.
+        Stow unknown data away in a list.
+
+        This function is needed to skip data of which the function is unknown.
+        If `self._experimental` is set to `True`,  the data is placed in an
+        appropriate place. This is mainly for debugging purposes.
+
+        Ideally, this function will become obsolete (when we have finished the
+        reverse engineering completely).
+
+        :arg dict destination: Destination dictionary.
+        :arg int size: Bytes to be stowed away (see `_get_field`).
+        :arg str key: Name of the list to store the data in.
+        """
+        if self._experimental:
+            if not key in destination:
+                destination[key] = []
+            destination[key].append(self._call('raw', self._get_field(size)))
+        else:
+            self._get_field(size)
+
+        self._raw_byte_count += size
+
+    def _parse_primitive(self, item, dtype, dest, name):
+        """
+        Parse a primitive data type.
+
+        :arg dict item: A dictionary.
+        :arg str dtype: Data type.
+        :arg dict dest: Destination dictionary.
+        :arg str name: Field name used in the destination dictionary.
+        """
+        # Determine whether to read a fixed or variable amount.
+        delim = []
+        size = (self.defaults['read'] if 'read' in self.defaults else 1)
+        if 'read' in item:
+            size = item['read']
+        elif 'read' in self.types[dtype]:
+            if type(self.types[dtype]['read']) == list:
+                size = 0
+                delim = self.types[dtype]['read']
+            else:
+                size = self.types[dtype]['read']
+
+        if name:
+            # Determine the function and its arguments.
+            func = dtype
+            kwargs = {}
+            if 'function' in self.types[dtype]:
+                if 'name' in self.types[dtype]['function']:
+                    func = self.types[dtype]['function']['name']
+                if 'args' in self.types[dtype]['function']:
+                    kwargs = self.types[dtype]['function']['args']
+
+            # Read and process the data.
+            result = self._call(func, self._get_field(size, delim), **kwargs)
+            if type(result) == dict:
+                for member in result:
+                    dest[member] = result[member]
+                    self._internal[member] = result[member]
+            else:
+                dest[name] = result
+                self._internal[name] = result
+        else:
+            self._parse_raw(dest, size)
+
+    def _parse_for(self, item, dest, name):
+        """
+        Parse a for loop.
 
         :arg dict item: A dictionary.
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
-        structure_dict = {}
+        length = item['for']
+        if type(length) != int:
+            length = self._internal[length]
 
-        self._parse(item['structure'], structure_dict)
-        dest[name].append(structure_dict)
+        for _ in range(length):
+            structure_dict = {}
+            self._parse(item['structure'], structure_dict)
+            dest[name].append(structure_dict)
 
+    def _parse_do_while(self, item, dest, name):
+        """
+        Parse a do-while loop.
+
+        :arg dict item: A dictionary.
+        :arg dict dest: Destination dictionary.
+        :arg str name: Field name used in the destination dictionary.
+        """
+        while True:
+            structure_dict = {}
+            self._parse(item['structure'], structure_dict)
+            dest[name].append(structure_dict)
+            if not self._evaluate(item['do_while']):
+                break
+
+    def _parse_while(self, item, dest, name):
+        """
+        Parse a while loop.
+
+        :arg dict item: A dictionary.
+        :arg dict dest: Destination dictionary.
+        :arg str name: Field name used in the destination dictionary.
+        """
+        delim = item['structure'][0]
+        dest[name] = [{}]
+
+        self._parse([delim], dest[name][0])
+        while True:
+            if not self._evaluate(item['while']):
+                break
+            self._parse(item['structure'][1:], dest[name][-1])
+            dest[name].append({})
+            self._parse([delim], dest[name][-1])
+
+        dest[item['while']['term']] = dest[name].pop(-1).values()[0]
 
     def _parse(self, structure, dest):
         """
@@ -204,53 +271,19 @@ class BinParser(object):
         :arg dict dest: Destination dictionary.
         """
         for item in structure:
-            # Conditional statement.
             if 'if' in item:
+                # Conditional statement.
                 if not self._evaluate(item['if']):
                     continue
 
             name = item['name'] if 'name' in item else ''
             dtype = item['type'] if 'type' in item else self.defaults['type']
-            if 'structure' in item:
-                dtype = 'list'
 
-            # Primitive data types.
-            if dtype != 'list':
-                # Determine whether to read a fixed or variable amount.
-                delim = []
-                size = (self.defaults['read'] if 'read' in self.defaults
-                    else 1)
-                if 'read' in item:
-                    size = item['read']
-                elif 'read' in self.types[dtype]:
-                    if type(self.types[dtype]['read']) == list:
-                        size = 0
-                        delim = self.types[dtype]['read']
-                    else:
-                        size = self.types[dtype]['read']
-
-                if name:
-                    # Determine the function and its arguments.
-                    func = dtype
-                    kwargs = {}
-                    if 'function' in self.types[dtype]:
-                        if 'name' in self.types[dtype]['function']:
-                            func = self.types[dtype]['function']['name']
-                        if 'args' in self.types[dtype]['function']:
-                            kwargs = self.types[dtype]['function']['args']
-
-                    # Read and process the data.
-                    result = self._call(func, self._get_field(size, delim),
-                        **kwargs)
-                    if type(result) == dict:
-                        for member in result:
-                            self._store(dest, member, result[member])
-                    else:
-                        self._store(dest, name, result)
-                else:
-                    self._parse_raw(dest, size)
-            # Nested structures.
+            if 'structure' not in item:
+                # Primitive data types.
+                self._parse_primitive(item, dtype, dest, name)
             else:
+                # Nested structures.
                 if self._debug > 2:
                     self._log.write('-- {}\n'.format(name))
 
@@ -261,34 +294,16 @@ class BinParser(object):
                         dest[name] = {}
 
                 if 'for' in item:
-                    length = item['for']
-                    if type(length) != int:
-                        length = self._internal[length]
-                    for _ in range(length):
-                        self._parse_structure(item, dest, name)
+                    self._parse_for(item, dest, name)
                 elif 'do_while' in item:
-                    while True:
-                        self._parse_structure(item, dest, name)
-                        if not self._evaluate(item['do_while']):
-                            break
+                    self._parse_do_while(item, dest, name)
                 elif 'while' in item:
-                    delim = item['structure'][0]
-                    dest[name] = [{}]
-                    self._parse([delim], dest[name][0])
-                    while True:
-                        if not self._evaluate(item['while']):
-                            break
-                        self._parse(item['structure'][1:], dest[name][-1])
-                        dest[name].append({})
-                        self._parse([delim], dest[name][-1])
-                    dest[item['while']['term']] = dest[name].pop(
-                        -1).values()[0]
+                    self._parse_while(item, dest, name)
                 else:
                     self._parse(item['structure'], dest[name])
 
             if self._debug > 2:
                 self._log.write(' --> {}\n'.format(name))
-
 
     def write(self, output_handle):
         """
