@@ -98,20 +98,6 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
   }
 
   /*
-  Store a value both in the destination object, as well as in the
-  internal cache.
-
-  :arg object dest: Destination object.
-  :arg str name: Field name used in the destination object.
-  :arg any value: Value to store.
-  */
-  function store(dest, name, value) {
-    //console.log(name + ': ' + value + '\n');
-    dest[name] = value;
-    internal[name] = value;
-  }
-
-  /*
   Resolve the value of a variable.
  
   First look in the cache to see if `name` is defined, then check the set
@@ -155,19 +141,129 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
   }
 
   /*
-  Convenience function for nested structures.
-
-  :arg object item: An object.
-  :arg object dest: Destination object.
-  :arg str name: Field name used in the destination object.
+  Parse a primitive data type.
+  
+  :arg dict item: A dictionary.
+  :arg str dtype: Data type.
+  :arg dict dest: Destination dictionary.
+  :arg str name: Field name used in the destination dictionary.
   */
-  function parseStructure(item, dest, name) {
-    var structureDict = {};
+  function parsePrimitive(item, dtype, dest, name) {
+    var delim = [],
+        size = defaults.read || 1,
+        func = dtype,
+        kwargs = {},
+        member,
+        result;
 
-    parse(item['structure'], structureDict);
-    dest[name].push(structureDict);
+    // Determine whether to read a fixed or variable amount.
+    if (item.read) {
+      size = item.read;
+    }
+    else if (types[dtype].read) {
+      if (types[dtype].read.constructor === Array) {
+        size = 0;
+        delim = types[dtype].read;
+      }
+      else {
+        size = types[dtype].read;
+      }
+    }
+
+    if (name) {
+      // Determine the function and its arguments.
+      if (types[dtype].function) {
+        if (types[dtype].function.name) {
+          func = types[dtype].function.name;
+        }
+        if (types[dtype].function.args) {
+          kwargs = types[dtype].function.args;
+        }
+      }
+
+      // Read and process the data.
+      result = functions[func](getField(size, delim), kwargs);
+      if (result.constructor === Object) {
+        for (member in result) {
+          dest[member] = result[member];
+          internal[member] = result[member];
+        }
+      }
+      else {
+        dest[name] = result;
+        internal[name] = result;
+      }
+    }
+    else {
+      getField(size);
+    }
   }
 
+  /*
+  Parse a for loop.
+  
+  :arg dict item: A dictionary.
+  :arg dict dest: Destination dictionary.
+  :arg str name: Field name used in the destination dictionary.
+  */
+  function parseFor(item, dest, name) {
+    var length = item.for,
+        structureDict,
+        _;
+
+    if (length.constructor !== Number) {
+      length = internal[length];
+    }
+
+    for (_ = 0; _ < length; _++) {
+      structureDict = {};
+      parse(item['structure'], structureDict);
+      dest[name].push(structureDict);
+    }
+  }
+
+  /*
+  Parse a do-while loop.
+  
+  :arg dict item: A dictionary.
+  :arg dict dest: Destination dictionary.
+  :arg str name: Field name used in the destination dictionary.
+  */
+  function parseDoWhile(item, dest, name) {
+    var structureDict;
+
+    while (true) {
+      structureDict = {};
+      parse(item['structure'], structureDict);
+      dest[name].push(structureDict);
+      if (!evaluate(item.do_while)) {
+        break;
+      }
+    }
+  }
+
+  /*
+  Parse a while loop.
+  
+  :arg dict item: A dictionary.
+  :arg dict dest: Destination dictionary.
+  :arg str name: Field name used in the destination dictionary.
+  */
+  function parseWhile(item, dest, name) {
+    var delim = item.structure[0];
+
+    dest[name] = [{}];
+    parse([delim], dest[name][0]);
+    while (true) {
+      if (!evaluate(item.while)) {
+        break;
+      }
+      parse(item.structure.slice(1), dest[name].slice(-1)[0]);
+      dest[name].push({});
+      parse([delim], dest[name].slice(-1)[0]);
+    }
+    dest[item.while.term] = getOneValue(dest[name].pop(-1));
+  }
 
   /*
   Parse a binary file.
@@ -179,21 +275,13 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
     var item,
         name,
         dtype,
-        size,
-        func,
-        length,
-        delim,
-        kwargs,
-        result,
-        index,
-        member,
-        _;
+        index;
 
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
 
-      // Conditional statement.
       if (item.if) {
+        // Conditional statement.
         if (!evaluate(item.if)) {
           continue;
         }
@@ -201,58 +289,13 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
 
       name = item.name || '';
       dtype = item.type || types.default;
-      if ('structure' in item) {
-        dtype = 'list';
+
+      if (!item.structure) {
+        // Primitive data types.
+        parsePrimitive(item, dtype, dest, name);
       }
-
-      // Primitive data types.
-      if (dtype !== 'list') {
-        // Determine whether to read a fixed or variable amount.
-        delim = [];
-        size = defaults.read || 1;
-        if (item.read) {
-          size = item.read;
-        }
-        else if (types[dtype].read) {
-          if (types[dtype].read.constructor === Array) {
-            size = 0;
-            delim = types[dtype].read;
-          }
-          else {
-            size = types[dtype].read;
-          }
-        }
-
-        if (name) {
-          // Determine the function and its arguments.
-          func = dtype;
-          kwargs = {};
-          if (types[dtype].function) {
-            if (types[dtype].function.name) {
-              func = types[dtype].function.name;
-            }
-            if (types[dtype].function.args) {
-              kwargs = types[dtype].function.args;
-            }
-          }
-
-          // Read and process the data.
-          result = functions[func](getField(size, delim), kwargs);
-          if (result.constructor === Object) {
-            for (member in result) {
-              store(dest, member, result[member]);
-            }
-          }
-          else {
-            store(dest, name, result);
-          }
-        }
-        else {
-          getField(size);
-        }
-      }
-      // Nested structures.
       else {
+        // Nested structures.
         if (!dest[name]) {
           if (item.for || item.do_while || item.while) {
             dest[name] = [];
@@ -263,35 +306,13 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
         }
 
         if (item.for) {
-          length = item.for;
-          if (length.constructor !== Number) {
-            length = internal[length];
-          }
-          for (_ = 0; _ < length; _++) {
-            parseStructure(item, dest, name);
-          }
+          parseFor(item, dest, name);
         }
         else if (item.do_while) {
-          while (true) {
-            parseStructure(item, dest, name);
-            if (!evaluate(item.do_while)) {
-              break;
-            }
-          }
+          parseDoWhile(item, dest, name);
         }
         else if (item.while) {
-          delim = item.structure[0];
-          dest[name] = [{}];
-          parse([delim], dest[name][0]);
-          while (true) {
-            if (!evaluate(item.while)) {
-              break;
-            }
-            parse(item.structure.slice(1), dest[name].slice(-1)[0]);
-            dest[name].push({});
-            parse([delim], dest[name].slice(-1)[0]);
-          }
-          dest[item.while.term] = getOneValue(dest[name].pop(-1));
+          parseWhile(item, dest, name);
         }
         else {
           parse(item.structure, dest[name]);

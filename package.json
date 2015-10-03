@@ -1,6 +1,6 @@
 {
   "name": "bin-parser",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "General binary file parser",
   "homepage": "https://github.com/jfjlaros/bin-parser",
   "files": [
