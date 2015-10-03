@@ -39,10 +39,8 @@ class BinParseFunctions(object):
         return ' '.join(
             [raw_data[x:x + 2] for x in range(0, len(raw_data), 2)])
 
-
     def bit(self, data):
         return '{:08b}'.format(ord(data))
-
 
     def int(self, data):
         """
@@ -57,17 +55,14 @@ class BinParseFunctions(object):
 
         :return int: Integer representation of {data}
         """
-        return reduce(lambda x, y: x * 0x100 + y,
-            map(lambda x: ord(x), data[::-1]))
-
+        return reduce(
+            lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
 
     def colour(self, data):
         return '0x{:06x}'.format(self.int(data))
 
-
     def trim(self, data, delimiter):
         return data.split(''.join(map(chr, delimiter)))[0]
-
 
     def text(self, data, split=[]):
         """
@@ -75,7 +70,6 @@ class BinParseFunctions(object):
         if split:
             return '\n'.join(data.split(''.join(map(chr, split))))
         return data
-
 
     def date(self, data, annotation):
         """
@@ -94,7 +88,6 @@ class BinParseFunctions(object):
             return annotation[date_int]
         return str(date_int)
 
-
     def map(self, data, annotation):
         """
         Replace a value with its annotation.
@@ -110,7 +103,7 @@ class BinParseFunctions(object):
             return annotation[index]
         return '{:02x}'.format(index)
 
-
+    # TODO: Document (and rename) default parameter.
     def flags(self, data, default, annotation):
         """
         Explode a bitfield into flags.

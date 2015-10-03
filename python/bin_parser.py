@@ -17,7 +17,8 @@ class BinParser(object):
     """
     General binary file parser.
     """
-    def __init__(self, input_handle, structure_handle, types_handle,
+    def __init__(
+            self, input_handle, structure_handle, types_handle,
             functions=BinParseFunctions, experimental=False, debug=0,
             log=sys.stdout):
         """
@@ -50,7 +51,7 @@ class BinParser(object):
         # Add standard data types.
         self.types['raw'] = {}
         self.types['list'] = {}
-        
+
         # Set default data type.
         if 'type' not in self.defaults:
             self.defaults['type'] = 'text'
@@ -64,10 +65,8 @@ class BinParser(object):
         except StopIteration:
             pass
 
-
     def _call(self, name, data, *args, **kwargs):
         return getattr(self._functions, name)(data, *args, **kwargs)
-
 
     def _get_field(self, size=0, delimiter=[]):
         """
@@ -93,8 +92,8 @@ class BinParser(object):
         if self._debug > 1:
             self._log.write('0x{:06x}: '.format(self._offset))
             if size:
-                self._log.write('{} ({})'.format(self._call('raw', field),
-                    size))
+                self._log.write('{} ({})'.format(self._call(
+                    'raw', field), size))
             else:
                 self._log.write('{}'.format(field))
             if self._debug < 3:
@@ -102,7 +101,6 @@ class BinParser(object):
 
         self._offset += extracted
         return field
-
 
     def _get_value(self, name):
         """
@@ -120,7 +118,6 @@ class BinParser(object):
         if name in self.constants:
             return self.constants[name]
         return name
-
 
     def _evaluate(self, expression):
         """
@@ -159,7 +156,7 @@ class BinParser(object):
         :arg str key: Name of the list to store the data in.
         """
         if self._experimental:
-            if not key in destination:
+            if key not in destination:
                 destination[key] = []
             destination[key].append(self._call('raw', self._get_field(size)))
         else:
@@ -317,12 +314,13 @@ class BinParser(object):
         if self._debug:
             output_handle.write('--- YAML DUMP ---\n\n')
         output_handle.write('---\n')
-        yaml.dump(self.parsed, output_handle, width=76,
-            default_flow_style=False)
+        yaml.dump(
+            self.parsed, output_handle, width=76, default_flow_style=False)
 
         if self._debug:
             output_handle.write('\n\n--- INTERNAL VARIABLES ---\n\n')
-            yaml.dump(self._internal, output_handle, width=76,
+            yaml.dump(
+                self._internal, output_handle, width=76,
                 default_flow_style=False)
 
             data_length = len(self.data)
