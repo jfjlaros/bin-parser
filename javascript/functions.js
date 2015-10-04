@@ -113,22 +113,21 @@ function BinParseFunctions() {
     return '0x' + pad(hex(this.int(data)), 6);
   };
 
-  this.trim = function(data, kwargs) {
-    var delimiter = kwargs.delimiter;
-
-    return data.split(String.fromCharCode.apply(this, delimiter))[0];
-  };
-
   this.text = function(data, kwargs) {
     var split = kwargs.split,
+        trim = kwargs.trim,
         encoding = kwargs.encoding || 'utf-8',
-        decodedData = iconv.decode(data, encoding);
+        decodedText = iconv.decode(data, encoding);
 
+    if (trim) {
+      decodedText = decodedText.split(
+        String.fromCharCode.apply(this, trim))[0];
+    }
     if (split) {
-      return decodedData.split(
+      return decodedText.split(
         String.fromCharCode.apply(this, split)).join('\n');
     }
-    return decodedData;
+    return decodedText;
   };
 
   /*

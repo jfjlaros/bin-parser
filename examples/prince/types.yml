@@ -3,8 +3,9 @@ types:
   trim:
     read: 25
     function:
+      name: text
       args:
-        delimiter:
+        trim:
           - 0x00
   int:
     read: 2
