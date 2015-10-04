@@ -1,5 +1,7 @@
 'use strict';
 
+var iconv = require('iconv-lite');
+
 /*
 Field unpacking functions for the general binary parser.
 
@@ -118,12 +120,15 @@ function BinParseFunctions() {
   };
 
   this.text = function(data, kwargs) {
-    var split = kwargs.split;
+    var split = kwargs.split,
+        encoding = kwargs.encoding || 'utf-8',
+        decodedData = iconv.decode(data, encoding);
 
     if (split) {
-      return data.split(String.fromCharCode.apply(this, split)).join('\n');
+      return decodedData.split(
+        String.fromCharCode.apply(this, split)).join('\n');
     }
-    return data;
+    return decodedData;
   };
 
   /*
@@ -194,4 +199,5 @@ function BinParseFunctions() {
   };
 }
 
+iconv.skipDecodeWarning = true;
 module.exports.BinParseFunctions = BinParseFunctions;

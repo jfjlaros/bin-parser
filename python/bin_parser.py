@@ -321,7 +321,7 @@ class BinParser(object):
             output_handle.write('\n\n--- INTERNAL VARIABLES ---\n\n')
             yaml.dump(
                 self._internal, output_handle, width=76,
-                default_flow_style=False)
+                default_flow_style=False, encoding=None)
 
             data_length = len(self.data)
             parsed = data_length - self._raw_byte_count

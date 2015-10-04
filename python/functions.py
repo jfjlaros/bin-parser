@@ -64,12 +64,13 @@ class BinParseFunctions(object):
     def trim(self, data, delimiter):
         return data.split(''.join(map(chr, delimiter)))[0]
 
-    def text(self, data, split=[]):
+    def text(self, data, split=[], encoding='utf-8'):
         """
         """
+        decoded_text = data.decode(encoding)
         if split:
-            return '\n'.join(data.split(''.join(map(chr, split))))
-        return data
+            return '\n'.join(decoded_text.split(''.join(map(chr, split))))
+        return decoded_text
 
     def date(self, data, annotation):
         """
