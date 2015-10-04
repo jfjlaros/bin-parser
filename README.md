@@ -34,24 +34,28 @@ Suppose we have a file (`balance.dat`) that contains the following:
 To make a parser for this type of file, we need to create a file that contains
 the type definitions. We name this file `types.yml`.
 
-    ---
-    types:
-      int:
-        read: 2
-      text:
-        read:
-          - 0x00
+```yml
+ ---
+ types:
+   int:
+     read: 2
+   text:
+     read:
+       - 0x00
+```
 
 Then we create a file that contains the definition of the structure. This file
 we name `structure.yml`.
 
-    ---
-    - name: year_of_birth
-      type: int
-    - name: name
-      type: text
-    - name: balance
-      type: int
+```yml
+---
+- name: year_of_birth
+  type: int
+- name: name
+  type: text
+- name: balance
+  type: int
+```
 
 We can now call the command line interface as follows:
 
@@ -60,18 +64,22 @@ We can now call the command line interface as follows:
 This will result in a new file, named `balance.yml`, which contains the content
 of the input file (`balance.dat`) in a human (and machine) readable format:
 
-    balance: 3210
-    name: John Doe
-    year_of_birth: 1999
+```yml
+balance: 3210
+name: John Doe
+year_of_birth: 1999
+```
 
 ## Using the library
 To use the library from our own code, we need to use the following:
 
-    import bin_parser
+```python
+import bin_parser
 
-    parser = bin_parser.BinParser(open('balance.dat'), open('structure.yml'),
-        open('types.yml'))
-    print parser.parsed['name']
+parser = bin_parser.BinParser(open('balance.dat'), open('structure.yml'),
+    open('types.yml'))
+print parser.parsed['name']
+```
 
 The `BinParser` object contains the original data in `data` and the parsed data
 in `parsed`. Furthermore it contains the function `write` to write the content
@@ -79,80 +87,125 @@ of `parsed` in YAML format to a file handle.
 
 
 # `structure.yml`: The structure of the binary file
-The file `structure.yml` contains the general structure of the binary file. 
+The file `structure.yml` contains the general structure of the binary file.
 
 ## Loops and conditionals
-    - name: fixed_size_list
-      for: 10
-      structure:
-        - name: bla
-          value: something
+Both loops and conditionals (except the `for` loop) are controlled by an
+evaluation of a logic statement. The statement is formulated by specifying one
+or two *operands* and one *operator*. The operands are either constants,
+variables or literals. The operator is one of the following:
 
-    - name: size_of_x
+   operator  | binary | explanation
+   ---------:|:------:|:-----------
+       `not` |    no  | Not.
+       `and` |   yes  | And.
+        `or` |   yes  | Or.
+       `xor` |   yes  | Exclusive or.
+        `eq` |   yes  | Equal.
+        `ne` |   yes  | Not equal.
+        `ge` |   yes  | Greater then or equal.
+        `gt` |   yes  | Greater then.
+        `le` |   yes  | Less then or equal.
+        `lt` |   yes  | Less then.
+       `mod` |   yes  | Modulo.
+  `contains` |   yes  | Is a sub string of.
+
+A simple test for truth or non-zero can be done by supplying one operand and no
+operator.
+
+### `for` loops
+A simple `for` loop can be made as follows.
+
+```yml
+- name: fixed_size_list
+  for: 2
+  structure:
+    - name: item
+    - name: value
       type: int
-    - name: x
-      for: size_of_x
-      structure:
-        - name: bla
-          value: something
+```
 
-    - name: something_to_match
+The size can also be given by a variable.
+
+```yml
+- name: size_of_list
+  type: int
+- name: variable_size_list
+  for: size_of_list
+  structure:
+    - name: item
+    - name: value
       type: int
-    - name: x
-      while:
-        operands:
-          - something_to_match
-          - something_else_to_match
-        operator: eq
+```
 
-      structure:
-        - name: bla
-          value: something
-        - name: something_else_to_match
-          type: int
+### `while` loops
+The `do-while` loop reads the structure as long as the specified condition is
+met. Evaluation is done at the end of each cycle, the resulting list is
+therefore at least of size 1.
 
-    - name: something_to_match
+```yml
+- name: variable_size_list
+  do_while:
+    operands:
+      - value
+      - 2
+    operator: ne
+  structure:
+    - name: item
+    - name: value
       type: int
-    - name: x
-      do_while:
-        operands:
-          - something_to_match
-          - something_else_to_match
-        operator: eq
-      structure:
-        - name: bla
-          value: something
-        - name: something_else_to_match
-          type: int
+```
 
-    - name: something_to_match
-      type: int
-    - name: something_else_to_match
-      type: int
-    - name: x
-      if:
-        operands:
-          - something_to_match
-          - something_else_to_match
-        operator: eq
-      structure:
-        - name: bla
-          value: something
+The `while` loop first reads the first element of the structure and if the
+specified condition is met, the rest of the structure is read. Evaluation is
+done at the start of the cycle, the resulting list can therefore be of size 0.
+The element used in the last evaluation (the one that terminates the loop),
+does not have an associated structure, so its value is stored in the variable
+specified by the `term` keyword.
 
+```yml
+- name: variable_size_list
+  while:
+    operands:
+      - value
+      - 2
+    operator: ne
+    term: list_term
+  structure:
+    - name: value
+      type: int
+    - name: item
+```
+
+### Conditionals
+A variable or structure can be read conditionally using the `if` statement.
+
+```yml
+- name: something
+  type: int
+- name: item
+  if:
+    operands:
+      - something
+      - 2
+    operator: eq
+```
 
 # `types.yml`: Constants, defaults and types
 The file `types.yml` consists of three (optional) sections; `types`,
 `constants` and `defaults`. In general the types file will look something like
 this:
 
-    ---
-    constants:
-      const: 10
-    defaults:
-      read: 2
-    types:
-      int:
-        read: 3
+```yml
+---
+constants:
+  const: 10
+defaults:
+  read: 2
+types:
+  int:
+    read: 3
+```
 
 ## Constants
 A constant can be used as an alias in `structure.yml`. Using constants can make
@@ -177,48 +230,59 @@ parameter.
 The following type is stored in two bytes and is processed by the `int`
 function:
 
-    short:
-      read: 2
-      function:
-        name: int
+```yml
+short:
+  read: 2
+  function:
+    name: int
+```
 
 This type is stored in a variable size array delimited by `0x00` and is
 processed by the `text` function:
 
-    comment:
-      read:
-        - 0x00
-      function:
-        name: text
+```yml
+comment:
+  read:
+    - 0x00
+  function:
+    name: text
+```
 
 And if we need to pass additional parameters to the `text` function, in this
 case split on the character `0x09`:
 
-    comment:
-      read:
-        - 0x00
-      function:
-        name: text
-        args:
-          split:
-            - 0x09
+```yml
+comment:
+  read:
+    - 0x00
+  function:
+    name: text
+    args:
+      split:
+        - 0x09
+```
 
 ### Defining new types
 Types can be added by subclassing the BinParseFunctions class. Suppose we need
 a function that inverts all bits in a byte. We first have to make a subclass
 that implements this function:
 
-    class Invert(BinParseFunctions):
-        def inv(self, data):
-            return data ^ 0xff
+```python
+class Invert(BinParseFunctions):
+    def inv(self, data):
+        return data ^ 0xff
+```
 
 By default, the new type will read one byte and process it with the `inv`
 function. In this case there is no need to define the type in `types.yml`.
 
 Now we can initiate the parser with this new class:
 
-    parser = bin_parser.BinParser(open('something.dat'), open('structure.yml'),
-        open('types.yml'), functions=Invert)
+```python
+parser = bin_parser.BinParser(
+    open('something.dat'), open('structure.yml'),
+    open('types.yml'), functions=Invert)
+```
 
 See `examples/prince/` for a working example.
 
@@ -233,14 +297,18 @@ default values are used:
 
 So, for example, since a byte is of size 1, we can omit the `read` parameter:
 
-    byte:
-      function:
-        name: int
+```yml
+byte:
+  function:
+    name: int
+```
 
 In the next example the function `int` will be used.
 
-    int:
-      read: 2
+```yml
+int:
+  read: 2
+```
 
 And if we need an integer of size one which we want to name `int`, we do not
 need to define anything.
