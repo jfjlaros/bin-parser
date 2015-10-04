@@ -17,6 +17,15 @@ in a parser.
 Since the bulk of the types stored in binary files are standard, dedicated
 parsers contain a lot of boiler plate code. {{MORE}}
 
+# Installation
+
+For Python:
+
+    pip install bin-parser
+
+For JavaScipt
+
+    npm install bin-parser
 
 # Approach
 In order to parse a binary file, the library needs two pieces of information:
@@ -76,8 +85,8 @@ To use the library from our own code, we need to use the following:
 ```python
 import bin_parser
 
-parser = bin_parser.BinParser(open('balance.dat'), open('structure.yml'),
-    open('types.yml'))
+parser = bin_parser.BinParser(
+    open('balance.dat'), open('structure.yml'), open('types.yml'))
 print parser.parsed['name']
 ```
 

@@ -10,8 +10,8 @@ from .bin_parser import BinParser
 from .functions import BinParseFunctions
 
 
-__version_info__ = ('0', '0', '6')
-__date__ = '3 Oct 2015'
+__version_info__ = ('0', '0', '8')
+__date__ = '4 Oct 2015'
 
 __version__ = '.'.join(__version_info__)
 __author__ = 'Jeroen F.J. Laros'
