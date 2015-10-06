@@ -43,18 +43,24 @@ class BinParser(object):
 
         self._functions = functions()
 
+        self.constants = {}
+        self.defaults = {
+            'read': 1,
+            'delimiter': [0x00],
+            'type': 'text'
+        }
+        self.types = {
+            'raw': {},
+            'int': {}
+        }
+
         tdata = yaml.load(types_handle)
-        self.types = tdata['types'] if 'types' in tdata else {}
-        self.constants = tdata['constants'] if 'constants' in tdata else {}
-        self.defaults = tdata['defaults'] if 'defaults' in tdata else {}
-
-        # Add standard data types.
-        self.types['raw'] = {}
-        self.types['list'] = {}
-
-        # Set default data type.
-        if 'type' not in self.defaults:
-            self.defaults['type'] = 'text'
+        if 'constants' in tdata:
+            self.constants.update(tdata['constants'])
+        if 'defaults' in tdata:
+            self.defaults.update(tdata['defaults'])
+        if 'types' in tdata:
+            self.types.update(tdata['types'])
 
         self._offset = 0
         self._raw_byte_count = 0
