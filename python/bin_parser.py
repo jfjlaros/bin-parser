@@ -45,8 +45,8 @@ class BinParser(object):
 
         self.constants = {}
         self.defaults = {
-            'read': 1,
-            'delimiter': [0x00],
+            'size': 0,
+            'delimiter': [],
             'type': 'text'
         }
         self.types = {
@@ -54,13 +54,13 @@ class BinParser(object):
             'int': {}
         }
 
-        tdata = yaml.load(types_handle)
-        if 'constants' in tdata:
-            self.constants.update(tdata['constants'])
-        if 'defaults' in tdata:
-            self.defaults.update(tdata['defaults'])
-        if 'types' in tdata:
-            self.types.update(tdata['types'])
+        types_data = yaml.load(types_handle)
+        if 'constants' in types_data:
+            self.constants.update(types_data['constants'])
+        if 'defaults' in types_data:
+            self.defaults.update(types_data['defaults'])
+        if 'types' in types_data:
+            self.types.update(types_data['types'])
 
         self._offset = 0
         self._raw_byte_count = 0
@@ -87,12 +87,17 @@ class BinParser(object):
         if self._offset >= len(self.data):
             raise StopIteration
 
+        separator = ''.join(map(chr, delimiter))
         if size:
+            # Fixed sized field.
             field = self.data[self._offset:self._offset + size]
             extracted = size
+            if delimiter:
+                # A variable sized field in a fixed sized field.
+                field = field.split(separator)[0]
         else:
-            field = self.data[self._offset:].split(
-                ''.join(map(chr, delimiter)))[0]
+            # Variable sized field.
+            field = self.data[self._offset:].split(separator)[0]
             extracted = len(field) + 1
 
         if self._debug > 1:
@@ -170,6 +175,17 @@ class BinParser(object):
 
         self._raw_byte_count += size
 
+    def _get_default(self, item, dtype, name):
+        """
+        """
+        if name in item:
+            return item[name]
+        if name in self.types[dtype]:
+            return self.types[dtype][name]
+        if name in self.defaults:
+            return self.defaults[name]
+        return None
+
     def _parse_primitive(self, item, dtype, dest, name):
         """
         Parse a primitive data type.
@@ -179,17 +195,10 @@ class BinParser(object):
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
-        # Determine whether to read a fixed or variable amount.
-        delim = []
-        size = (self.defaults['read'] if 'read' in self.defaults else 1)
-        if 'read' in item:
-            size = item['read']
-        elif 'read' in self.types[dtype]:
-            if type(self.types[dtype]['read']) == list:
-                size = 0
-                delim = self.types[dtype]['read']
-            else:
-                size = self.types[dtype]['read']
+        delim = self._get_default(item, dtype, 'delimiter')
+        size = self._get_default(item, dtype, 'size')
+        if not (delim or size):
+            size = 1
 
         if name:
             # Determine the function and its arguments.

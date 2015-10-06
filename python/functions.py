@@ -61,13 +61,11 @@ class BinParseFunctions(object):
     def colour(self, data):
         return '0x{:06x}'.format(self.int(data))
 
-    def text(self, data, split=[], trim=[], encoding='utf-8'):
+    def text(self, data, split=[], encoding='utf-8'):
         """
         """
         decoded_text = data.decode(encoding)
 
-        if trim:
-            decoded_text = decoded_text.split(''.join(map(chr, trim)))[0]
         if split:
             return '\n'.join(decoded_text.split(''.join(map(chr, split))))
         return decoded_text
