@@ -31,15 +31,6 @@ def _inverse_dict(dictionary):
 
 
 class BinParseFunctions(object):
-    def __init__(self):
-        self.functions = {
-            'raw': [self.raw, self.raw_inv],
-            'bit': [self.bit, self.bit_inv],
-            'int': [self.int, self.int_inv],
-            'colour': [self.colour, self.colour_inv],
-            'text': [self.text, self.text_inv]
-        }
-
     def raw(self, data):
         """
         Return the input data in hexadecimal, grouped by bit.
@@ -152,6 +143,15 @@ class BinParseFunctions(object):
             return annotation[index]
         return '{:02x}'.format(index)
 
+    def map_inv(self, data, annotation):
+        """
+        """
+        inverse_annotation = _inverse_dict(annotation)
+
+        if data in inverse_annotation:
+            return chr(inverse_annotation[data])
+        return chr(int(data, 0x10))
+
     def flags(self, data, default, annotation):
         """
         Explode a bitfield into flags.
@@ -174,3 +174,8 @@ class BinParseFunctions(object):
                 flags[annotation[flag]] = value
 
         return flags
+
+    def flags_inv(self, data, default, annotation):
+        """
+        """
+        pass
