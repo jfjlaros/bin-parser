@@ -26,12 +26,12 @@ operators = {
 }
 
 
+def _inverse_dict(dictionary):
+    return dict(map(lambda x: x[::-1], dictionary.items()))
+
+
 class BinParseFunctions(object):
     def __init__(self):
-        # NOTE: Functions that trim or use delimiters can not be inverted. The
-        # delimiter restoration and/or padding should be done at a higher
-        # level. It also raises the question whether trimming should be done
-        # here.
         self.functions = {
             'raw': [self.raw, self.raw_inv],
             'bit': [self.bit, self.bit_inv],
@@ -128,7 +128,14 @@ class BinParseFunctions(object):
             return annotation[date_int]
         return str(date_int)
 
-    # NOTE: HERE
+    def date_inv(self, data, annotation):
+        """
+        """
+        inverse_annotation = _inverse_dict(annotation)
+
+        if data in inverse_annotation:
+            return self.int_inv(inverse_annotation[data])
+        return self.int_inv(int(data))
 
     def map(self, data, annotation):
         """
