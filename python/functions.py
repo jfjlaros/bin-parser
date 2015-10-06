@@ -27,6 +27,19 @@ operators = {
 
 
 class BinParseFunctions(object):
+    def __init__(self):
+        # NOTE: Functions that trim or use delimiters can not be inverted. The
+        # delimiter restoration and/or padding should be done at a higher
+        # level. It also raises the question whether trimming should be done
+        # here.
+        self.functions = {
+            'raw': [self.raw, self.raw_inv],
+            'bit': [self.bit, self.bit_inv],
+            'int': [self.int, self.int_inv],
+            'colour': [self.colour, self.colour_inv],
+            'text': [self.text, self.text_inv]
+        }
+
     def raw(self, data):
         """
         Return the input data in hexadecimal, grouped by bit.
@@ -39,8 +52,14 @@ class BinParseFunctions(object):
         return ' '.join(
             [raw_data[x:x + 2] for x in range(0, len(raw_data), 2)])
 
+    def raw_inv(self, data):
+        return ''.join(data.split()).decode('hex')
+
     def bit(self, data):
         return '{:08b}'.format(ord(data))
+
+    def bit_inv(self, data):
+        return chr(int('0b{}'.format(data), 2))
 
     def int(self, data):
         """
@@ -58,8 +77,23 @@ class BinParseFunctions(object):
         return reduce(
             lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
 
+    def int_inv(self, data):
+        """
+        """
+        data_int = data
+        result = ''
+
+        while data_int:
+            result += chr(data_int % 0x100)
+            data_int >>= 8
+
+        return result
+
     def colour(self, data):
         return '0x{:06x}'.format(self.int(data))
+
+    def colour_inv(self, data):
+        return self.int_inv(int(data, 0x10))
 
     def text(self, data, split=[], trim=[], encoding='utf-8'):
         """
@@ -71,6 +105,13 @@ class BinParseFunctions(object):
         if split:
             return '\n'.join(decoded_text.split(''.join(map(chr, split))))
         return decoded_text
+
+    def text_inv(self, data, split=[], encoding='utf-8'):
+        decoded_text = data
+
+        if split:
+            decoded_text = ''.join(map(chr, split)).join(data.split('\n'))
+        return decoded_text.encode(encoding)
 
     def date(self, data, annotation):
         """
@@ -89,6 +130,8 @@ class BinParseFunctions(object):
             return annotation[date_int]
         return str(date_int)
 
+    # NOTE: HERE
+
     def map(self, data, annotation):
         """
         Replace a value with its annotation.
@@ -104,7 +147,6 @@ class BinParseFunctions(object):
             return annotation[index]
         return '{:02x}'.format(index)
 
-    # TODO: Document (and rename) default parameter.
     def flags(self, data, default, annotation):
         """
         Explode a bitfield into flags.
