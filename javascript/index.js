@@ -61,10 +61,17 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
   var data = fileContent,
       internal = {},
       functions = functions || new Functions.BinParseFunctions(),
-      tdata = typesContent,
-      types = tdata.types || {},
-      constants = tdata.constants || {},
-      defaults = tdata.defaults || {},
+      constants = {},
+      defaults = {
+        'size': 0,
+        'delimiter': [],
+        'type': 'text'
+      },
+      types = {
+        'raw': {},
+        'int': {}
+      },
+      types_data = typesContent,
       offset = 0,
       structure = structureContent;
 
@@ -77,19 +84,26 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
   */
   function getField(size, delimiter) {
     var field,
-        extracted;
+        extracted,
+        separator;
 
     if (offset >= data.length) {
       throw('StopIteration');
     }
 
+    separator = String.fromCharCode.apply(this, delimiter)
     if (size) {
+      // Fixed sized field.
       field = data.slice(offset, offset + size);
       extracted = size;
+      if (delimiter.length) {
+        // A variable sized field in a fixed sized field.
+        field = field.split(separator)[0];
+      }
     }
     else {
-      field = data.slice(offset, -1).split(String.fromCharCode.apply(
-        this, delimiter))[0];
+      // Variable sized field.
+      field = data.slice(offset, -1).split(separator)[0];
       extracted = field.length + 1;
     }
 
@@ -140,6 +154,19 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
     return Functions.operators[expression.operator].apply(this, operands);
   }
 
+  function getDefault(item, dtype, name) {
+    if (name in item) {
+      return item[name];
+    }
+    if (name in types[dtype]) {
+      return types[dtype][name];
+    }
+    if (name in defaults) {
+      return defaults[name];
+    }
+    return undefined;
+  }
+
   /*
   Parse a primitive data type.
   
@@ -149,25 +176,15 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
   :arg str name: Field name used in the destination dictionary.
   */
   function parsePrimitive(item, dtype, dest, name) {
-    var delim = [],
-        size = defaults.read || 1,
+    var delim = getDefault(item, dtype, 'delimiter'),
+        size = getDefault(item, dtype, 'size'),
         func = dtype,
         kwargs = {},
         member,
         result;
 
-    // Determine whether to read a fixed or variable amount.
-    if (item.read) {
-      size = item.read;
-    }
-    else if (types[dtype].read) {
-      if (types[dtype].read.constructor === Array) {
-        size = 0;
-        delim = types[dtype].read;
-      }
-      else {
-        size = types[dtype].read;
-      }
+    if (!(delim.length || size)) {
+      size = 1;
     }
 
     if (name) {
@@ -195,7 +212,7 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
       }
     }
     else {
-      getField(size);
+      getField(size, []);
     }
   }
 
@@ -288,7 +305,7 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
       }
 
       name = item.name || '';
-      dtype = item.type || types.default;
+      dtype = item.type || defaults.type;
 
       if (!item.structure) {
         // Primitive data types.
@@ -340,15 +357,14 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
   /*
   Initialisation.
   */
-  // Add standard data types.
-  update(types, {
-    'raw': {},
-    'list': {}
-  });
-
-  // Set default data type.
-  if (!types.default) {
-    types.default = 'text';
+  if (types_data.constants) {
+    update(constants, types_data.constants);
+  }
+  if (types_data.defaults) {
+    update(defaults, types_data.defaults);
+  }
+  if (types_data.types) {
+    update(types, types_data.types);
   }
 
   try {

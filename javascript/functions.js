@@ -115,14 +115,9 @@ function BinParseFunctions() {
 
   this.text = function(data, kwargs) {
     var split = kwargs.split,
-        trim = kwargs.trim,
         encoding = kwargs.encoding || 'utf-8',
         decodedText = iconv.decode(data, encoding);
 
-    if (trim) {
-      decodedText = decodedText.split(
-        String.fromCharCode.apply(this, trim))[0];
-    }
     if (split) {
       return decodedText.split(
         String.fromCharCode.apply(this, split)).join('\n');
