@@ -1,7 +1,7 @@
 ---
 types:
   int:
-    read: 2
+    size: 2
   text:
-    read:
+    delimiter:
       - 0x00

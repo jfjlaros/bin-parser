@@ -4,5 +4,5 @@ types:
     function:
       name: int
   text:
-    read:
+    delimiter:
       - 0x00
