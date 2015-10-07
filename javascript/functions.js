@@ -41,7 +41,7 @@ Pad a string with leading zeroes.
 :arg any input: String to be padded.
 :arg int length: Length of the resulting string.
 
-:return str: Padded string.
+:returns str: Padded string.
 */
 function pad(input, length) {
   var string = input.toString(),
@@ -55,11 +55,11 @@ function pad(input, length) {
 }
 
 /*
-Encode a string in hexadecimal.
+Encode a string in hexadecimal, grouped by byte.
 
 :arg str data: Input string.
 
-:return str: Hexadecimal representation of {data}.
+:returns str: Hexadecimal representation of {data}.
 */
 function convertToHex(data) {
   var result = '',
@@ -71,7 +71,17 @@ function convertToHex(data) {
   return result;
 }
 
+/*
+Functions for decoding data.
+*/
 function BinParseFunctions() {
+  /*
+  Encode a string in hexadecimal, grouped by byte.
+
+  :arg str data: Input data.
+
+  :returns str: Hexadecimal representation of {data}.
+  */
   this.raw = function(data) {
     return convertToHex(data).match(/.{1,2}/g).join(' ');
   };
@@ -97,7 +107,7 @@ function BinParseFunctions() {
 
   :arg str data: Little-endian encoded integer.
 
-  :return int: Integer representation of {data}
+  :returns int: Integer representation of {data}
   */
   this.int = function(data) {
     var result = 0,
@@ -113,6 +123,15 @@ function BinParseFunctions() {
     return '0x' + pad(hex(this.int(data)), 6);
   };
 
+  /*
+  Decode a text string.
+
+  :arg str data: Text string.
+  :arg list(byte) kwargs.split: Internal delimiter for end of line.
+  :arg str kwargs.encoding: Character encoding.
+
+  :returns str: Decoded text.
+  */
   this.text = function(data, kwargs) {
     var split = kwargs.split,
         encoding = kwargs.encoding || 'utf-8',
@@ -132,8 +151,10 @@ function BinParseFunctions() {
   (zero padded) day of the year.
 
   :arg str data: Binary encoded date.
+  :arg dict kwargs.annotation: Names for special cases.
 
-  :return str: Date in format '%Y%j', 'defined' or 'unknown'.
+
+  :returns str: Date in format '%Y%j', 'defined' or 'unknown'.
   */
   this.date = function(data, kwargs) {
     var annotation = kwargs.annotation,
@@ -149,9 +170,9 @@ function BinParseFunctions() {
   Replace a value with its annotation.
 
   :arg str data: Encoded data.
-  :arg dict annotation: Annotation of {data}.
+  :arg dict kwargs.annotation: Annotation of {data}.
 
-  :return str: Annotated representation of {data}.
+  :returns str: Annotated representation of {data}.
   */
   this.map = function(data, kwargs) {
     var annotation = kwargs.annotation,
@@ -167,13 +188,16 @@ function BinParseFunctions() {
   Explode a bitfield into flags.
 
   :arg int data: Bit field.
-  :arg str annotation: Annotation of {data}.
+  :arg str kwargs.name: Flag name for unannotated bits.
+  :arg str kwargs.annotation: Annotation of {data}.
+
+  :returns dict: Dictionary of flags and their values.
   */
   this.flags = function(data, kwargs) {
     var deft = kwargs.default,
         annotation = kwargs.annotation,
         bitfield = this.int(data),
-        destination = {},
+        flags_dict = {},
         flag,
         value;
 
@@ -182,14 +206,14 @@ function BinParseFunctions() {
 
       if (!annotation[flag]) {
         if (value) {
-          destination['flags_' + deft + '_' + pad(hex(flag), 2)] = value;
+          flags_dict['flags_' + deft + '_' + pad(hex(flag), 2)] = value;
         }
       }
       else {
-        destination[annotation[flag]] = value;
+        flags_dict[annotation[flag]] = value;
       }
     }
-    return destination;
+    return flags_dict;
   };
 }
 

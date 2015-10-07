@@ -31,26 +31,33 @@ def _inverse_dict(dictionary):
 
 
 class BinParseFunctions(object):
+    """
+    Functions for decoding and encoding data.
+
+    Every decoding function has a counterpart for encoding. These functions end
+    with `_inv`. Documentation of these functions is omited.
+    """
     def raw(self, data):
         """
-        Return the input data in hexadecimal, grouped by bit.
+        Encode a string in hexadecimal, grouped by byte.
 
         :arg str data: Input data.
 
-        :return str: Hexadecimal representation of {data}.
+        :returns str: Hexadecimal representation of {data}.
         """
         raw_data = data.encode('hex')
+
         return ' '.join(
             [raw_data[x:x + 2] for x in range(0, len(raw_data), 2)])
 
-    def raw_inv(self, data):
-        return ''.join(data.split()).decode('hex')
+    def raw_inv(self, hex_string):
+        return ''.join(hex_string.split()).decode('hex')
 
     def bit(self, data):
         return '{:08b}'.format(ord(data))
 
-    def bit_inv(self, data):
-        return chr(int('0b{}'.format(data), 2))
+    def bit_inv(self, bit_string):
+        return chr(int('0b{}'.format(bit_string), 2))
 
     def int(self, data):
         """
@@ -63,15 +70,13 @@ class BinParseFunctions(object):
 
         :arg str data: Little-endian encoded integer.
 
-        :return int: Integer representation of {data}
+        :returns int: Integer representation of {data}
         """
         return reduce(
             lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
 
-    def int_inv(self, data):
-        """
-        """
-        data_int = data
+    def int_inv(self, integer):
+        data_int = integer
         result = ''
 
         while data_int:
@@ -83,11 +88,18 @@ class BinParseFunctions(object):
     def colour(self, data):
         return '0x{:06x}'.format(self.int(data))
 
-    def colour_inv(self, data):
-        return self.int_inv(int(data, 0x10))
+    def colour_inv(self, colour_string):
+        return self.int_inv(int(colour_string, 0x10))
 
     def text(self, data, split=[], encoding='utf-8'):
         """
+        Decode a text string.
+
+        :arg str data: Text string.
+        :arg list(byte) split: Internal delimiter for end of line.
+        :arg str encoding: Character encoding.
+
+        :returns str: Decoded text.
         """
         decoded_text = data.decode(encoding)
 
@@ -95,11 +107,12 @@ class BinParseFunctions(object):
             return '\n'.join(decoded_text.split(''.join(map(chr, split))))
         return decoded_text
 
-    def text_inv(self, data, split=[], encoding='utf-8'):
-        decoded_text = data
+    def text_inv(self, text_string, split=[], encoding='utf-8'):
+        decoded_text = text_string
 
         if split:
-            decoded_text = ''.join(map(chr, split)).join(data.split('\n'))
+            decoded_text = ''.join(map(chr, split)).join(
+                text_string.split('\n'))
         return decoded_text.encode(encoding)
 
     def date(self, data, annotation):
@@ -110,8 +123,9 @@ class BinParseFunctions(object):
         the (zero padded) day of the year.
 
         :arg str data: Binary encoded date.
+        :arg dict annotation: Names for special cases.
 
-        :return str: Date in format '%Y%j', 'defined' or 'unknown'.
+        :returns str: Date in format '%Y%j', 'defined' or 'unknown'.
         """
         date_int = self.int(data)
 
@@ -119,14 +133,12 @@ class BinParseFunctions(object):
             return annotation[date_int]
         return str(date_int)
 
-    def date_inv(self, data, annotation):
-        """
-        """
+    def date_inv(self, date_int, annotation):
         inverse_annotation = _inverse_dict(annotation)
 
-        if data in inverse_annotation:
-            return self.int_inv(inverse_annotation[data])
-        return self.int_inv(int(data))
+        if date_int in inverse_annotation:
+            return self.int_inv(inverse_annotation[date_int])
+        return self.int_inv(int(date_int))
 
     def map(self, data, annotation):
         """
@@ -135,7 +147,7 @@ class BinParseFunctions(object):
         :arg str data: Encoded data.
         :arg dict annotation: Annotation of {data}.
 
-        :return str: Annotated representation of {data}.
+        :returns str: Annotated representation of {data}.
         """
         index = ord(data)
 
@@ -143,39 +155,49 @@ class BinParseFunctions(object):
             return annotation[index]
         return '{:02x}'.format(index)
 
-    def map_inv(self, data, annotation):
-        """
-        """
+    def map_inv(self, mapped_string, annotation):
         inverse_annotation = _inverse_dict(annotation)
 
-        if data in inverse_annotation:
-            return chr(inverse_annotation[data])
-        return chr(int(data, 0x10))
+        if mapped_string in inverse_annotation:
+            return chr(inverse_annotation[mapped_string])
+        return chr(int(mapped_string, 0x10))
 
     def flags(self, data, default, annotation):
         """
         Explode a bitfield into flags.
 
+        Note that if a flag is not annotated and false, it will not be included
+        in the results.
+
         :arg int data: Bit field.
+        :arg str default: Flag name for unannotated bits.
         :arg str annotation: Annotation of {data}.
 
-        :return dict: Dictionary of flags and their values.
+        :returns dict: Dictionary of flags and their values.
         """
         bitfield = self.int(data)
-        flags = {}
+        flags_dict = {}
 
         for flag in map(lambda x: 2 ** x, range(8)):
             value = bool(flag & bitfield)
 
             if flag not in annotation:
                 if value:
-                    flags['flags_{}_{:02x}'.format(default, flag)] = value
+                    flags_dict['flags_{}_{:02x}'.format(default, flag)] = value
             else:
-                flags[annotation[flag]] = value
+                flags_dict[annotation[flag]] = value
 
-        return flags
+        return flags_dict
 
-    def flags_inv(self, data, default, annotation):
-        """
-        """
-        pass
+    def flags_inv(self, flags_dict, default, annotation):
+        inverse_annotation = _inverse_dict(annotation)
+        prefix_len = len('flags_{}_'.format(default))
+        values = 0x00
+
+        for key in flags_dict:
+            if key in inverse_annotation:
+                if flags_dict[key]:
+                    values += inverse_annotation[key]
+            else:
+                values += int(key[prefix_len:], 0x10)
+        return chr(values)
