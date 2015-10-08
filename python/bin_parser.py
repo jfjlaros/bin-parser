@@ -393,7 +393,10 @@ class BinWriter(BinParser):
         self.data = ''
         self.parsed = yaml.load(input_handle)
 
-        self._parse(self._structure, self.parsed)
+        try:
+            self._parse(self._structure, self.parsed)
+        except Exception:
+            pass
 
     def _set_field(self, data, size=0, delimiter=[]):
         """
@@ -450,6 +453,14 @@ class BinWriter(BinParser):
         #         self._internal[member] = result[member]
         self._set_field(self._call(func, value, **kwargs), size, delim)
 
+    def _get_type(self, item):
+        """
+        """
+        for operand in item['while']['operands']:
+            for field in item['structure']:
+                if operand == field['name']:
+                    return field
+
     def _parse_for(self, item, source):
         """
         Parse a for loop.
@@ -460,27 +471,6 @@ class BinWriter(BinParser):
         for subitem in source:
             self._parse(item['structure'], subitem)
 
-    # def _parse_while(self, item, dest, name):
-    #     """
-    #     Parse a while loop.
-
-    #     :arg dict item: A dictionary.
-    #     :arg dict dest: Destination dictionary.
-    #     :arg str name: Field name used in the destination dictionary.
-    #     """
-    #     delim = item['structure'][0]
-    #     dest[name] = [{}]
-
-    #     self._parse([delim], dest[name][0])
-    #     while True:
-    #         if not self._evaluate(item['while']):
-    #             break
-    #         self._parse(item['structure'][1:], dest[name][-1])
-    #         dest[name].append({})
-    #         self._parse([delim], dest[name][-1])
-
-    #     dest[item['while']['term']] = dest[name].pop(-1).values()[0]
-
     def _parse(self, structure, source):
         """
         Parse a binary file.
@@ -488,9 +478,15 @@ class BinWriter(BinParser):
         :arg dict structure: Structure of the binary file.
         :arg dict source: Source dictionary.
         """
+        raw_counter = 0
+
         for item in structure:
+            if self._debug:
+                self._log.write('{}\n'.format(item['name']))
+
             if 'if' in item:
                 # Conditional statement.
+                # NOTE: Is this needed?
                 if not self._evaluate(item['if']):
                     continue
 
@@ -501,11 +497,15 @@ class BinWriter(BinParser):
             if not name:
                 # NOTE: Not sure if this is correct.
                 dtype = 'raw'
+                value = source['raw'][raw_counter]
+                raw_counter += 1
+            else:
+                value = source[name]
 
             if 'structure' not in item:
                 # Primitive data types.
-                self._parse_primitive(item, dtype, source[name])
-                self._internal[name] = source[name]
+                self._parse_primitive(item, dtype, value)
+                self._internal[name] = value
             else:
                 # Nested structures.
             #     if self._debug > 2:
@@ -518,11 +518,16 @@ class BinWriter(BinParser):
             #             dest[name] = {}
 
                 if 'for' in item:
-                    self._parse_for(item, source[name])
+                    self._parse_for(item, value)
                 elif 'do_while' in item:
                     # TODO: Merge with 'for'.
-                    self._parse_for(item, source[name])
-            #     elif 'while' in item:
+                    self._parse_for(item, value)
+                elif 'while' in item:
+                    self._parse_for(item, value)
+                    self._parse_primitive(
+                        self._get_type(item), self._get_type(item)['type'],
+                        source[item['while']['term']])
+
             #         self._parse_while(item, dest, name)
             #     else:
             #         self._parse(item['structure'], dest[name])
