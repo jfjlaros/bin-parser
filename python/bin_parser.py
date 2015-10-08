@@ -375,7 +375,7 @@ class BinWriter(BinParser):
     """
     def __init__(
             self, input_handle, structure_handle, types_handle,
-            functions=BinWriteFunctions, debug=0, log=sys.stderr):
+            functions=BinWriteFunctions, debug=0, log=sys.stdout):
         """
         Constructor.
 
@@ -414,8 +414,8 @@ class BinWriter(BinParser):
             # NOTE: This can result in a non-delimited trimmed field.
             field = field[:size]
         if len(field) < size:
-            # Pad the field if necessary
-            field += 0x00 * size - len(field)
+            # Pad the field if necessary.
+            field += chr(0x00) * (size - len(field))
 
         self.data += field
 
@@ -426,7 +426,6 @@ class BinWriter(BinParser):
         :arg dict item: A dictionary.
         :arg str dtype: Data type.
         :arg unknown value: Value to be stored.
-        :arg str name: Field name used in the destination dictionary.
         """
         delim = self._get_default(item, dtype, 'delimiter')
         size = self._get_default(item, dtype, 'size')
@@ -451,37 +450,15 @@ class BinWriter(BinParser):
         #         self._internal[member] = result[member]
         self._set_field(self._call(func, value, **kwargs), size, delim)
 
-    # def _parse_for(self, item, dest, name):
-    #     """
-    #     Parse a for loop.
+    def _parse_for(self, item, source):
+        """
+        Parse a for loop.
 
-    #     :arg dict item: A dictionary.
-    #     :arg dict dest: Destination dictionary.
-    #     :arg str name: Field name used in the destination dictionary.
-    #     """
-    #     length = item['for']
-    #     if type(length) != int:
-    #         length = self._internal[length]
-
-    #     for _ in range(length):
-    #         structure_dict = {}
-    #         self._parse(item['structure'], structure_dict)
-    #         dest[name].append(structure_dict)
-
-    # def _parse_do_while(self, item, dest, name):
-    #     """
-    #     Parse a do-while loop.
-
-    #     :arg dict item: A dictionary.
-    #     :arg dict dest: Destination dictionary.
-    #     :arg str name: Field name used in the destination dictionary.
-    #     """
-    #     while True:
-    #         structure_dict = {}
-    #         self._parse(item['structure'], structure_dict)
-    #         dest[name].append(structure_dict)
-    #         if not self._evaluate(item['do_while']):
-    #             break
+        :arg dict item: A dictionary.
+        :arg dict source: Source dictionary.
+        """
+        for subitem in source:
+            self._parse(item['structure'], subitem)
 
     # def _parse_while(self, item, dest, name):
     #     """
@@ -520,7 +497,7 @@ class BinWriter(BinParser):
             name = item['name'] if 'name' in item else ''
             dtype = item['type'] if 'type' in item else self.defaults['type']
 
-            # Unchanged until here.
+            # Same as reader until here.
             if not name:
                 # NOTE: Not sure if this is correct.
                 dtype = 'raw'
@@ -529,8 +506,8 @@ class BinWriter(BinParser):
                 # Primitive data types.
                 self._parse_primitive(item, dtype, source[name])
                 self._internal[name] = source[name]
-            # else:
-            #     # Nested structures.
+            else:
+                # Nested structures.
             #     if self._debug > 2:
             #         self._log.write('-- {}\n'.format(name))
 
@@ -540,10 +517,11 @@ class BinWriter(BinParser):
             #         else:
             #             dest[name] = {}
 
-            #     if 'for' in item:
-            #         self._parse_for(item, dest, name)
-            #     elif 'do_while' in item:
-            #         self._parse_do_while(item, dest, name)
+                if 'for' in item:
+                    self._parse_for(item, source[name])
+                elif 'do_while' in item:
+                    # TODO: Merge with 'for'.
+                    self._parse_for(item, source[name])
             #     elif 'while' in item:
             #         self._parse_while(item, dest, name)
             #     else:
