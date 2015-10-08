@@ -10,38 +10,26 @@ import sys
 
 import yaml
 
-from functions import BinReadFunctions, operators
+from functions import BinReadFunctions, BinWriteFunctions, operators
 
 
 class BinParser(object):
-    pass
-
-class BinReader(BinParser):
-    """
-    General binary file parser.
-    """
     def __init__(
-            self, input_handle, structure_handle, types_handle,
-            functions=BinReadFunctions, experimental=False, debug=0,
-            log=sys.stdout):
+            self, structure_handle, types_handle, functions=BinReadFunctions,
+            debug=0, log=sys.stdout):
         """
         Constructor.
 
-        :arg stream input_handle: Open readable handle to a binary file.
         :arg stream structure_handle: Open readable handle to the structure
             definition.
         :arg stream types_handle: Open readable handle to the types definition.
         :arg object functions: Object containing parsing functions.
-        :arg bool experimental: Enable experimental features.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
         """
-        self.data = input_handle.read()
-        self.parsed = {}
         self._internal = {}
 
         self._debug = debug
-        self._experimental = experimental | bool(debug)
         self._log = log
 
         self._functions = functions()
@@ -65,17 +53,96 @@ class BinReader(BinParser):
         if 'types' in types_data:
             self.types.update(types_data['types'])
 
-        self._offset = 0
-        self._raw_byte_count = 0
-
-        structure = yaml.load(structure_handle)
-        try:
-            self._parse(structure, self.parsed)
-        except StopIteration:
-            pass
+        self._structure = yaml.load(structure_handle)
 
     def _call(self, name, data, *args, **kwargs):
         return getattr(self._functions, name)(data, *args, **kwargs)
+
+    def _get_value(self, name):
+        """
+        Resolve the value of a variable.
+
+        First look in the cache to see if `name` is defined, then check the set
+        of constants. If nothing can be found, the variable is considered to be
+        a literal.
+
+        :arg any name: The name or value of a variable.
+        :returns: The resolved value.
+        """
+        if name in self._internal:
+            return self._internal[name]
+        if name in self.constants:
+            return self.constants[name]
+        return name
+
+    def _get_default(self, item, dtype, name):
+        """
+        """
+        if name in item:
+            return item[name]
+        if name in self.types[dtype]:
+            return self.types[dtype][name]
+        if name in self.defaults:
+            return self.defaults[name]
+        return None
+
+    def _evaluate(self, expression):
+        """
+        Evaluate an expression.
+
+        An expression is represented by a dictionary with the following
+        structure:
+
+            expression = {
+                'operator': '',
+                'operands': []
+            }
+
+        :arg dict expression: An expression.
+        :returns any: Result of the evaluation.
+        """
+        operands = map(lambda x: self._get_value(x), expression['operands'])
+
+        if len(operands) == 1 and 'operator' not in expression:
+            return operands[0]
+        return operators[expression['operator']](*operands)
+
+
+class BinReader(BinParser):
+    """
+    General binary file reader.
+    """
+    def __init__(
+            self, input_handle, structure_handle, types_handle,
+            functions=BinReadFunctions, experimental=False, debug=0,
+            log=sys.stdout):
+        """
+        Constructor.
+
+        :arg stream input_handle: Open readable handle to a binary file.
+        :arg stream structure_handle: Open readable handle to the structure
+            definition.
+        :arg stream types_handle: Open readable handle to the types definition.
+        :arg object functions: Object containing parsing functions.
+        :arg bool experimental: Enable experimental features.
+        :arg int debug: Debugging level.
+        :arg stream log: Debug stream to write to.
+        """
+        super(BinReader, self).__init__(
+            structure_handle, types_handle, functions, debug, log)
+
+        # TODO: Remove experimental feature, as it loses information.
+        self._experimental = experimental | bool(debug)
+
+        self.data = input_handle.read()
+        self.parsed = {}
+        self._offset = 0
+        self._raw_byte_count = 0
+
+        try:
+            self._parse(self._structure, self.parsed)
+        except StopIteration:
+            pass
 
     def _get_field(self, size=0, delimiter=[]):
         """
@@ -116,44 +183,6 @@ class BinReader(BinParser):
         self._offset += extracted
         return field
 
-    def _get_value(self, name):
-        """
-        Resolve the value of a variable.
-
-        First look in the cache to see if `name` is defined, then check the set
-        of constants. If nothing can be found, the variable is considered to be
-        a literal.
-
-        :arg any name: The name or value of a variable.
-        :returns: The resolved value.
-        """
-        if name in self._internal:
-            return self._internal[name]
-        if name in self.constants:
-            return self.constants[name]
-        return name
-
-    def _evaluate(self, expression):
-        """
-        Evaluate an expression.
-
-        An expression is represented by a dictionary with the following
-        structure:
-
-            expression = {
-                'operator': '',
-                'operands': []
-            }
-
-        :arg dict expression: An expression.
-        :returns any: Result of the evaluation.
-        """
-        operands = map(lambda x: self._get_value(x), expression['operands'])
-
-        if len(operands) == 1 and 'operator' not in expression:
-            return operands[0]
-        return operators[expression['operator']](*operands)
-
     def _parse_raw(self, destination, size, key='raw'):
         """
         Stow unknown data away in a list.
@@ -177,17 +206,6 @@ class BinReader(BinParser):
             self._get_field(size)
 
         self._raw_byte_count += size
-
-    def _get_default(self, item, dtype, name):
-        """
-        """
-        if name in item:
-            return item[name]
-        if name in self.types[dtype]:
-            return self.types[dtype][name]
-        if name in self.defaults:
-            return self.defaults[name]
-        return None
 
     def _parse_primitive(self, item, dtype, dest, name):
         """
@@ -349,3 +367,201 @@ class BinReader(BinParser):
                 self._offset, data_length))
             output_handle.write('{} bytes parsed ({:d}%)\n'.format(
                 parsed, parsed * 100 // len(self.data)))
+
+
+class BinWriter(BinParser):
+    """
+    General binary file writer.
+    """
+    def __init__(
+            self, input_handle, structure_handle, types_handle,
+            functions=BinWriteFunctions, debug=0, log=sys.stderr):
+        """
+        Constructor.
+
+        :arg stream input_handle: Open readable handle to a yaml file.
+        :arg stream structure_handle: Open readable handle to the structure
+            definition.
+        :arg stream types_handle: Open readable handle to the types definition.
+        :arg object functions: Object containing parsing functions.
+        :arg int debug: Debugging level.
+        :arg stream log: Debug stream to write to.
+        """
+        super(BinWriter, self).__init__(
+            structure_handle, types_handle, functions, debug, log)
+
+        self.data = ''
+        self.parsed = yaml.load(input_handle)
+
+        self._parse(self._structure, self.parsed)
+
+    def _set_field(self, data, size=0, delimiter=[]):
+        """
+        Append a field to {self.data} using either a fixed size, or a
+        delimiter.
+
+        :arg int data: The content of the field.
+        :arg int size: Size of fixed size field.
+        :arg list(char) delimiter: Delimiter for variable sized fields.
+        """
+        field = data
+
+        if delimiter:
+            # Add the delimiter for variable length fields.
+            field += ''.join(map(chr, delimiter))
+        if size:
+            # Clip the field if it is too large.
+            # NOTE: This can result in a non-delimited trimmed field.
+            field = field[:size]
+        if len(field) < size:
+            # Pad the field if necessary
+            field += 0x00 * size - len(field)
+
+        self.data += field
+
+    def _parse_primitive(self, item, dtype, value):
+        """
+        Parse a primitive data type.
+
+        :arg dict item: A dictionary.
+        :arg str dtype: Data type.
+        :arg unknown value: Value to be stored.
+        :arg str name: Field name used in the destination dictionary.
+        """
+        delim = self._get_default(item, dtype, 'delimiter')
+        size = self._get_default(item, dtype, 'size')
+        if not (delim or size):
+            size = 1
+
+        # Determine the function and its arguments.
+        func = dtype
+        kwargs = {}
+        if 'function' in self.types[dtype]:
+            if 'name' in self.types[dtype]['function']:
+                func = self.types[dtype]['function']['name']
+            if 'args' in self.types[dtype]['function']:
+                kwargs = self.types[dtype]['function']['args']
+
+        # NOTE: The following may need to be inverted for flags, but perhaps we
+        # can just pass the entire scope.
+        #
+        # if type(result) == dict:
+        #     for member in result:
+        #         dest[member] = result[member]
+        #         self._internal[member] = result[member]
+        self._set_field(self._call(func, value, **kwargs), size, delim)
+
+    # def _parse_for(self, item, dest, name):
+    #     """
+    #     Parse a for loop.
+
+    #     :arg dict item: A dictionary.
+    #     :arg dict dest: Destination dictionary.
+    #     :arg str name: Field name used in the destination dictionary.
+    #     """
+    #     length = item['for']
+    #     if type(length) != int:
+    #         length = self._internal[length]
+
+    #     for _ in range(length):
+    #         structure_dict = {}
+    #         self._parse(item['structure'], structure_dict)
+    #         dest[name].append(structure_dict)
+
+    # def _parse_do_while(self, item, dest, name):
+    #     """
+    #     Parse a do-while loop.
+
+    #     :arg dict item: A dictionary.
+    #     :arg dict dest: Destination dictionary.
+    #     :arg str name: Field name used in the destination dictionary.
+    #     """
+    #     while True:
+    #         structure_dict = {}
+    #         self._parse(item['structure'], structure_dict)
+    #         dest[name].append(structure_dict)
+    #         if not self._evaluate(item['do_while']):
+    #             break
+
+    # def _parse_while(self, item, dest, name):
+    #     """
+    #     Parse a while loop.
+
+    #     :arg dict item: A dictionary.
+    #     :arg dict dest: Destination dictionary.
+    #     :arg str name: Field name used in the destination dictionary.
+    #     """
+    #     delim = item['structure'][0]
+    #     dest[name] = [{}]
+
+    #     self._parse([delim], dest[name][0])
+    #     while True:
+    #         if not self._evaluate(item['while']):
+    #             break
+    #         self._parse(item['structure'][1:], dest[name][-1])
+    #         dest[name].append({})
+    #         self._parse([delim], dest[name][-1])
+
+    #     dest[item['while']['term']] = dest[name].pop(-1).values()[0]
+
+    def _parse(self, structure, source):
+        """
+        Parse a binary file.
+
+        :arg dict structure: Structure of the binary file.
+        :arg dict source: Source dictionary.
+        """
+        for item in structure:
+            if 'if' in item:
+                # Conditional statement.
+                if not self._evaluate(item['if']):
+                    continue
+
+            name = item['name'] if 'name' in item else ''
+            dtype = item['type'] if 'type' in item else self.defaults['type']
+
+            # Unchanged until here.
+            if not name:
+                # NOTE: Not sure if this is correct.
+                dtype = 'raw'
+
+            if 'structure' not in item:
+                # Primitive data types.
+                self._parse_primitive(item, dtype, source[name])
+                self._internal[name] = source[name]
+            # else:
+            #     # Nested structures.
+            #     if self._debug > 2:
+            #         self._log.write('-- {}\n'.format(name))
+
+            #     if name not in dest:
+            #         if set(['for', 'do_while', 'while']) & set(item):
+            #             dest[name] = []
+            #         else:
+            #             dest[name] = {}
+
+            #     if 'for' in item:
+            #         self._parse_for(item, dest, name)
+            #     elif 'do_while' in item:
+            #         self._parse_do_while(item, dest, name)
+            #     elif 'while' in item:
+            #         self._parse_while(item, dest, name)
+            #     else:
+            #         self._parse(item['structure'], dest[name])
+
+            # if self._debug > 2:
+            #     self._log.write(' --> {}\n'.format(name))
+
+    def write(self, output_handle):
+        """
+        Write the parsed binary file to a stream.
+
+        :arg stream output_handle: Open writable handle.
+        """
+        output_handle.write(self.data)
+
+        if self._debug:
+            self._log.write('--- INTERNAL VARIABLES ---\n\n')
+            yaml.dump(
+                self._internal, self._log, width=76,
+                default_flow_style=False, encoding=None)
