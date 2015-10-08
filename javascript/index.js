@@ -55,12 +55,12 @@ function numerical(a, b) {
 }
 
 /*
-General binary file parser.
+General binary file reader.
 */
-function BinParser(fileContent, structureContent, typesContent, functions) {
+function BinReader(fileContent, structureContent, typesContent, functions) {
   var data = fileContent,
       internal = {},
-      functions = functions || new Functions.BinParseFunctions(),
+      functions = functions || new Functions.BinReadFunctions(),
       constants = {},
       defaults = {
         'size': 0,
@@ -381,7 +381,7 @@ function BinParser(fileContent, structureContent, typesContent, functions) {
   this.defaults = defaults;
 }
 
-module.exports.BinParser = BinParser;
+module.exports.BinReader = BinReader;
 module.exports.update = update;
 module.exports.pop = pop;
 module.exports.numerical = numerical;

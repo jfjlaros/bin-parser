@@ -3,30 +3,30 @@ Tests for the bin_parser.bin_parser module.
 """
 
 
-from bin_parser import BinParser
+from bin_parser import BinReader
 
 
-class TestParser(object):
+class TestReader(object):
     """
     Test the python.fam_parser module.
     """
     def setup(self):
-        self.balance = BinParser(open('examples/balance/balance.dat'),
+        self.balance = BinReader(open('examples/balance/balance.dat'),
             open('examples/balance/structure.yml'),
             open('examples/balance/types.yml')).parsed
-        self.for_ = BinParser(open('examples/lists/for.dat'),
+        self.for_ = BinReader(open('examples/lists/for.dat'),
             open('examples/lists/structure_for.yml'),
             open('examples/lists/types.yml')).parsed
-        self.do_while = BinParser(open('examples/lists/do_while.dat'),
+        self.do_while = BinReader(open('examples/lists/do_while.dat'),
             open('examples/lists/structure_do_while.yml'),
             open('examples/lists/types.yml')).parsed
-        self.while_ = BinParser(open('examples/lists/while.dat'),
+        self.while_ = BinReader(open('examples/lists/while.dat'),
             open('examples/lists/structure_while.yml'),
             open('examples/lists/types.yml')).parsed
-        self.if_a = BinParser(open('examples/conditional/a.dat'),
+        self.if_a = BinReader(open('examples/conditional/a.dat'),
             open('examples/conditional/structure.yml'),
             open('examples/conditional/types.yml')).parsed
-        self.if_b = BinParser(open('examples/conditional/b.dat'),
+        self.if_b = BinReader(open('examples/conditional/b.dat'),
             open('examples/conditional/structure.yml'),
             open('examples/conditional/types.yml')).parsed
 

@@ -74,7 +74,7 @@ function convertToHex(data) {
 /*
 Functions for decoding data.
 */
-function BinParseFunctions() {
+function BinReadFunctions() {
   /*
   Encode a string in hexadecimal, grouped by byte.
 
@@ -218,4 +218,4 @@ function BinParseFunctions() {
 }
 
 iconv.skipDecodeWarning = true;
-module.exports.BinParseFunctions = BinParseFunctions;
+module.exports.BinReadFunctions = BinReadFunctions;

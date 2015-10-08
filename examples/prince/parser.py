@@ -3,10 +3,10 @@
 
 import sys
 
-from bin_parser import BinParser, BinParseFunctions
+from bin_parser import BinReader, BinReadFunctions
 
 
-class Prince(BinParseFunctions):
+class Prince(BinReadFunctions):
     def min(self, data):
         return super(Prince, self).int(data) - 1
 
@@ -15,6 +15,6 @@ class Prince(BinParseFunctions):
         return super(Prince, self).int(data) // 12
 
 
-parser = BinParser(open('prince.hof'), open('structure.yml'),
+parser = BinReader(open('prince.hof'), open('structure.yml'),
     open('types.yml'), functions=Prince)
 parser.write(sys.stdout)

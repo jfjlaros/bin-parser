@@ -1,7 +1,7 @@
 import argparse
 
 from . import usage, version
-from .bin_parser import BinParser
+from .bin_parser import BinReader
 
 
 def bin_parser(
@@ -17,7 +17,7 @@ def bin_parser(
     :arg bool experimental: Enable experimental features.
     :arg int debug: Debugging level.
     """
-    parser = BinParser(
+    parser = BinReader(
         input_handle, structure_handle, types_handle,
         experimental=experimental, debug=debug)
     parser.write(output_handle)

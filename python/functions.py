@@ -30,12 +30,9 @@ def _inverse_dict(dictionary):
     return dict(map(lambda x: x[::-1], dictionary.items()))
 
 
-class BinParseFunctions(object):
+class BinReadFunctions(object):
     """
-    Functions for decoding and encoding data.
-
-    Every decoding function has a counterpart for encoding. These functions end
-    with `_inv`. Documentation of these functions is omited.
+    Functions for decoding data.
     """
     def raw(self, data):
         """
@@ -50,14 +47,8 @@ class BinParseFunctions(object):
         return ' '.join(
             [raw_data[x:x + 2] for x in range(0, len(raw_data), 2)])
 
-    def raw_inv(self, hex_string):
-        return ''.join(hex_string.split()).decode('hex')
-
     def bit(self, data):
         return '{:08b}'.format(ord(data))
-
-    def bit_inv(self, bit_string):
-        return chr(int('0b{}'.format(bit_string), 2))
 
     def int(self, data):
         """
@@ -75,21 +66,8 @@ class BinParseFunctions(object):
         return reduce(
             lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
 
-    def int_inv(self, integer):
-        data_int = integer
-        result = ''
-
-        while data_int:
-            result += chr(data_int % 0x100)
-            data_int >>= 8
-
-        return result
-
     def colour(self, data):
         return '0x{:06x}'.format(self.int(data))
-
-    def colour_inv(self, colour_string):
-        return self.int_inv(int(colour_string, 0x10))
 
     def text(self, data, split=[], encoding='utf-8'):
         """
@@ -106,14 +84,6 @@ class BinParseFunctions(object):
         if split:
             return '\n'.join(decoded_text.split(''.join(map(chr, split))))
         return decoded_text
-
-    def text_inv(self, text_string, split=[], encoding='utf-8'):
-        decoded_text = text_string
-
-        if split:
-            decoded_text = ''.join(map(chr, split)).join(
-                text_string.split('\n'))
-        return decoded_text.encode(encoding)
 
     def date(self, data, annotation):
         """
@@ -133,13 +103,6 @@ class BinParseFunctions(object):
             return annotation[date_int]
         return str(date_int)
 
-    def date_inv(self, date_int, annotation):
-        inverse_annotation = _inverse_dict(annotation)
-
-        if date_int in inverse_annotation:
-            return self.int_inv(inverse_annotation[date_int])
-        return self.int_inv(int(date_int))
-
     def map(self, data, annotation):
         """
         Replace a value with its annotation.
@@ -154,13 +117,6 @@ class BinParseFunctions(object):
         if index in annotation:
             return annotation[index]
         return '{:02x}'.format(index)
-
-    def map_inv(self, mapped_string, annotation):
-        inverse_annotation = _inverse_dict(annotation)
-
-        if mapped_string in inverse_annotation:
-            return chr(inverse_annotation[mapped_string])
-        return chr(int(mapped_string, 0x10))
 
     def flags(self, data, default, annotation):
         """
@@ -189,7 +145,56 @@ class BinParseFunctions(object):
 
         return flags_dict
 
-    def flags_inv(self, flags_dict, default, annotation):
+
+class BinWriteFunctions(object):
+    """
+    Functions for encoding data.
+
+    Every decoding function in the BinReadFunctions class has a counterpart for
+    encoding. Documentation of these functions is omited.
+    """
+    def raw(self, hex_string):
+        return ''.join(hex_string.split()).decode('hex')
+
+    def bit(self, bit_string):
+        return chr(int('0b{}'.format(bit_string), 2))
+
+    def int(self, integer):
+        data_int = integer
+        result = ''
+
+        while data_int:
+            result += chr(data_int % 0x100)
+            data_int >>= 8
+
+        return result
+
+    def colour(self, colour_string):
+        return self.int(int(colour_string, 0x10))
+
+    def text(self, text_string, split=[], encoding='utf-8'):
+        decoded_text = text_string
+
+        if split:
+            decoded_text = ''.join(map(chr, split)).join(
+                text_string.split('\n'))
+        return decoded_text.encode(encoding)
+
+    def date(self, date_int, annotation):
+        inverse_annotation = _inverse_dict(annotation)
+
+        if date_int in inverse_annotation:
+            return self.int(inverse_annotation[date_int])
+        return self.int(int(date_int))
+
+    def map(self, mapped_string, annotation):
+        inverse_annotation = _inverse_dict(annotation)
+
+        if mapped_string in inverse_annotation:
+            return chr(inverse_annotation[mapped_string])
+        return chr(int(mapped_string, 0x10))
+
+    def flags(self, flags_dict, default, annotation):
         inverse_annotation = _inverse_dict(annotation)
         prefix_len = len('flags_{}_'.format(default))
         values = 0x00

@@ -6,10 +6,10 @@ var fs = require('fs'),
     path = require('path'),
     yaml = require('js-yaml');
 
-var BinParser = require('./index');
+var BinReader = require('./index');
 
 var main = function(filename, structure, types) {
-  var parser = new BinParser.BinParser(
+  var parser = new BinReader.BinReader(
     fs.readFileSync(filename).toString('binary'),
     yaml.load(fs.readFileSync(structure).toString('binary')),
     yaml.load(fs.readFileSync(types).toString('binary')));

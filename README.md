@@ -85,12 +85,12 @@ To use the library from our own code, we need to use the following:
 ```python
 import bin_parser
 
-parser = bin_parser.BinParser(
+parser = bin_parser.BinReader(
     open('balance.dat'), open('structure.yml'), open('types.yml'))
 print parser.parsed['name']
 ```
 
-The `BinParser` object contains the original data in `data` and the parsed data
+The `BinReader` object contains the original data in `data` and the parsed data
 in `parsed`. Furthermore it contains the function `write` to write the content
 of `parsed` in YAML format to a file handle.
 
@@ -272,12 +272,12 @@ comment:
 ```
 
 ### Defining new types
-Types can be added by subclassing the BinParseFunctions class. Suppose we need
+Types can be added by subclassing the BinReadFunctions class. Suppose we need
 a function that inverts all bits in a byte. We first have to make a subclass
 that implements this function:
 
 ```python
-class Invert(BinParseFunctions):
+class Invert(BinReadFunctions):
     def inv(self, data):
         return data ^ 0xff
 ```
@@ -288,7 +288,7 @@ function. In this case there is no need to define the type in `types.yml`.
 Now we can initiate the parser with this new class:
 
 ```python
-parser = bin_parser.BinParser(
+parser = bin_parser.BinReader(
     open('something.dat'), open('structure.yml'),
     open('types.yml'), functions=Invert)
 ```

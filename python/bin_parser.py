@@ -10,16 +10,19 @@ import sys
 
 import yaml
 
-from functions import BinParseFunctions, operators
+from functions import BinReadFunctions, operators
 
 
 class BinParser(object):
+    pass
+
+class BinReader(BinParser):
     """
     General binary file parser.
     """
     def __init__(
             self, input_handle, structure_handle, types_handle,
-            functions=BinParseFunctions, experimental=False, debug=0,
+            functions=BinReadFunctions, experimental=False, debug=0,
             log=sys.stdout):
         """
         Constructor.
