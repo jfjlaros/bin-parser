@@ -167,7 +167,7 @@ class BinWriteFunctions(object):
             result += chr(data_int % 0x100)
             data_int >>= 8
 
-        return result
+        return result or chr(0x00)
 
     def colour(self, colour_string):
         return self.int(int(colour_string, 0x10))

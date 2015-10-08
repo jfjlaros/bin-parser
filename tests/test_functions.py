@@ -27,8 +27,11 @@ class TestParser(object):
     def test_bit(self):
         assert self.byte == self.bpfi.bit(self.bpf.bit(self.byte))
 
-    def test_int(self):
+    def test_int_1(self):
         assert self.string == self.bpfi.int(self.bpf.int(self.string))
+
+    def test_int_2(self):
+        assert self.bpfi.int(0) == chr(0x00)
 
     def test_colour(self):
         assert self.string == self.bpfi.colour(self.bpf.colour(self.string))
