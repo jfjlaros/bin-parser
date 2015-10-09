@@ -195,7 +195,7 @@ class BinWriteFunctions(object):
 
     def flags(self, flags_dict, annotation):
         inverse_annotation = _inverse_dict(annotation)
-        prefix_len = len('flags_')
+        prefix_len = len('flag_')
         values = 0x00
 
         for key in flags_dict:

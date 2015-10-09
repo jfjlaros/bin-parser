@@ -19,7 +19,6 @@ class TestParser(object):
         self.date_annotation = {3289392: self.annotation}
         self.map_annotation = {48: self.annotation}
         self.flags_annotation = {0x10: self.annotation, 0x01: 'unused'}
-        self.flags_name = 'yy'
 
     def test_raw(self):
         assert self.string == self.bpfi.raw(self.bpf.raw(self.string))
@@ -61,16 +60,14 @@ class TestParser(object):
             self.bpf.map(self.byte, self.map_annotation), self.map_annotation)
 
     def test_flags_1(self):
-        assert self.byte == self.bpfi.flags(
-            self.bpf.flags(self.byte, self.flags_name, {}),
-            self.flags_name, {})
+        assert self.byte == self.bpfi.flags(self.bpf.flags(self.byte, {}), {})
 
     def test_flags_2(self):
         assert (self.bpf.flags(
-            self.byte, self.flags_name, self.flags_annotation) ==
-            {'flags_yy_20': True, 'unused': False, 'xxxx': True})
+            self.byte, self.flags_annotation) ==
+            {'flag_20': True, 'unused': False, 'xxxx': True})
 
     def test_flags_3(self):
         assert self.bpfi.flags(self.bpf.flags(
-            self.byte, self.flags_name, self.flags_annotation),
-            self.flags_name, self.flags_annotation) == self.byte
+            self.byte, self.flags_annotation),
+            self.flags_annotation) == self.byte

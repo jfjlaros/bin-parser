@@ -518,7 +518,6 @@ class BinWriter(BinParser):
                         [term],
                         {term['name']: source[item['while']['term']]})
                 else:
-                    print 'XXX', item['structure'], value
                     self._parse(item['structure'], value)
 
                 if self._debug > 1:
@@ -530,8 +529,7 @@ class BinWriter(BinParser):
 
         :arg stream output_handle: Open writable handle.
         """
-        yaml.dump(
-            self.parsed, output_handle, width=76, default_flow_style=False)
+        output_handle.write(self.data)
 
         if self._debug:
             if self._debug > 1:
