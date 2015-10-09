@@ -183,10 +183,7 @@ class BinReader(BinParser):
         """
         Stow unknown data away in a list.
 
-        This function is needed to skip data of which the function is unknown.
-
-        Ideally, this function will become obsolete (when we have finished the
-        reverse engineering completely).
+        This function is used to skip data of which the function is unknown.
 
         :arg dict destination: Destination dictionary.
         :arg int size: Bytes to be stowed away (see `_get_field`).
@@ -225,9 +222,9 @@ class BinReader(BinParser):
             # Read and process the data.
             result = self._call(func, self._get_field(size, delim), **kwargs)
             if type(result) == dict:
+                # Unpack dictionaries in order to use the items in evaluations.
                 for member in result:
                     self._internal[member] = result[member]
-            #else:
             dest[name] = result
             self._internal[name] = result
         else:
@@ -379,7 +376,7 @@ class BinWriter(BinParser):
         self.data = ''
         self.parsed = yaml.load(input_handle)
 
-        self._parse(self._structure, self.parsed)
+        self._encode(self._structure, self.parsed)
 
     def _set_field(self, data, size=0, delimiter=[]):
         """
@@ -405,9 +402,9 @@ class BinWriter(BinParser):
 
         self.data += field
 
-    def _parse_primitive(self, item, dtype, value):
+    def _encode_primitive(self, item, dtype, value):
         """
-        Parse a primitive data type.
+        Encode a primitive data type.
 
         :arg dict item: A dictionary.
         :arg str dtype: Data type.
@@ -427,16 +424,11 @@ class BinWriter(BinParser):
             if 'args' in self.types[dtype]['function']:
                 kwargs = self.types[dtype]['function']['args']
 
-        # NOTE: The following may need to be inverted for flags, but perhaps we
-        # can just pass the entire scope.
-        #
-        # if type(result) == dict:
-        #     for member in result:
-        #         dest[member] = result[member]
-        #         self._internal[member] = result[member]
         if type(value) == dict:
+            # Unpack dictionaries in order to use the items in evaluations.
             for member in value:
                 self._internal[member] = value[member]
+
         self._set_field(self._call(func, value, **kwargs), size, delim)
 
     def _get_item(self, item):
@@ -447,19 +439,19 @@ class BinWriter(BinParser):
                 if operand == field['name']:
                     return field
 
-    def _parse_for(self, item, source):
+    def _encode_loop(self, item, source):
         """
-        Parse a for loop.
+        Encode a loop.
 
         :arg dict item: A dictionary.
         :arg dict source: Source dictionary.
         """
         for subitem in source:
-            self._parse(item['structure'], subitem)
+            self._encode(item['structure'], subitem)
 
-    def _parse(self, structure, source):
+    def _encode(self, structure, source):
         """
-        Parse a binary file.
+        Encode to a file.
 
         :arg dict structure: Structure of the binary file.
         :arg dict source: Source dictionary.
@@ -469,14 +461,12 @@ class BinWriter(BinParser):
         for item in structure:
             if 'if' in item:
                 # Conditional statement.
-                # NOTE: Is this needed?
                 if not self._evaluate(item['if']):
                     continue
 
             name = item['name'] if 'name' in item else ''
             dtype = item['type'] if 'type' in item else self.defaults['type']
 
-            # Same as reader until here.
             if not name:
                 # NOTE: Not sure if this is correct.
                 dtype = 'raw'
@@ -491,41 +481,30 @@ class BinWriter(BinParser):
                     self._log.write(
                         '0x{:06x}: {} --> {}\n'.format(
                         len(self.data), name, value))
-                self._parse_primitive(item, dtype, value)
+
+                self._encode_primitive(item, dtype, value)
                 self._internal[name] = value
             else:
                 # Nested structures.
                 if self._debug > 1:
                     self._log.write('-- {}\n'.format(name))
-            #     if self._debug > 2:
-            #         self._log.write('-- {}\n'.format(name))
 
-            #     if name not in dest:
-            #         if set(['for', 'do_while', 'while']) & set(item):
-            #             dest[name] = []
-            #         else:
-            #             dest[name] = {}
-
-                if 'for' in item:
-                    self._parse_for(item, value)
-                elif 'do_while' in item:
-                    # TODO: Merge with 'for'.
-                    self._parse_for(item, value)
-                elif 'while' in item:
-                    self._parse_for(item, value)
-                    term = self._get_item(item)
-                    self._parse(
-                        [term],
-                        {term['name']: source[item['while']['term']]})
+                if set(['for', 'do_while', 'while']) & set(item):
+                    self._encode_loop(item, value)
+                    if 'while' in item:
+                        term = self._get_item(item)
+                        self._encode(
+                            [term],
+                            {term['name']: source[item['while']['term']]})
                 else:
-                    self._parse(item['structure'], value)
+                    self._encode(item['structure'], value)
 
                 if self._debug > 1:
                     self._log.write(' --> {}\n'.format(name))
 
     def write(self, output_handle):
         """
-        Write the parsed binary file to a stream.
+        Write the encoded file to a stream.
 
         :arg stream output_handle: Open writable handle.
         """
