@@ -5,8 +5,7 @@ from .bin_parser import BinReader
 
 
 def bin_parser(
-        input_handle, structure_handle, types_handle, output_handle,
-        experimental=False, debug=0):
+        input_handle, structure_handle, types_handle, output_handle, debug=0):
     """
     Main entry point.
 
@@ -14,12 +13,10 @@ def bin_parser(
     :arg stream structure_handle: Open readable handle to the structure file.
     :arg stream types_handle: Open readable handle to the types file.
     :arg stream output_handle: Open writable handle.
-    :arg bool experimental: Enable experimental features.
     :arg int debug: Debugging level.
     """
     parser = BinReader(
-        input_handle, structure_handle, types_handle,
-        experimental=experimental, debug=debug)
+        input_handle, structure_handle, types_handle, debug=debug)
     parser.write(output_handle)
 
 
@@ -44,9 +41,6 @@ def main():
         'output_handle', metavar='OUTPUT', type=argparse.FileType('w'),
         help='output file')
     parser.add_argument('-d', dest='debug', type=int, help='debugging level')
-    parser.add_argument(
-        '-e', dest='experimental', action='store_true',
-        help='enable experimental features')
     parser.add_argument('-v', action='version', version=version(parser.prog))
 
     try:

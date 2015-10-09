@@ -16,7 +16,7 @@ from functions import BinReadFunctions, BinWriteFunctions, operators
 class BinParser(object):
     def __init__(
             self, structure_handle, types_handle, functions=BinReadFunctions,
-            debug=0, log=sys.stdout):
+            debug=0, log=sys.stderr):
         """
         Constructor.
 
@@ -54,6 +54,9 @@ class BinParser(object):
             self.types.update(types_data['types'])
 
         self._structure = yaml.load(structure_handle)
+
+        if self._debug > 1:
+            self._log.write('--- PARSING DETAILS ---\n\n')
 
     def _call(self, name, data, *args, **kwargs):
         return getattr(self._functions, name)(data, *args, **kwargs)
@@ -114,8 +117,7 @@ class BinReader(BinParser):
     """
     def __init__(
             self, input_handle, structure_handle, types_handle,
-            functions=BinReadFunctions, experimental=False, debug=0,
-            log=sys.stdout):
+            functions=BinReadFunctions, debug=0, log=sys.stderr):
         """
         Constructor.
 
@@ -124,15 +126,11 @@ class BinReader(BinParser):
             definition.
         :arg stream types_handle: Open readable handle to the types definition.
         :arg object functions: Object containing parsing functions.
-        :arg bool experimental: Enable experimental features.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
         """
         super(BinReader, self).__init__(
             structure_handle, types_handle, functions, debug, log)
-
-        # TODO: Remove experimental feature, as it loses information.
-        self._experimental = experimental | bool(debug)
 
         self.data = input_handle.read()
         self.parsed = {}
@@ -177,8 +175,6 @@ class BinReader(BinParser):
                     'raw', field), size))
             else:
                 self._log.write('{}'.format(field))
-            if self._debug < 3:
-                self._log.write('\n')
 
         self._offset += extracted
         return field
@@ -188,8 +184,6 @@ class BinReader(BinParser):
         Stow unknown data away in a list.
 
         This function is needed to skip data of which the function is unknown.
-        If `self._experimental` is set to `True`,  the data is placed in an
-        appropriate place. This is mainly for debugging purposes.
 
         Ideally, this function will become obsolete (when we have finished the
         reverse engineering completely).
@@ -198,12 +192,9 @@ class BinReader(BinParser):
         :arg int size: Bytes to be stowed away (see `_get_field`).
         :arg str key: Name of the list to store the data in.
         """
-        if self._experimental:
-            if key not in destination:
-                destination[key] = []
-            destination[key].append(self._call('raw', self._get_field(size)))
-        else:
-            self._get_field(size)
+        if key not in destination:
+            destination[key] = []
+        destination[key].append(self._call('raw', self._get_field(size)))
 
         self._raw_byte_count += size
 
@@ -316,7 +307,7 @@ class BinReader(BinParser):
                 self._parse_primitive(item, dtype, dest, name)
             else:
                 # Nested structures.
-                if self._debug > 2:
+                if self._debug > 1:
                     self._log.write('-- {}\n'.format(name))
 
                 if name not in dest:
@@ -334,7 +325,7 @@ class BinReader(BinParser):
                 else:
                     self._parse(item['structure'], dest[name])
 
-            if self._debug > 2:
+            if self._debug > 1:
                 self._log.write(' --> {}\n'.format(name))
 
     def write(self, output_handle):
@@ -343,29 +334,25 @@ class BinReader(BinParser):
 
         :arg stream output_handle: Open writable handle.
         """
-        if self._debug > 1:
-            output_handle.write('\n\n')
-
-        if self._debug:
-            output_handle.write('--- YAML DUMP ---\n\n')
-        output_handle.write('---\n')
         yaml.dump(
             self.parsed, output_handle, width=76, default_flow_style=False)
 
         if self._debug:
-            output_handle.write('\n\n--- INTERNAL VARIABLES ---\n\n')
+            if self._debug > 1:
+                self._log.write('\n\n')
+            self._log.write('--- INTERNAL VARIABLES ---\n\n')
             yaml.dump(
-                self._internal, output_handle, width=76,
+                self._internal, self._log, width=76,
                 default_flow_style=False, encoding=None)
 
             data_length = len(self.data)
             parsed = data_length - self._raw_byte_count
 
-            output_handle.write('\n\n--- DEBUG INFO ---\n\n')
-            output_handle.write('Reached byte {} out of {}.\n'.format(
+            self._log.write('\n\n--- DEBUG INFO ---\n\n')
+            self._log.write('Reached byte {} out of {}.\n'.format(
                 self._offset, data_length))
-            output_handle.write('{} bytes parsed ({:d}%)\n'.format(
-                parsed, parsed * 100 // len(self.data)))
+            self._log.write('{} bytes parsed ({:d}%).\n'.format(
+                parsed, parsed * 100 // data_length))
 
 
 class BinWriter(BinParser):
@@ -374,7 +361,7 @@ class BinWriter(BinParser):
     """
     def __init__(
             self, input_handle, structure_handle, types_handle,
-            functions=BinWriteFunctions, debug=0, log=sys.stdout):
+            functions=BinWriteFunctions, debug=0, log=sys.stderr):
         """
         Constructor.
 
@@ -500,7 +487,7 @@ class BinWriter(BinParser):
 
             if 'structure' not in item:
                 # Primitive data types.
-                if self._debug:
+                if self._debug > 1:
                     self._log.write(
                         '0x{:06x}: {} --> {}\n'.format(
                         len(self.data), name, value))
@@ -508,7 +495,7 @@ class BinWriter(BinParser):
                 self._internal[name] = value
             else:
                 # Nested structures.
-                if self._debug:
+                if self._debug > 1:
                     self._log.write('-- {}\n'.format(name))
             #     if self._debug > 2:
             #         self._log.write('-- {}\n'.format(name))
@@ -534,7 +521,7 @@ class BinWriter(BinParser):
                     print 'XXX', item['structure'], value
                     self._parse(item['structure'], value)
 
-                if self._debug:
+                if self._debug > 1:
                     self._log.write(' --> {}\n'.format(name))
 
     def write(self, output_handle):
@@ -543,10 +530,17 @@ class BinWriter(BinParser):
 
         :arg stream output_handle: Open writable handle.
         """
-        output_handle.write(self.data)
+        yaml.dump(
+            self.parsed, output_handle, width=76, default_flow_style=False)
 
         if self._debug:
-            self._log.write('\n\n--- INTERNAL VARIABLES ---\n\n')
+            if self._debug > 1:
+                self._log.write('\n\n')
+
+            self._log.write('--- INTERNAL VARIABLES ---\n\n')
             yaml.dump(
                 self._internal, self._log, width=76,
                 default_flow_style=False, encoding=None)
+
+            self._log.write('\n\n--- DEBUG INFO ---\n\n')
+            self._log.write('{} bytes written.\n'.format(len(self.data)))
