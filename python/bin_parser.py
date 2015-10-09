@@ -235,11 +235,10 @@ class BinReader(BinParser):
             result = self._call(func, self._get_field(size, delim), **kwargs)
             if type(result) == dict:
                 for member in result:
-                    dest[member] = result[member]
                     self._internal[member] = result[member]
-            else:
-                dest[name] = result
-                self._internal[name] = result
+            #else:
+            dest[name] = result
+            self._internal[name] = result
         else:
             self._parse_raw(dest, size)
 
@@ -393,10 +392,7 @@ class BinWriter(BinParser):
         self.data = ''
         self.parsed = yaml.load(input_handle)
 
-        try:
-            self._parse(self._structure, self.parsed)
-        except Exception:
-            pass
+        self._parse(self._structure, self.parsed)
 
     def _set_field(self, data, size=0, delimiter=[]):
         """
@@ -451,9 +447,12 @@ class BinWriter(BinParser):
         #     for member in result:
         #         dest[member] = result[member]
         #         self._internal[member] = result[member]
+        if type(value) == dict:
+            for member in value:
+                self._internal[member] = value[member]
         self._set_field(self._call(func, value, **kwargs), size, delim)
 
-    def _get_type(self, item):
+    def _get_item(self, item):
         """
         """
         for operand in item['while']['operands']:
@@ -481,9 +480,6 @@ class BinWriter(BinParser):
         raw_counter = 0
 
         for item in structure:
-            if self._debug:
-                self._log.write('{}\n'.format(item['name']))
-
             if 'if' in item:
                 # Conditional statement.
                 # NOTE: Is this needed?
@@ -504,10 +500,16 @@ class BinWriter(BinParser):
 
             if 'structure' not in item:
                 # Primitive data types.
+                if self._debug:
+                    self._log.write(
+                        '0x{:06x}: {} --> {}\n'.format(
+                        len(self.data), name, value))
                 self._parse_primitive(item, dtype, value)
                 self._internal[name] = value
             else:
                 # Nested structures.
+                if self._debug:
+                    self._log.write('-- {}\n'.format(name))
             #     if self._debug > 2:
             #         self._log.write('-- {}\n'.format(name))
 
@@ -524,16 +526,16 @@ class BinWriter(BinParser):
                     self._parse_for(item, value)
                 elif 'while' in item:
                     self._parse_for(item, value)
-                    self._parse_primitive(
-                        self._get_type(item), self._get_type(item)['type'],
-                        source[item['while']['term']])
+                    term = self._get_item(item)
+                    self._parse(
+                        [term],
+                        {term['name']: source[item['while']['term']]})
+                else:
+                    print 'XXX', item['structure'], value
+                    self._parse(item['structure'], value)
 
-            #         self._parse_while(item, dest, name)
-            #     else:
-            #         self._parse(item['structure'], dest[name])
-
-            # if self._debug > 2:
-            #     self._log.write(' --> {}\n'.format(name))
+                if self._debug:
+                    self._log.write(' --> {}\n'.format(name))
 
     def write(self, output_handle):
         """
@@ -544,7 +546,7 @@ class BinWriter(BinParser):
         output_handle.write(self.data)
 
         if self._debug:
-            self._log.write('--- INTERNAL VARIABLES ---\n\n')
+            self._log.write('\n\n--- INTERNAL VARIABLES ---\n\n')
             yaml.dump(
                 self._internal, self._log, width=76,
                 default_flow_style=False, encoding=None)

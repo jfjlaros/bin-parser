@@ -118,7 +118,7 @@ class BinReadFunctions(object):
             return annotation[index]
         return '{:02x}'.format(index)
 
-    def flags(self, data, default, annotation):
+    def flags(self, data, annotation):
         """
         Explode a bitfield into flags.
 
@@ -126,7 +126,6 @@ class BinReadFunctions(object):
         in the results.
 
         :arg int data: Bit field.
-        :arg str default: Flag name for unannotated bits.
         :arg str annotation: Annotation of {data}.
 
         :returns dict: Dictionary of flags and their values.
@@ -139,7 +138,7 @@ class BinReadFunctions(object):
 
             if flag not in annotation:
                 if value:
-                    flags_dict['flags_{}_{:02x}'.format(default, flag)] = value
+                    flags_dict['flag_{:02x}'.format(flag)] = value
             else:
                 flags_dict[annotation[flag]] = value
 
@@ -194,9 +193,9 @@ class BinWriteFunctions(object):
             return chr(inverse_annotation[mapped_string])
         return chr(int(mapped_string, 0x10))
 
-    def flags(self, flags_dict, default, annotation):
+    def flags(self, flags_dict, annotation):
         inverse_annotation = _inverse_dict(annotation)
-        prefix_len = len('flags_{}_'.format(default))
+        prefix_len = len('flags_')
         values = 0x00
 
         for key in flags_dict:
