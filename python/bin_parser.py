@@ -36,13 +36,16 @@ class BinParser(object):
 
         self.constants = {}
         self.defaults = {
-            'size': 0,
             'delimiter': [],
-            'type': 'text'
+            'name': '',
+            'size': 0,
+            'type': 'text',
+            'unknown_destination': 'raw',
+            'unknown_function': 'raw'
         }
         self.types = {
-            'raw': {},
-            'int': {}
+            'int': {},
+            'raw': {}
         }
 
         types_data = yaml.load(types_handle)
@@ -83,11 +86,30 @@ class BinParser(object):
         """
         if name in item:
             return item[name]
-        if name in self.types[dtype]:
+        if dtype in self.types and name in self.types[dtype]:
             return self.types[dtype][name]
         if name in self.defaults:
             return self.defaults[name]
         return None
+
+    def _get_function(self, item, dtype):
+        """
+        """
+        delim = self._get_default(item, dtype, 'delimiter')
+        size = self._get_default(item, dtype, 'size')
+        if not (delim or size):
+            size = 1
+
+        # Determine the function and its arguments.
+        func = dtype
+        kwargs = {}
+        if 'function' in self.types[dtype]:
+            if 'name' in self.types[dtype]['function']:
+                func = self.types[dtype]['function']['name']
+            if 'args' in self.types[dtype]['function']:
+                kwargs = self.types[dtype]['function']['args']
+
+        return delim, size, func, kwargs
 
     def _evaluate(self, expression):
         """
@@ -179,22 +201,6 @@ class BinReader(BinParser):
         self._offset += extracted
         return field
 
-    def _parse_raw(self, destination, size, key='raw'):
-        """
-        Stow unknown data away in a list.
-
-        This function is used to skip data of which the function is unknown.
-
-        :arg dict destination: Destination dictionary.
-        :arg int size: Bytes to be stowed away (see `_get_field`).
-        :arg str key: Name of the list to store the data in.
-        """
-        if key not in destination:
-            destination[key] = []
-        destination[key].append(self._call('raw', self._get_field(size)))
-
-        self._raw_byte_count += size
-
     def _parse_primitive(self, item, dtype, dest, name):
         """
         Parse a primitive data type.
@@ -204,31 +210,30 @@ class BinReader(BinParser):
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
-        delim = self._get_default(item, dtype, 'delimiter')
-        size = self._get_default(item, dtype, 'size')
-        if not (delim or size):
-            size = 1
+        delim, size, func, kwargs = self._get_function(item, dtype)
 
         if name:
-            # Determine the function and its arguments.
-            func = dtype
-            kwargs = {}
-            if 'function' in self.types[dtype]:
-                if 'name' in self.types[dtype]['function']:
-                    func = self.types[dtype]['function']['name']
-                if 'args' in self.types[dtype]['function']:
-                    kwargs = self.types[dtype]['function']['args']
-
             # Read and process the data.
             result = self._call(func, self._get_field(size, delim), **kwargs)
             if type(result) == dict:
                 # Unpack dictionaries in order to use the items in evaluations.
                 for member in result:
                     self._internal[member] = result[member]
+            else:
+                self._internal[name] = result
             dest[name] = result
-            self._internal[name] = result
         else:
-            self._parse_raw(dest, size)
+            # Stow unknown data away in a list.
+            unknown_dest = self._get_default(
+                item, dtype, 'unknown_destination')
+            if unknown_dest not in dest:
+                dest[unknown_dest] = []
+            dest[unknown_dest].append(
+                self._call(
+                    self._get_default(item, dtype, 'unknown_function'),
+                    self._get_field(size)))
+            self._raw_byte_count += size
+
 
     def _parse_for(self, item, dest, name):
         """
@@ -296,8 +301,8 @@ class BinReader(BinParser):
                 if not self._evaluate(item['if']):
                     continue
 
-            name = item['name'] if 'name' in item else ''
-            dtype = item['type'] if 'type' in item else self.defaults['type']
+            dtype = self._get_default(item, '', 'type')
+            name = self._get_default(item, dtype, 'name')
 
             if 'structure' not in item:
                 # Primitive data types.
@@ -402,32 +407,23 @@ class BinWriter(BinParser):
 
         self.data += field
 
-    def _encode_primitive(self, item, dtype, value):
+    def _encode_primitive(self, item, dtype, value, name):
         """
         Encode a primitive data type.
 
         :arg dict item: A dictionary.
         :arg str dtype: Data type.
         :arg unknown value: Value to be stored.
+        :arg str name: Field name used in the destination dictionary.
         """
-        delim = self._get_default(item, dtype, 'delimiter')
-        size = self._get_default(item, dtype, 'size')
-        if not (delim or size):
-            size = 1
-
-        # Determine the function and its arguments.
-        func = dtype
-        kwargs = {}
-        if 'function' in self.types[dtype]:
-            if 'name' in self.types[dtype]['function']:
-                func = self.types[dtype]['function']['name']
-            if 'args' in self.types[dtype]['function']:
-                kwargs = self.types[dtype]['function']['args']
+        delim, size, func, kwargs = self._get_function(item, dtype)
 
         if type(value) == dict:
             # Unpack dictionaries in order to use the items in evaluations.
             for member in value:
                 self._internal[member] = value[member]
+        else:
+            self._internal[name] = value
 
         self._set_field(self._call(func, value, **kwargs), size, delim)
 
@@ -438,16 +434,6 @@ class BinWriter(BinParser):
             for field in item['structure']:
                 if operand == field['name']:
                     return field
-
-    def _encode_loop(self, item, source):
-        """
-        Encode a loop.
-
-        :arg dict item: A dictionary.
-        :arg dict source: Source dictionary.
-        """
-        for subitem in source:
-            self._encode(item['structure'], subitem)
 
     def _encode(self, structure, source):
         """
@@ -464,13 +450,14 @@ class BinWriter(BinParser):
                 if not self._evaluate(item['if']):
                     continue
 
-            name = item['name'] if 'name' in item else ''
-            dtype = item['type'] if 'type' in item else self.defaults['type']
+            dtype = self._get_default(item, '', 'type')
+            name = self._get_default(item, dtype, 'name')
 
             if not name:
                 # NOTE: Not sure if this is correct.
-                dtype = 'raw'
-                value = source['raw'][raw_counter]
+                dtype = self._get_default(item, dtype, 'unknown_function')
+                value = source[self._get_default(
+                    item, dtype, 'unknown_destination')][raw_counter]
                 raw_counter += 1
             else:
                 value = source[name]
@@ -482,15 +469,15 @@ class BinWriter(BinParser):
                         '0x{:06x}: {} --> {}\n'.format(
                         len(self.data), name, value))
 
-                self._encode_primitive(item, dtype, value)
-                self._internal[name] = value
+                self._encode_primitive(item, dtype, value, name)
             else:
                 # Nested structures.
                 if self._debug > 1:
                     self._log.write('-- {}\n'.format(name))
 
                 if set(['for', 'do_while', 'while']) & set(item):
-                    self._encode_loop(item, value)
+                    for subitem in value:
+                        self._encode(item['structure'], subitem)
                     if 'while' in item:
                         term = self._get_item(item)
                         self._encode(

@@ -31,7 +31,6 @@ test_writer() {
   echo "  $1"
   python -m extras.compare_yaml $yml_1 $yml_2
 
-  cat $yml_2
   rm $yml_1 $yml_2 $bin
 }
 
