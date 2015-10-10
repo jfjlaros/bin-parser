@@ -22,6 +22,10 @@ __homepage__ = 'https://git.lumc.nl/j.f.j.laros/bin-parser'
 usage = __doc__.split('\n\n\n')
 
 
+def doc_split(func):
+    return func.__doc__.split("\n\n")[0]
+
+
 def version(name):
     return '{} version {}\n\nAuthor   : {} <{}>\nHomepage : {}'.format(
         name, __version__, __author__, __contact__, __homepage__)
