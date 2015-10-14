@@ -48,7 +48,7 @@ class BinParser(object):
             'raw': {}
         }
 
-        types_data = yaml.load(types_handle)
+        types_data = yaml.safe_load(types_handle)
         if 'constants' in types_data:
             self.constants.update(types_data['constants'])
         if 'defaults' in types_data:
@@ -56,7 +56,7 @@ class BinParser(object):
         if 'types' in types_data:
             self.types.update(types_data['types'])
 
-        self._structure = yaml.load(structure_handle)
+        self._structure = yaml.safe_load(structure_handle)
 
         if self._debug > 1:
             self._log.write('--- PARSING DETAILS ---\n\n')
@@ -336,14 +336,14 @@ class BinReader(BinParser):
 
         :arg stream output_handle: Open writable handle.
         """
-        yaml.dump(
+        yaml.safe_dump(
             self.parsed, output_handle, width=76, default_flow_style=False)
 
         if self._debug:
             if self._debug > 1:
                 self._log.write('\n\n')
             self._log.write('--- INTERNAL VARIABLES ---\n\n')
-            yaml.dump(
+            yaml.safe_dump(
                 self._internal, self._log, width=76,
                 default_flow_style=False, encoding=None)
 
@@ -379,7 +379,7 @@ class BinWriter(BinParser):
             structure_handle, types_handle, functions, debug, log)
 
         self.data = ''
-        self.parsed = yaml.load(input_handle)
+        self.parsed = yaml.safe_load(input_handle)
 
         self._encode(self._structure, self.parsed)
 
@@ -502,7 +502,7 @@ class BinWriter(BinParser):
                 self._log.write('\n\n')
 
             self._log.write('--- INTERNAL VARIABLES ---\n\n')
-            yaml.dump(
+            yaml.safe_dump(
                 self._internal, self._log, width=76,
                 default_flow_style=False, encoding=None)
 
