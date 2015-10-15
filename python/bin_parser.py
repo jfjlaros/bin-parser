@@ -276,8 +276,8 @@ class BinReader(BinParser):
         :arg str name: Field name used in the destination dictionary.
         """
         delim = item['structure'][0]
-        dest[name] = [{}]
 
+        dest[name] = [{}]
         self._parse([delim], dest[name][0])
         while True:
             if not self._evaluate(item['while']):

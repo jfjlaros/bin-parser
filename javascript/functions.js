@@ -188,14 +188,12 @@ function BinReadFunctions() {
   Explode a bitfield into flags.
 
   :arg int data: Bit field.
-  :arg str kwargs.name: Flag name for unannotated bits.
   :arg str kwargs.annotation: Annotation of {data}.
 
   :returns dict: Dictionary of flags and their values.
   */
   this.flags = function(data, kwargs) {
-    var deft = kwargs.default,
-        annotation = kwargs.annotation,
+    var annotation = kwargs.annotation,
         bitfield = this.int(data),
         flags_dict = {},
         flag,
@@ -206,7 +204,7 @@ function BinReadFunctions() {
 
       if (!annotation[flag]) {
         if (value) {
-          flags_dict['flags_' + deft + '_' + pad(hex(flag), 2)] = value;
+          flags_dict['flag_' + pad(hex(flag), 2)] = value;
         }
       }
       else {

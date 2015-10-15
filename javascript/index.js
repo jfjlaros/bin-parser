@@ -58,22 +58,109 @@ function numerical(a, b) {
 General binary file reader.
 */
 function BinReader(fileContent, structureContent, typesContent, functions) {
-  var data = fileContent,
+  var 
       internal = {},
       functions = functions || new Functions.BinReadFunctions(),
       constants = {},
       defaults = {
-        'size': 0,
         'delimiter': [],
-        'type': 'text'
+        'name': '',
+        'size': 0,
+        'type': 'text',
+        'unknown_destination': 'raw',
+        'unknown_function': 'raw'
       },
       types = {
         'raw': {},
         'int': {}
       },
       types_data = typesContent,
-      offset = 0,
-      structure = structureContent;
+      structure = structureContent,
+      data,
+      offset,
+      parsed;
+
+  /*
+  Resolve the value of a variable.
+ 
+  First look in the cache to see if `name` is defined, then check the set
+  of constants. If nothing can be found, the variable is considered to be
+  a literal.
+ 
+  :arg any name: The name or value of a variable.
+  :returns: The resolved value.
+  */
+  function getValue(name) {
+    if (internal[name] !== undefined) {
+      return internal[name];
+    }
+    if (constants[name] !== undefined) {
+      return constants[name];
+    }
+    return name;
+  }
+
+  function getDefault(item, dtype, name) {
+    if (item[name] !== undefined) {
+      return item[name];
+    }
+    if ((types[dtype] !== undefined) && (types[dtype][name] !== undefined)) {
+      return types[dtype][name];
+    }
+    if (defaults[name] !== undefined) {
+      return defaults[name];
+    }
+    return undefined;
+  }
+
+  function getFunction(item, dtype) {
+    var delim = getDefault(item, dtype, 'delimiter'),
+        size = getDefault(item, dtype, 'size'),
+        func = dtype,
+        kwargs = {};
+
+    if (!(delim.length || size)) {
+      size = 1;
+    }
+
+    // Determine the function and its arguments.
+    if ('function' in types[dtype]) {
+      if ('name' in types[dtype].function) {
+        func = types[dtype].function.name;
+      }
+      if ('args' in types[dtype].function) {
+        kwargs = types[dtype].function.args;
+      }
+    }
+    return [delim, size, func, kwargs];
+  }
+
+  /*
+  Evaluate an expression.
+
+  An expression is represented by an object with the following
+  structure:
+
+      expression = {
+          'operator': '',
+          'operands': []
+      }
+
+  :arg object expression: An expression.
+  :returns any: Result of the evaluation.
+  */
+  function evaluate(expression) {
+    var operands = expression.operands.map(getValue);
+
+    if (operands.length === 1 && !expression.operator) {
+      return operands[0];
+    }
+    return Functions.operators[expression.operator].apply(this, operands);
+  }
+
+  /*
+  Reader specific functions.
+  */
 
   /*
   Extract a field from {data} using either a fixed size, or a delimiter. After
@@ -112,62 +199,6 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   }
 
   /*
-  Resolve the value of a variable.
- 
-  First look in the cache to see if `name` is defined, then check the set
-  of constants. If nothing can be found, the variable is considered to be
-  a literal.
- 
-  :arg any name: The name or value of a variable.
-  :returns: The resolved value.
-  */
-  function getValue(name) {
-    if (internal[name] !== undefined) {
-      return internal[name];
-    }
-    if (constants[name] !== undefined) {
-      return constants[name];
-    }
-    return name;
-  }
-
-  /*
-  Evaluate an expression.
-
-  An expression is represented by an object with the following
-  structure:
-
-      expression = {
-          'operator': '',
-          'operands': []
-      }
-
-  :arg object expression: An expression.
-  :returns any: Result of the evaluation.
-  */
-  function evaluate(expression) {
-    var operands = expression.operands.map(getValue);
-
-    if (operands.length === 1 && !expression.operator) {
-      return operands[0];
-    }
-    return Functions.operators[expression.operator].apply(this, operands);
-  }
-
-  function getDefault(item, dtype, name) {
-    if (name in item) {
-      return item[name];
-    }
-    if (name in types[dtype]) {
-      return types[dtype][name];
-    }
-    if (name in defaults) {
-      return defaults[name];
-    }
-    return undefined;
-  }
-
-  /*
   Parse a primitive data type.
   
   :arg dict item: A dictionary.
@@ -176,43 +207,37 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   :arg str name: Field name used in the destination dictionary.
   */
   function parsePrimitive(item, dtype, dest, name) {
-    var delim = getDefault(item, dtype, 'delimiter'),
-        size = getDefault(item, dtype, 'size'),
-        func = dtype,
-        kwargs = {},
+    var temp = getFunction(item, dtype),
+        delim = temp[0],
+        size = temp[1],
+        func = temp[2],
+        kwargs = temp[3],
         member,
-        result;
-
-    if (!(delim.length || size)) {
-      size = 1;
-    }
+        result,
+        unknownDest;
 
     if (name) {
-      // Determine the function and its arguments.
-      if (types[dtype].function) {
-        if (types[dtype].function.name) {
-          func = types[dtype].function.name;
-        }
-        if (types[dtype].function.args) {
-          kwargs = types[dtype].function.args;
-        }
-      }
-
       // Read and process the data.
       result = functions[func](getField(size, delim), kwargs);
       if (result.constructor === Object) {
+        // Unpack dictionaries in order to use the items in evaluations.
         for (member in result) {
-          dest[member] = result[member];
           internal[member] = result[member];
         }
       }
       else {
-        dest[name] = result;
         internal[name] = result;
       }
+      dest[name] = result;
     }
     else {
-      getField(size, []);
+      unknownDest = getDefault(item, dtype, 'unknown_destination');
+      if (!(unknownDest in dest)) {
+        dest[unknownDest] = [];
+      }
+      dest[unknownDest].push(
+        functions[getDefault(item, dtype, 'unknown_function')](
+          getField(size, [])));
     }
   }
 
@@ -304,8 +329,8 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
         }
       }
 
-      name = item.name || '';
-      dtype = item.type || defaults.type;
+      dtype = getDefault(item, '', 'type');
+      name = getDefault(item, dtype, 'name');
 
       if (!item.structure) {
         // Primitive data types.
@@ -347,14 +372,6 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   };
 
   /*
-  Get parsed object.
-  this.getParsed = function() {
-    return parsed;
-  };
-  */
-  this.parsed = {};
-
-  /*
   Initialisation.
   */
   if (types_data.constants) {
@@ -367,8 +384,20 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
     update(types, types_data.types);
   }
 
+  this.types = types;
+  this.constants = constants;
+  this.defaults = defaults;
+
+  /*
+  Reader specific initialisation.
+  */
+
+  data = fileContent;
+  parsed = {};
+  offset = 0;
+
   try {
-    parse(structure, this.parsed);
+    parse(structure, parsed);
   }
   catch(err) {
     if (err !== 'StopIteration') {
@@ -376,9 +405,8 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
     }
   }
 
-  this.types = types;
-  this.constants = constants;
-  this.defaults = defaults;
+  this.data = data;
+  this.parsed = parsed;
 }
 
 module.exports.BinReader = BinReader;
