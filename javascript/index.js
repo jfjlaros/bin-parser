@@ -88,7 +88,7 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   a literal.
  
   :arg any name: The name or value of a variable.
-  :returns: The resolved value.
+  :returns any: The resolved value.
   */
   function getValue(name) {
     if (internal[name] !== undefined) {
@@ -100,6 +100,18 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
     return name;
   }
 
+  /*
+  Resolve the value of a member variable.
+
+  First see if the variable is defined in `item`, then check the type
+  definition and lastly check the defaults.
+
+  :arg object item: Data structure.
+  :arg str dtype: Name of the data type.
+  :arg str name: The name of the variable.
+
+  :returns any: The resolved value.
+  */
   function getDefault(item, dtype, name) {
     if (item[name] !== undefined) {
       return item[name];
@@ -113,6 +125,18 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
     return undefined;
   }
 
+  /*
+  Determine what to read and how to interpret what was read.
+
+  First resolve the `delimiter` and `size`. If none are given, assume we
+  read one byte. Then resolve the function that will interpret the data
+  (either delimited or fixed size).
+
+  :arg object item: Data structure.
+  :arg str dtype: Name of the data type.
+
+  :returns tuple: (`delim`, `size`, `func`, `kwargs`).
+  */
   function getFunction(item, dtype) {
     var delim = getDefault(item, dtype, 'delimiter'),
         size = getDefault(item, dtype, 'size'),
@@ -201,9 +225,9 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   /*
   Parse a primitive data type.
   
-  :arg dict item: A dictionary.
+  :arg object item: Data structure.
   :arg str dtype: Data type.
-  :arg dict dest: Destination dictionary.
+  :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
   function parsePrimitive(item, dtype, dest, name) {
@@ -244,8 +268,8 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   /*
   Parse a for loop.
   
-  :arg dict item: A dictionary.
-  :arg dict dest: Destination dictionary.
+  :arg object item: Data structure.
+  :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
   function parseFor(item, dest, name) {
@@ -267,8 +291,8 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   /*
   Parse a do-while loop.
   
-  :arg dict item: A dictionary.
-  :arg dict dest: Destination dictionary.
+  :arg object item: Data structure.
+  :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
   function parseDoWhile(item, dest, name) {
@@ -287,8 +311,8 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
   /*
   Parse a while loop.
   
-  :arg dict item: A dictionary.
-  :arg dict dest: Destination dictionary.
+  :arg object item: Data structure.
+  :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
   function parseWhile(item, dest, name) {

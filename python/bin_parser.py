@@ -73,7 +73,7 @@ class BinParser(object):
         a literal.
 
         :arg any name: The name or value of a variable.
-        :returns: The resolved value.
+        :returns any: The resolved value.
         """
         if name in self._internal:
             return self._internal[name]
@@ -83,6 +83,16 @@ class BinParser(object):
 
     def _get_default(self, item, dtype, name):
         """
+        Resolve the value of a member variable.
+
+        First see if the variable is defined in `item`, then check the type
+        definition and lastly check the defaults.
+
+        :arg dict item: Data structure.
+        :arg str dtype: Name of the data type.
+        :arg str name: The name of the variable.
+
+        :returns any: The resolved value.
         """
         if name in item:
             return item[name]
@@ -94,6 +104,16 @@ class BinParser(object):
 
     def _get_function(self, item, dtype):
         """
+        Determine what to read and how to interpret what was read.
+
+        First resolve the `delimiter` and `size`. If none are given, assume we
+        read one byte. Then resolve the function that will interpret the data
+        (either delimited or fixed size).
+
+        :arg dict item: Data structure.
+        :arg str dtype: Name of the data type.
+
+        :returns tuple: (`delim`, `size`, `func`, `kwargs`).
         """
         delim = self._get_default(item, dtype, 'delimiter')
         size = self._get_default(item, dtype, 'size')
@@ -205,7 +225,7 @@ class BinReader(BinParser):
         """
         Parse a primitive data type.
 
-        :arg dict item: A dictionary.
+        :arg dict item: Data structure.
         :arg str dtype: Data type.
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
@@ -239,7 +259,7 @@ class BinReader(BinParser):
         """
         Parse a for loop.
 
-        :arg dict item: A dictionary.
+        :arg dict item: Data structure.
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
@@ -256,7 +276,7 @@ class BinReader(BinParser):
         """
         Parse a do-while loop.
 
-        :arg dict item: A dictionary.
+        :arg dict item: Data structure.
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
@@ -271,7 +291,7 @@ class BinReader(BinParser):
         """
         Parse a while loop.
 
-        :arg dict item: A dictionary.
+        :arg dict item: Data structure.
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
@@ -411,7 +431,7 @@ class BinWriter(BinParser):
         """
         Encode a primitive data type.
 
-        :arg dict item: A dictionary.
+        :arg dict item: Data structure.
         :arg str dtype: Data type.
         :arg unknown value: Value to be stored.
         :arg str name: Field name used in the destination dictionary.
@@ -429,6 +449,11 @@ class BinWriter(BinParser):
 
     def _get_item(self, item):
         """
+        Resolve the `term` field in the `while` structure.
+
+        :arg dict item: Data structure.
+
+        :returns dict: Item that `term` points to.
         """
         for operand in item['while']['operands']:
             for field in item['structure']:
