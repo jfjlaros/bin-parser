@@ -4,8 +4,6 @@ General binary file parser.
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 """
-
-
 import sys
 
 import yaml
