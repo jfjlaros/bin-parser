@@ -93,13 +93,29 @@ no support for the chaining of data types, so currently, compressed and
 encrypted files are not supported.
 
 # Installation
-Python:
+## Python
 
     pip install bin-parser
 
-JavaScipt:
+## JavaScript
 
     npm install bin-parser
+
+# Usage
+## Python
+To convert a binary file to YAML, use the `read` subcommand:
+
+    bin_parser read input.bin structure.yml types.yml output.yml
+
+To convert a YAML file to binary, use the `write` subcommand:
+
+    bin_parser write input.yml structure.yml types.yml output.bin
+
+## JavaScript
+Currently only the reader is implemented in JavaScript. After installation it
+can be used from the command line as follows:
+
+    ./node_modules/.bin/bin-parser input.bin structure.yml types.yml
 
 # Approach
 In order to parse a binary file, the library needs two pieces of information:
