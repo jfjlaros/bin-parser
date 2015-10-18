@@ -4,8 +4,6 @@ General binary file parser.
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 """
-
-
 import sys
 
 import yaml
@@ -259,7 +257,6 @@ class BinReader(BinParser):
                         data))
             self._raw_byte_count += size
 
-
     def _parse_for(self, item, dest, name):
         """
         Parse a for loop.
@@ -496,8 +493,7 @@ class BinWriter(BinParser):
             if 'structure' not in item:
                 # Primitive data types.
                 if self._debug > 1:
-                    self._log.write(
-                        '0x{:06x}: {} --> {}\n'.format(
+                    self._log.write('0x{:06x}: {} --> {}\n'.format(
                         len(self.data), name, value))
 
                 self._encode_primitive(item, dtype, value, name)
