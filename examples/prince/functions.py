@@ -10,8 +10,8 @@ class PrinceReadFunctions(BinReadFunctions):
 
 
 class PrinceWriteFunctions(BinWriteFunctions):
-    def min(self, data):
-        return super(PrinceWriteFunctions, self).int(data + 1)
+    def min(self, minutes):
+        return super(PrinceWriteFunctions, self).int(minutes + 1)
 
-    def sec(self, data):
-        return super(PrinceWriteFunctions, self).int(data * 12)
+    def sec(self, seconds):
+        return super(PrinceWriteFunctions, self).int(seconds * 12)
