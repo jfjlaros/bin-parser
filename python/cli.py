@@ -5,7 +5,8 @@ from .bin_parser import BinReader, BinWriter
 
 
 def bin_reader(
-        input_handle, structure_handle, types_handle, output_handle, debug=0):
+        input_handle, structure_handle, types_handle, output_handle,
+        prune=False, debug=0):
     """
     Convert a binary file to YAML.
 
@@ -13,10 +14,11 @@ def bin_reader(
     :arg stream structure_handle: Open readable handle to the structure file.
     :arg stream types_handle: Open readable handle to the types file.
     :arg stream output_handle: Open writable handle.
+    :arg bool prune: Remove all unknown data fields from the output.
     :arg int debug: Debugging level.
     """
     parser = BinReader(
-        input_handle, structure_handle, types_handle, debug=debug)
+        input_handle, structure_handle, types_handle, prune=prune, debug=debug)
     parser.write(output_handle)
 
 
@@ -54,7 +56,8 @@ def main():
         'output_handle', metavar='OUTPUT', type=argparse.FileType('w'),
         help='output file')
     opt_parser.add_argument(
-        '-d', dest='debug', type=int, help='debugging level')
+        '-d', dest='debug', type=int, default=0,
+        help='debugging level (%(type)s default=%(default)s)')
 
     parser = argparse.ArgumentParser(
         description=usage[0], epilog=usage[1],
@@ -65,6 +68,9 @@ def main():
 
     read_parser = subparsers.add_parser(
         'read', parents=[opt_parser], description=doc_split(bin_reader))
+    read_parser.add_argument(
+        '-p', dest='prune', default=False, action='store_true',
+        help='remove unknown data fields')
     read_parser.set_defaults(func=bin_reader)
 
     write_parser = subparsers.add_parser(

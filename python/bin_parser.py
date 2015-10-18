@@ -159,7 +159,7 @@ class BinReader(BinParser):
     """
     def __init__(
             self, input_handle, structure_handle, types_handle,
-            functions=BinReadFunctions, debug=0, log=sys.stderr):
+            functions=BinReadFunctions, prune=False, debug=0, log=sys.stderr):
         """
         Constructor.
 
@@ -168,11 +168,14 @@ class BinReader(BinParser):
             definition.
         :arg stream types_handle: Open readable handle to the types definition.
         :arg object functions: Object containing parsing functions.
+        :arg bool prune: Remove all unknown data fields from the output.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
         """
         super(BinReader, self).__init__(
             structure_handle, types_handle, functions, debug, log)
+
+        self._prune = prune
 
         self.data = input_handle.read()
         self.parsed = {}
@@ -244,14 +247,16 @@ class BinReader(BinParser):
             dest[name] = result
         else:
             # Stow unknown data away in a list.
-            unknown_dest = self._get_default(
-                item, dtype, 'unknown_destination')
-            if unknown_dest not in dest:
-                dest[unknown_dest] = []
-            dest[unknown_dest].append(
-                self._call(
-                    self._get_default(item, dtype, 'unknown_function'),
-                    self._get_field(size)))
+            data = self._get_field(size)
+            if not self._prune:
+                unknown_dest = self._get_default(
+                    item, dtype, 'unknown_destination')
+                if unknown_dest not in dest:
+                    dest[unknown_dest] = []
+                dest[unknown_dest].append(
+                    self._call(
+                        self._get_default(item, dtype, 'unknown_function'),
+                        data))
             self._raw_byte_count += size
 
 

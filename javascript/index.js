@@ -57,10 +57,12 @@ function numerical(a, b) {
 /*
 General binary file reader.
 */
-function BinReader(fileContent, structureContent, typesContent, functions) {
+function BinReader(
+    fileContent, structureContent, typesContent, functions, prune) {
   var 
       internal = {},
       functions = functions || new Functions.BinReadFunctions(),
+      prune = prune || false,
       constants = {},
       defaults = {
         'delimiter': [],
@@ -236,6 +238,7 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
         size = temp[1],
         func = temp[2],
         kwargs = temp[3],
+        data,
         member,
         result,
         unknownDest;
@@ -255,13 +258,16 @@ function BinReader(fileContent, structureContent, typesContent, functions) {
       dest[name] = result;
     }
     else {
-      unknownDest = getDefault(item, dtype, 'unknown_destination');
-      if (!(unknownDest in dest)) {
-        dest[unknownDest] = [];
+      // Stow unknown data away in a list.
+      data = getField(size, []);
+      if (!prune) {
+        unknownDest = getDefault(item, dtype, 'unknown_destination');
+        if (!(unknownDest in dest)) {
+          dest[unknownDest] = [];
+        }
+        dest[unknownDest].push(
+          functions[getDefault(item, dtype, 'unknown_function')](data));
       }
-      dest[unknownDest].push(
-        functions[getDefault(item, dtype, 'unknown_function')](
-          getField(size, [])));
     }
   }
 
