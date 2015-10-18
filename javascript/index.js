@@ -233,19 +233,28 @@ function BinReader(
   :arg str name: Field name used in the destination dictionary.
   */
   function parsePrimitive(item, dtype, dest, name) {
-    var temp = getFunction(item, dtype),
-        delim = temp[0],
-        size = temp[1],
-        func = temp[2],
-        kwargs = temp[3],
-        data,
+    var delim,
+        func,
+        kwargs,
         member,
         result,
+        size,
+        temp,
         unknownDest;
 
+    // Read and process the data.
+    if (!name) {
+      dtype = getDefault(item, '', 'unknown_function')
+    }
+    temp = getFunction(item, dtype);
+    delim = temp[0];
+    size = temp[1];
+    func = temp[2];
+    kwargs = temp[3];
+    result = functions[func](getField(size, delim), kwargs);
+
     if (name) {
-      // Read and process the data.
-      result = functions[func](getField(size, delim), kwargs);
+      // Store the data.
       if (result.constructor === Object) {
         // Unpack dictionaries in order to use the items in evaluations.
         for (member in result) {
@@ -259,14 +268,12 @@ function BinReader(
     }
     else {
       // Stow unknown data away in a list.
-      data = getField(size, []);
       if (!prune) {
         unknownDest = getDefault(item, dtype, 'unknown_destination');
         if (!(unknownDest in dest)) {
           dest[unknownDest] = [];
         }
-        dest[unknownDest].push(
-          functions[getDefault(item, dtype, 'unknown_function')](data));
+        dest[unknownDest].push(result);
       }
     }
   }

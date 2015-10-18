@@ -233,11 +233,14 @@ class BinReader(BinParser):
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
+        # Read and process the data.
+        if not name:
+            dtype = self._get_default(item, '', 'unknown_function')
         delim, size, func, kwargs = self._get_function(item, dtype)
+        result = self._call(func, self._get_field(size, delim), **kwargs)
 
         if name:
-            # Read and process the data.
-            result = self._call(func, self._get_field(size, delim), **kwargs)
+            # Store the data.
             if type(result) == dict:
                 # Unpack dictionaries in order to use the items in evaluations.
                 for member in result:
@@ -247,16 +250,12 @@ class BinReader(BinParser):
             dest[name] = result
         else:
             # Stow unknown data away in a list.
-            data = self._get_field(size)
             if not self._prune:
                 unknown_dest = self._get_default(
                     item, dtype, 'unknown_destination')
                 if unknown_dest not in dest:
                     dest[unknown_dest] = []
-                dest[unknown_dest].append(
-                    self._call(
-                        self._get_default(item, dtype, 'unknown_function'),
-                        data))
+                dest[unknown_dest].append(result)
             self._raw_byte_count += size
 
     def _parse_for(self, item, dest, name):
