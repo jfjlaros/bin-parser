@@ -1,8 +1,25 @@
 # General binary file parser
 This library aims at general binary file parsing by interpreting documentation
-of the file structure and the types used. It supports basic data types like
-integers, variable length (delimited) strings, dates, maps and bit fields
-(flags) and it can iterate over sub structures.
+of the file structure and data types. By default, it supports basic data types
+like integers, variable length (delimited) strings, dates, maps and bit fields
+(flags) and it can iterate over sub structures. Other data types are easily
+added.
+
+The file structure and the types are stored in YAML format. For practical
+purposes the structure is separated from the types, this way multiple file
+formats using the same types (within one project for example) can be easily
+supported without much duplication.
+
+The design of the library is such that all operations can be reversed. This is
+fully implemented in the Python version of the library. This means that fully
+functional binary editing is possible using this implementation; first use the
+reader to convert a binary file to a YAML representation, this representation
+is easily edited using a text editor, and then use the writer to convert back
+to binary.
+
+This idea is implemented in two languages; Python and JavaScript. All main
+development is done in Python, all reading functionalities have been ported to
+JavaScript.
 
 ## Why use this library?
 The challenge of parsing binary files is not a new one, it requires reverse
@@ -15,15 +32,72 @@ gain from the reverse engineering process and use this documentation directly
 in a parser.
 
 Since the bulk of the types stored in binary files are standard, dedicated
-parsers contain a lot of boiler plate code. {{MORE}}
+parsers contain a lot of boiler plate code. We try to minimise this by
+providing a framework where all knowledge is recorded in a human readable
+format (YAML files) while the obligatory boiler plate code is incorporated in
+the library.
+
+## Background
+In the following example, we read two bytes from an input stream, convert the
+read data to an integer and store it in an output dictionary under the key
+`balance`.
+
+```python
+output['balance'] = bin_to_int(input_handle.read(2))
+output['age'] = bin_to_int(input_handle.read(2))
+```
+
+This approach results in file specific literals (like `balance` and `2`) and
+data type conversions (`bin_to_int()`) directly in source code. This has
+several disadvantages:
+
+- It is difficult to see what the file format is. This can be deduced only from
+  the source code of the developed parser.
+- A separate piece of software needs to be implemented if the conversion needs
+  to be reversed.
+
+Within the framework of this library, we attempt to solve the aforementioned
+problems.
+
+By first defining the types, we can reuse them easily:
+
+```yml
+---
+short:
+  size: 2
+  function:
+    name: int
+```
+
+Now we can use the type `short` in our structure definition:
+
+```yml
+---
+- name: balance
+  type: short
+- name: age
+  type: short
+```
+
+By recording the file structure this way, the knowledge and the implementation
+of the parser are strictly separated. This has the following advantages:
+
+- Human readable documentation of the file format.
+- Portability.
+- Reading and writing of the file format.
+
+## When can this library be used?
+The main assumption made is that the binary files are *linearly parsable*. File
+seeking or multiple passes over an input file are not supported. Also, there is
+no support for the chaining of data types, so currently, compressed and
+encrypted files are not supported.
 
 # Installation
-
-For Python:
+Python:
 
     pip install bin-parser
 
-For JavaScipt
+JavaScipt:
 
     npm install bin-parser
 
@@ -44,13 +118,13 @@ To make a parser for this type of file, we need to create a file that contains
 the type definitions. We name this file `types.yml`.
 
 ```yml
- ---
- types:
-   int:
-     read: 2
-   text:
-     read:
-       - 0x00
+---
+types:
+  int:
+    size: 2
+  text:
+    delimiter:
+      - 0x00
 ```
 
 Then we create a file that contains the definition of the structure. This file
@@ -68,34 +142,139 @@ we name `structure.yml`.
 
 We can now call the command line interface as follows:
 
-    bin_parser balance.dat structure.yml types.yml balance.yml
+    bin_parser read balance.dat structure.yml types.yml balance.yml
 
 This will result in a new file, named `balance.yml`, which contains the content
 of the input file (`balance.dat`) in a human (and machine) readable format:
 
 ```yml
+---
 balance: 3210
 name: John Doe
 year_of_birth: 1999
 ```
 
-## Using the library
-To use the library from our own code, we need to use the following:
+# Constants, defaults and types
+The file `types.yml` consists of three (optional) sections; `types`,
+`constants` and `defaults`. In general the types file will look something like
+this:
 
-```python
-import bin_parser
-
-parser = bin_parser.BinReader(
-    open('balance.dat'), open('structure.yml'), open('types.yml'))
-print parser.parsed['name']
+```yml
+---
+constants:
+  const: 10
+defaults:
+  size: 2
+types:
+  int:
+    size: 3
 ```
 
-The `BinReader` object contains the original data in `data` and the parsed data
-in `parsed`. Furthermore it contains the function `write` to write the content
-of `parsed` in YAML format to a file handle.
+## Constants
+A constant can be used as an alias in `structure.yml`. Using constants can make
+conditional statements and loops more readable.
 
+## Types
+A type consists of two subunits controlling two stages; the acquirement stage
+and the processing stage.
 
-# `structure.yml`: The structure of the binary file
+The acquirement stage is controlled by the `size` and `delimiter` parameters,
+the size is given in number of bytes, the delimiter is a list of characters.
+Usually specifying one of these parameters is sufficient for the acquisition of
+the data, but in some cases, where for example we have to read a fixed sized
+block in which a string of variable size is stored, both parameters can be used
+simultaneously. Once the data is acquired, it is passed to the processing
+stage.
+
+The processing stage is controlled by the `function` parameter, it denotes the
+function that is responsible for the processing of the acquired data.
+Additional parameters for this function can be supplied by the `args`
+parameter.
+
+### Examples
+The following type is stored in two bytes and is processed by the `int`
+function:
+
+```yml
+short:
+  size: 2
+  function:
+    name: int
+```
+
+This type is stored in a variable size array delimited by `0x00` and is
+processed by the `text` function:
+
+```yml
+comment:
+  delimiter:
+    - 0x00
+  function:
+    name: text
+```
+
+And if we need to pass additional parameters to the `text` function, in this
+case split on the character `0x09`:
+
+```yml
+comment:
+  delimiter:
+    - 0x00
+  function:
+    name: text
+    args:
+      split:
+        - 0x09
+```
+
+## Defaults
+To save some space and time writing our types definitions, the following
+default values are used:
+
+- `read` defaults to `1`.
+- `function` defaults to the name of the type.
+- If no name is given, the type defaults to `raw` and the destination is a list
+  named `__raw__`.
+
+So, for example, since a byte is of size 1, we can omit the `read` parameter in
+the type definition:
+
+```yml
+byte:
+  function:
+    name: int
+```
+
+In the next example the function `int` will be used.
+
+```yml
+int:
+  size: 2
+```
+
+And if we need an integer of size one which we want to name `int`, we do not
+need to define anything.
+
+If the following construction is used in the structure, the type will default
+to `raw`:
+
+```yml
+- name:
+  read 20
+```
+
+### Overrides
+The following defaults can be overridden by adding an entry in the `defaults`
+section:
+
+- `delimiter` (defaults to `[]`).
+- `name` (defaults to `''`).
+- `size` (defaults to 0).
+- `type` (defaults to `text`).
+- `unknown_destination` (defaults to `__raw__`).
+- `unknown_type` (defaults to `raw`).
+
+# Structure of the binary file
 The file `structure.yml` contains the general structure of the binary file.
 
 ## Loops and conditionals
@@ -200,76 +379,48 @@ A variable or structure can be read conditionally using the `if` statement.
     operator: eq
 ```
 
-# `types.yml`: Constants, defaults and types
-The file `types.yml` consists of three (optional) sections; `types`,
-`constants` and `defaults`. In general the types file will look something like
-this:
+### Evaluation
+The following statements are equal:
 
 ```yml
----
-constants:
-  const: 10
-defaults:
-  read: 2
-types:
-  int:
-    read: 3
+- name: item
+  if:
+    operands:
+      - something
 ```
-
-## Constants
-A constant can be used as an alias in `structure.yml`. Using constants can make
-conditional statements and loops more readable.
-
-## Types
-A type consists of two subunits controlling two stages; the acquirement stage
-and the processing stage.
-
-The acquirement stage is controlled by the `read` parameter, which is either
-an integer or a list of characters. If an integer is passed, the parser will
-read this amount of bytes, if a list is passed, the parser will read until the
-supplied characters are encountered. Once the data is acquired, it is passed to
-the processing stage.
-
-The processing stage is controlled by the `function` parameter, it denotes the
-function that is responsible for the processing of the acquired data.
-Additional parameters for this function can be supplied by the `args`
-parameter.
-
-### Examples
-The following type is stored in two bytes and is processed by the `int`
-function:
 
 ```yml
-short:
-  read: 2
-  function:
-    name: int
+- name: item
+  if:
+    operands:
+      - something
+      - true
+    operator: eq
 ```
-
-This type is stored in a variable size array delimited by `0x00` and is
-processed by the `text` function:
 
 ```yml
-comment:
-  read:
-    - 0x00
-  function:
-    name: text
+- name: item
+  if:
+    operands:
+      - something
+      - false
+    operator: ne
 ```
 
-And if we need to pass additional parameters to the `text` function, in this
-case split on the character `0x09`:
+# Using the library
+To use the library from our own code, we need to use the following:
 
-```yml
-comment:
-  read:
-    - 0x00
-  function:
-    name: text
-    args:
-      split:
-        - 0x09
+```python
+import bin_parser
+
+parser = bin_parser.BinReader(
+    open('balance.dat'), open('structure.yml'), open('types.yml'))
+print parser.parsed['name']
 ```
+
+The `BinReader` object contains the original data in `data` and the parsed data
+in `parsed`. Furthermore it contains the function `write` to write the content
+of `parsed` in YAML format to a file handle.
 
 ### Defining new types
 Types can be added by subclassing the BinReadFunctions class. Suppose we need
@@ -289,42 +440,8 @@ Now we can initiate the parser with this new class:
 
 ```python
 parser = bin_parser.BinReader(
-    open('something.dat'), open('structure.yml'),
-    open('types.yml'), functions=Invert)
+    open('something.dat'), open('structure.yml'), open('types.yml'),
+    functions=Invert)
 ```
 
 See `examples/prince/` for a working example.
-
-## Defaults
-To save some space and time writing our types definitions, the following
-default values are used:
-
-- `read` defaults to `1`.
-- `function` defaults to the name of the type.
-- The type itself defaults to `function`.
-- If no name is given, the type defaults to `raw`.
-
-So, for example, since a byte is of size 1, we can omit the `read` parameter:
-
-```yml
-byte:
-  function:
-    name: int
-```
-
-In the next example the function `int` will be used.
-
-```yml
-int:
-  read: 2
-```
-
-And if we need an integer of size one which we want to name `int`, we do not
-need to define anything.
-
-### Overrides
-The following defaults can be overridden by adding an entry in the `defaults`
-section:
-
-- `read`
-- `type`

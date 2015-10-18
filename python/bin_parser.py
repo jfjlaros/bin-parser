@@ -40,7 +40,7 @@ class BinParser(object):
             'name': '',
             'size': 0,
             'type': 'text',
-            'unknown_destination': 'raw',
+            'unknown_destination': '__raw__',
             'unknown_function': 'raw'
         }
         self.types = {
@@ -361,6 +361,7 @@ class BinReader(BinParser):
 
         :arg stream output_handle: Open writable handle.
         """
+        output_handle.write(u'---\n')
         yaml.safe_dump(
             self.parsed, output_handle, width=76, default_flow_style=False)
 

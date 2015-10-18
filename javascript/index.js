@@ -69,7 +69,7 @@ function BinReader(
         'name': '',
         'size': 0,
         'type': 'text',
-        'unknown_destination': 'raw',
+        'unknown_destination': '__raw__',
         'unknown_function': 'raw'
       },
       types = {
