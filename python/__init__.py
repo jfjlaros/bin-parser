@@ -7,7 +7,7 @@ Copyright (c) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 Licensed under the MIT license, see the LICENSE file.
 """
 from .bin_parser import BinReader, BinWriter
-from .functions import BinReadFunctions
+from .functions import BinReadFunctions, BinWriteFunctions
 
 
 __version_info__ = ('0', '0', '8')

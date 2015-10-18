@@ -5,7 +5,7 @@
   for: number_of_entries
   structure:
     - name: name
-      type: trim
+      type: text
     - name: minutes
       type: min
     - name: seconds
