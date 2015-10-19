@@ -6,7 +6,8 @@ General binary file parser.
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 */
 
-var yaml = require('js-yaml');
+var Buffer = require('buffer-extend-split'),
+    yaml = require('js-yaml');
 
 var Functions = require('./functions');
 

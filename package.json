@@ -18,15 +18,16 @@
     "url": "https://github.com/jfjlaros/bin-parser.git"
   },
   "keywords": [
-    "general",
     "binary",
+    "general",
     "parser"
   ],
   "author": "Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>",
   "license": "MIT",
   "dependencies": {
-    "js-yaml": "^3.3.1",
-    "iconv-lite": "^0.4.13"
+    "buffer-extend-split": "^0.0.0",
+    "iconv-lite": "^0.4.13",
+    "js-yaml": "^3.3.1"
   },
   "bugs": {
     "url": "https://github.com/jfjlaros/bin-parser/issues"

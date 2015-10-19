@@ -28,7 +28,7 @@ Miscellaneous functions.
 */
 
 function ord(character) {
-  return character.charCodeAt(0);
+  return character[0];
 }
 
 function hex(value) {
@@ -66,7 +66,7 @@ function convertToHex(data) {
       index;
 
   for (index = 0; index < data.length; index++) {
-    result += pad(hex(data.charCodeAt(index)), 2);
+    result += pad(hex(data[index]), 2);
   }
   return result;
 }
@@ -87,7 +87,7 @@ function BinReadFunctions() {
   };
 
   this.bit = function(data) {
-    var bitField = data.charCodeAt(0),
+    var bitField = data[0],
         result = '',
         mask;
 
@@ -114,7 +114,7 @@ function BinReadFunctions() {
         index;
 
     for (index = data.length - 1; index >= 0; index--) {
-      result = result * 0x100 + data.charCodeAt(index);
+      result = result * 0x100 + data[index];
     }
     return result;
   };
@@ -215,5 +215,4 @@ function BinReadFunctions() {
   };
 }
 
-iconv.skipDecodeWarning = true;
 module.exports.BinReadFunctions = BinReadFunctions;

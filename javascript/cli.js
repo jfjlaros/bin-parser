@@ -10,7 +10,7 @@ var BinReader = require('./index');
 
 var main = function(filename, structure, types) {
   var parser = new BinReader.BinReader(
-    fs.readFileSync(filename).toString('binary'),
+    fs.readFileSync(filename),
     yaml.load(fs.readFileSync(structure)),
     yaml.load(fs.readFileSync(types)));
 
