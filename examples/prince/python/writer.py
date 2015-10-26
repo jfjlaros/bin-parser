@@ -7,6 +7,6 @@ from functions import PrinceWriteFunctions
 
 
 parser = BinWriter(
-    open('prince.yml'), open('structure.yml'), open('types.yml'),
+    open('../prince.yml'), open('../structure.yml'), open('../types.yml'),
     functions=PrinceWriteFunctions)
 parser.write(sys.stdout)
