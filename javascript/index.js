@@ -245,7 +245,7 @@ function BinReader(
 
     // Read and process the data.
     if (!name) {
-      dtype = getDefault(item, '', 'unknown_function')
+      dtype = getDefault(item, '', 'unknown_function');
     }
     temp = getFunction(item, dtype);
     delim = temp[0];

@@ -1,11 +1,10 @@
 """
-Field unpacking functions for the general binary parser.
+Field packing and unpacking functions for the general binary parser.
 
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 """
 import operator
-import yaml
 
 
 operators = {
@@ -148,7 +147,7 @@ class BinWriteFunctions(object):
     Functions for encoding data.
 
     Every decoding function in the BinReadFunctions class has a counterpart for
-    encoding. Documentation of these functions is omited.
+    encoding. Documentation of these functions is omitted.
     """
     def raw(self, hex_string):
         return ''.join(hex_string.split()).decode('hex')
