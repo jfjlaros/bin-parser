@@ -1,9 +1,15 @@
 var BinReadFunctions = require('../../../javascript/functions');
 
-BinReadFunctions.BinReadFunctions.prototype.min = function(data) {
-  return this.int(data) - 1;
+function PrinceReadFunctions() {
+  this.min = function(data) {
+    return this.int(data) - 1;
+  };
+
+  this.sec = function(data) {
+    return Math.floor(this.int(data) / 12);
+  };
+
+  BinReadFunctions.BinReadFunctions.call(this);
 }
 
-BinReadFunctions.BinReadFunctions.prototype.sec = function(data) {
-  return Math.floor(this.int(data) / 12);
-}
+module.exports.PrinceReadFunctions = PrinceReadFunctions;

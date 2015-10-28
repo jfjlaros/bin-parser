@@ -8,13 +8,14 @@ var fs = require('fs'),
 
 var BinParser = require('../../../javascript/index');
 
-require('./functions');
+var PrinceReadFunctions = require('./functions');
 
 var main = function(filename) {
   var parser = new BinParser.BinReader(
     fs.readFileSync('../prince.hof'),
     yaml.load(fs.readFileSync('../structure.yml')),
-    yaml.load(fs.readFileSync('../types.yml')));
+    yaml.load(fs.readFileSync('../types.yml')),
+    new PrinceReadFunctions.PrinceReadFunctions());
 
   parser.dump();
 };
