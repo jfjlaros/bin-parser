@@ -7,10 +7,10 @@ test_cli() {
   py="/tmp/${seed}_py.yml"
   js="/tmp/${seed}_js.yml"
 
+  echo "  $1"
   python -m python.cli read $1 $2 $3 $py
   nodejs javascript/cli.js $1 $2 $3 > $js
 
-  echo "  $1"
   python -m extras.compare_yaml $py $js
 
   rm $py $js

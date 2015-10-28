@@ -58,30 +58,8 @@ function numerical(a, b) {
 /*
 General binary file reader.
 */
-function BinReader(
-    fileContent, structureContent, typesContent, functions, prune) {
-  var 
-      internal = {},
-      functions = functions || new Functions.BinReadFunctions(),
-      prune = prune || false,
-      constants = {},
-      defaults = {
-        'delimiter': [],
-        'name': '',
-        'size': 0,
-        'type': 'text',
-        'unknown_destination': '__raw__',
-        'unknown_function': 'raw'
-      },
-      types = {
-        'raw': {},
-        'int': {}
-      },
-      types_data = typesContent,
-      structure = structureContent,
-      data,
-      offset,
-      parsed;
+function BinParser(structureContent, typesContent, functions) {
+  var types_data = typesContent;
 
   /*
   Resolve the value of a variable.
@@ -93,15 +71,15 @@ function BinReader(
   :arg any name: The name or value of a variable.
   :returns any: The resolved value.
   */
-  function getValue(name) {
-    if (internal[name] !== undefined) {
-      return internal[name];
+  this.getValue = function(name) {
+    if (this.internal[name] !== undefined) {
+      return this.internal[name];
     }
-    if (constants[name] !== undefined) {
-      return constants[name];
+    if (this.constants[name] !== undefined) {
+      return this.constants[name];
     }
     return name;
-  }
+  };
 
   /*
   Resolve the value of a member variable.
@@ -115,18 +93,19 @@ function BinReader(
 
   :returns any: The resolved value.
   */
-  function getDefault(item, dtype, name) {
+  this.getDefault = function(item, dtype, name) {
     if (item[name] !== undefined) {
       return item[name];
     }
-    if ((types[dtype] !== undefined) && (types[dtype][name] !== undefined)) {
-      return types[dtype][name];
+    if ((this.types[dtype] !== undefined) &&
+        (this.types[dtype][name] !== undefined)) {
+      return this.types[dtype][name];
     }
-    if (defaults[name] !== undefined) {
-      return defaults[name];
+    if (this.defaults[name] !== undefined) {
+      return this.defaults[name];
     }
     return undefined;
-  }
+  };
 
   /*
   Determine what to read and how to interpret what was read.
@@ -140,9 +119,9 @@ function BinReader(
 
   :returns tuple: (`delim`, `size`, `func`, `kwargs`).
   */
-  function getFunction(item, dtype) {
-    var delim = getDefault(item, dtype, 'delimiter'),
-        size = getDefault(item, dtype, 'size'),
+  this.getFunction = function(item, dtype) {
+    var delim = this.getDefault(item, dtype, 'delimiter'),
+        size = this.getDefault(item, dtype, 'size'),
         func = dtype,
         kwargs = {};
 
@@ -151,16 +130,16 @@ function BinReader(
     }
 
     // Determine the function and its arguments.
-    if ('function' in types[dtype]) {
-      if ('name' in types[dtype].function) {
-        func = types[dtype].function.name;
+    if ('function' in this.types[dtype]) {
+      if ('name' in this.types[dtype].function) {
+        func = this.types[dtype].function.name;
       }
-      if ('args' in types[dtype].function) {
-        kwargs = types[dtype].function.args;
+      if ('args' in this.types[dtype].function) {
+        kwargs = this.types[dtype].function.args;
       }
     }
     return [delim, size, func, kwargs];
-  }
+  };
 
   /*
   Evaluate an expression.
@@ -176,18 +155,61 @@ function BinReader(
   :arg object expression: An expression.
   :returns any: Result of the evaluation.
   */
-  function evaluate(expression) {
-    var operands = expression.operands.map(getValue);
+  this.evaluate = function(expression) {
+    var operands = [],
+        index;
 
-    if (operands.length === 1 && !expression.operator) {
+    for (index = 0; index < expression.operands.length; index++) {
+      operands.push(this.getValue(expression.operands[index]));
+    }
+
+    if ((operands.length === 1) && (expression.operator === undefined)) {
       return operands[0];
     }
     return Functions.operators[expression.operator].apply(this, operands);
-  }
+  };
 
   /*
-  Reader specific functions.
+  Initialisation.
   */
+  this.internal = {};
+
+  this.functions = functions || new Functions.BinReadFunctions();
+
+  this.constants = {};
+  this.defaults = {
+    'delimiter': [],
+    'name': '',
+    'size': 0,
+    'type': 'text',
+    'unknown_destination': '__raw__',
+    'unknown_function': 'raw'
+  };
+  this.types = {
+    'int': {},
+    'raw': {}
+  };
+
+  if (types_data.constants) {
+    update(this.constants, types_data.constants);
+  }
+  if (types_data.defaults) {
+    update(this.defaults, types_data.defaults);
+  }
+  if (types_data.types) {
+    update(this.types, types_data.types);
+  }
+
+  this.structure = structureContent;
+}
+
+/*
+General binary file reader.
+*/
+function BinReader(
+    fileContent, structureContent, typesContent, functions, prune) {
+  var prune = prune || false,
+      offset = 0;
 
   /*
   Extract a field from {data} using either a fixed size, or a delimiter. After
@@ -196,19 +218,19 @@ function BinReader(
   :arg int size: Size of fixed size field.
   :return str: Content of the requested field.
   */
-  function getField(size, delimiter) {
+  this.getField = function(size, delimiter) {
     var field,
         extracted,
         separator;
 
-    if (offset >= data.length) {
+    if (offset >= this.data.length) {
       throw('StopIteration');
     }
 
     separator = String.fromCharCode.apply(this, delimiter)
     if (size) {
       // Fixed sized field.
-      field = data.slice(offset, offset + size);
+      field = this.data.slice(offset, offset + size);
       extracted = size;
       if (delimiter.length) {
         // A variable sized field in a fixed sized field.
@@ -217,13 +239,13 @@ function BinReader(
     }
     else {
       // Variable sized field.
-      field = data.slice(offset, -1).split(separator)[0];
+      field = this.data.slice(offset, -1).split(separator)[0];
       extracted = field.length + 1;
     }
 
     offset += extracted;
     return field;
-  }
+  };
 
   /*
   Parse a primitive data type.
@@ -233,7 +255,7 @@ function BinReader(
   :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
-  function parsePrimitive(item, dtype, dest, name) {
+  this.parsePrimitive = function(item, dtype, dest, name) {
     var delim,
         func,
         kwargs,
@@ -245,39 +267,39 @@ function BinReader(
 
     // Read and process the data.
     if (!name) {
-      dtype = getDefault(item, '', 'unknown_function');
+      dtype = this.getDefault(item, '', 'unknown_function');
     }
-    temp = getFunction(item, dtype);
+    temp = this.getFunction(item, dtype);
     delim = temp[0];
     size = temp[1];
     func = temp[2];
     kwargs = temp[3];
-    result = functions[func](getField(size, delim), kwargs);
+    result = this.functions[func](this.getField(size, delim), kwargs);
 
     if (name) {
       // Store the data.
       if (result.constructor === Object) {
         // Unpack dictionaries in order to use the items in evaluations.
         for (member in result) {
-          internal[member] = result[member];
+          this.internal[member] = result[member];
         }
       }
       else {
-        internal[name] = result;
+        this.internal[name] = result;
       }
       dest[name] = result;
     }
     else {
       // Stow unknown data away in a list.
       if (!prune) {
-        unknownDest = getDefault(item, dtype, 'unknown_destination');
+        unknownDest = this.getDefault(item, dtype, 'unknown_destination');
         if (!(unknownDest in dest)) {
           dest[unknownDest] = [];
         }
         dest[unknownDest].push(result);
       }
     }
-  }
+  };
 
   /*
   Parse a for loop.
@@ -286,21 +308,21 @@ function BinReader(
   :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
-  function parseFor(item, dest, name) {
+  this.parseFor = function(item, dest, name) {
     var length = item.for,
         structureDict,
         _;
 
     if (length.constructor !== Number) {
-      length = internal[length];
+      length = this.internal[length];
     }
 
     for (_ = 0; _ < length; _++) {
       structureDict = {};
-      parse(item['structure'], structureDict);
+      this.parse(item['structure'], structureDict);
       dest[name].push(structureDict);
     }
-  }
+  };
 
   /*
   Parse a do-while loop.
@@ -309,18 +331,18 @@ function BinReader(
   :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
-  function parseDoWhile(item, dest, name) {
+  this.parseDoWhile = function(item, dest, name) {
     var structureDict;
 
     while (true) {
       structureDict = {};
-      parse(item['structure'], structureDict);
+      this.parse(item['structure'], structureDict);
       dest[name].push(structureDict);
-      if (!evaluate(item.do_while)) {
+      if (!this.evaluate(item.do_while)) {
         break;
       }
     }
-  }
+  };
 
   /*
   Parse a while loop.
@@ -329,21 +351,21 @@ function BinReader(
   :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
   */
-  function parseWhile(item, dest, name) {
+  this.parseWhile = function(item, dest, name) {
     var delim = item.structure[0];
 
     dest[name] = [{}];
-    parse([delim], dest[name][0]);
+    this.parse([delim], dest[name][0]);
     while (true) {
-      if (!evaluate(item.while)) {
+      if (!this.evaluate(item.while)) {
         break;
       }
-      parse(item.structure.slice(1), dest[name].slice(-1)[0]);
+      this.parse(item.structure.slice(1), dest[name].slice(-1)[0]);
       dest[name].push({});
-      parse([delim], dest[name].slice(-1)[0]);
+      this.parse([delim], dest[name].slice(-1)[0]);
     }
     dest[item.while.term] = getOneValue(dest[name].pop(-1));
-  }
+  };
 
   /*
   Parse a binary file.
@@ -351,7 +373,7 @@ function BinReader(
   :arg object structure: Structure of the binary file.
   :arg object dest: Destination object.
   */
-  function parse(structure, dest) {
+  this.parse = function(structure, dest) {
     var item,
         name,
         dtype,
@@ -359,20 +381,21 @@ function BinReader(
 
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
+      //console.log(item);
 
       if (item.if) {
         // Conditional statement.
-        if (!evaluate(item.if)) {
+        if (!this.evaluate(item.if)) {
           continue;
         }
       }
 
-      dtype = getDefault(item, '', 'type');
-      name = getDefault(item, dtype, 'name');
+      dtype = this.getDefault(item, '', 'type');
+      name = this.getDefault(item, dtype, 'name');
 
       if (!item.structure) {
         // Primitive data types.
-        parsePrimitive(item, dtype, dest, name);
+        this.parsePrimitive(item, dtype, dest, name);
       }
       else {
         // Nested structures.
@@ -386,20 +409,20 @@ function BinReader(
         }
 
         if (item.for) {
-          parseFor(item, dest, name);
+          this.parseFor(item, dest, name);
         }
         else if (item.do_while) {
-          parseDoWhile(item, dest, name);
+          this.parseDoWhile(item, dest, name);
         }
         else if (item.while) {
-          parseWhile(item, dest, name);
+          this.parseWhile(item, dest, name);
         }
         else {
-          parse(item.structure, dest[name]);
+          this.parse(item.structure, dest[name]);
         }
       }
     }
-  }
+  };
 
   /*
   Write the parsed binary file to the console.
@@ -412,39 +435,19 @@ function BinReader(
   /*
   Initialisation.
   */
-  if (types_data.constants) {
-    update(constants, types_data.constants);
-  }
-  if (types_data.defaults) {
-    update(defaults, types_data.defaults);
-  }
-  if (types_data.types) {
-    update(types, types_data.types);
-  }
+  BinParser.call(this, structureContent, typesContent, functions);
 
-  this.types = types;
-  this.constants = constants;
-  this.defaults = defaults;
-
-  /*
-  Reader specific initialisation.
-  */
-
-  data = fileContent;
-  parsed = {};
-  offset = 0;
+  this.data = fileContent;
+  this.parsed = {};
 
   try {
-    parse(structure, parsed);
+    this.parse(this.structure, this.parsed);
   }
   catch(err) {
     if (err !== 'StopIteration') {
       throw(err);
     }
   }
-
-  this.data = data;
-  this.parsed = parsed;
 }
 
 module.exports.BinReader = BinReader;
