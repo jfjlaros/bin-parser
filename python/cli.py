@@ -1,5 +1,7 @@
 import argparse
 
+import yaml
+
 from . import usage, version, doc_split
 from .bin_parser import BinReader, BinWriter
 
@@ -18,8 +20,15 @@ def bin_reader(
     :arg int debug: Debugging level.
     """
     parser = BinReader(
-        input_handle, structure_handle, types_handle, prune=prune, debug=debug)
-    parser.write(output_handle)
+        input_handle.read(),
+        yaml.safe_load(structure_handle),
+        yaml.safe_load(types_handle),
+        prune=prune, debug=debug)
+    output_handle.write(u'---\n')
+    yaml.safe_dump(
+        parser.parsed, output_handle, width=76, default_flow_style=False)
+    if debug:
+        parser.write_debug_info()
 
 
 def bin_writer(
@@ -34,8 +43,13 @@ def bin_writer(
     :arg int debug: Debugging level.
     """
     parser = BinWriter(
-        input_handle, structure_handle, types_handle, debug=debug)
-    parser.write(output_handle)
+        yaml.safe_load(input_handle),
+        yaml.safe_load(structure_handle),
+        yaml.safe_load(types_handle),
+        debug=debug)
+    output_handle.write(parser.data)
+    if debug:
+        parser.write_debug_info()
 
 
 def main():

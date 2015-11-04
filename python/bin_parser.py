@@ -6,21 +6,17 @@ General binary file parser.
 """
 import sys
 
-import yaml
-
 from functions import BinReadFunctions, BinWriteFunctions, operators
 
 
 class BinParser(object):
-    def __init__(
-            self, structure_handle, types_handle, functions=BinReadFunctions,
+    def __init__(self, structure, types, functions=BinReadFunctions,
             debug=0, log=sys.stderr):
         """
         Constructor.
 
-        :arg stream structure_handle: Open readable handle to the structure
-            definition.
-        :arg stream types_handle: Open readable handle to the types definition.
+        :arg dict structure: The structure definition.
+        :arg dict types: The types definition.
         :arg object functions: Object containing parsing functions.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
@@ -46,7 +42,7 @@ class BinParser(object):
             'raw': {}
         }
 
-        types_data = yaml.safe_load(types_handle)
+        types_data = types
         if 'constants' in types_data:
             self.constants.update(types_data['constants'])
         if 'defaults' in types_data:
@@ -54,7 +50,7 @@ class BinParser(object):
         if 'types' in types_data:
             self.types.update(types_data['types'])
 
-        self._structure = yaml.safe_load(structure_handle)
+        self._structure = structure
 
         if self._debug > 1:
             self._log.write('--- PARSING DETAILS ---\n\n')
@@ -150,32 +146,44 @@ class BinParser(object):
             return operands[0]
         return operators[expression['operator']](*operands)
 
+    def _write_debug_info(self):
+        """
+        Write additional debugging information to the log.
+        """
+        if self._debug > 1:
+            self._log.write('\n\n')
+
+        self._log.write('--- INTERNAL VARIABLES ---\n\n')
+        for item in self._internal:
+            self._log.write('{}: {}\n'.format(item, self._internal[item]))
+
+        self._log.write('\n\n--- DEBUG INFO ---\n\n')
+
 
 class BinReader(BinParser):
     """
     General binary file reader.
     """
     def __init__(
-            self, input_handle, structure_handle, types_handle,
-            functions=BinReadFunctions, prune=False, debug=0, log=sys.stderr):
+            self, data, structure, types, functions=BinReadFunctions,
+            prune=False, debug=0, log=sys.stderr):
         """
         Constructor.
 
-        :arg stream input_handle: Open readable handle to a binary file.
-        :arg stream structure_handle: Open readable handle to the structure
-            definition.
-        :arg stream types_handle: Open readable handle to the types definition.
+        :arg stream data: Content of a binary file.
+        :arg dict structure: The structure definition.
+        :arg dict types: The types definition.
         :arg object functions: Object containing parsing functions.
         :arg bool prune: Remove all unknown data fields from the output.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
         """
         super(BinReader, self).__init__(
-            structure_handle, types_handle, functions, debug, log)
+            structure, types, functions, debug, log)
 
         self._prune = prune
 
-        self.data = input_handle.read()
+        self.data = data
         self.parsed = {}
         self._offset = 0
         self._raw_byte_count = 0
@@ -351,32 +359,19 @@ class BinReader(BinParser):
             if self._debug > 1:
                 self._log.write(' --> {}\n'.format(name))
 
-    def write(self, output_handle):
+    def write_debug_info(self):
         """
-        Write the parsed binary file to a stream.
-
-        :arg stream output_handle: Open writable handle.
+        Write additional debugging information to the log.
         """
-        output_handle.write(u'---\n')
-        yaml.safe_dump(
-            self.parsed, output_handle, width=76, default_flow_style=False)
+        self._write_debug_info()
 
-        if self._debug:
-            if self._debug > 1:
-                self._log.write('\n\n')
-            self._log.write('--- INTERNAL VARIABLES ---\n\n')
-            yaml.safe_dump(
-                self._internal, self._log, width=76,
-                default_flow_style=False, encoding=None)
+        data_length = len(self.data)
+        parsed = data_length - self._raw_byte_count
 
-            data_length = len(self.data)
-            parsed = data_length - self._raw_byte_count
-
-            self._log.write('\n\n--- DEBUG INFO ---\n\n')
-            self._log.write('Reached byte {} out of {}.\n'.format(
-                self._offset, data_length))
-            self._log.write('{} bytes parsed ({:d}%).\n'.format(
-                parsed, parsed * 100 // data_length))
+        self._log.write('Reached byte {} out of {}.\n'.format(
+            self._offset, data_length))
+        self._log.write('{} bytes parsed ({:d}%).\n'.format(
+            parsed, parsed * 100 // data_length))
 
 
 class BinWriter(BinParser):
@@ -384,24 +379,23 @@ class BinWriter(BinParser):
     General binary file writer.
     """
     def __init__(
-            self, input_handle, structure_handle, types_handle,
-            functions=BinWriteFunctions, debug=0, log=sys.stderr):
+            self, parsed, structure, types, functions=BinWriteFunctions,
+            debug=0, log=sys.stderr):
         """
         Constructor.
 
-        :arg stream input_handle: Open readable handle to a yaml file.
-        :arg stream structure_handle: Open readable handle to the structure
-            definition.
-        :arg stream types_handle: Open readable handle to the types definition.
+        :arg dict parsed: Parsed representation of a binary file.
+        :arg dict structure: The structure definition.
+        :arg dict types: The types definition.
         :arg object functions: Object containing parsing functions.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
         """
         super(BinWriter, self).__init__(
-            structure_handle, types_handle, functions, debug, log)
+            structure, types, functions, debug, log)
 
         self.data = ''
-        self.parsed = yaml.safe_load(input_handle)
+        self.parsed = parsed
 
         self._encode(self._structure, self.parsed)
 
@@ -515,22 +509,10 @@ class BinWriter(BinParser):
                 if self._debug > 1:
                     self._log.write(' --> {}\n'.format(name))
 
-    def write(self, output_handle):
+    def write_debug_info(self):
         """
-        Write the encoded file to a stream.
-
-        :arg stream output_handle: Open writable handle.
+        Write additional debugging information to the log.
         """
-        output_handle.write(self.data)
+        self._write_debug_info()
 
-        if self._debug:
-            if self._debug > 1:
-                self._log.write('\n\n')
-
-            self._log.write('--- INTERNAL VARIABLES ---\n\n')
-            yaml.safe_dump(
-                self._internal, self._log, width=76,
-                default_flow_style=False, encoding=None)
-
-            self._log.write('\n\n--- DEBUG INFO ---\n\n')
-            self._log.write('{} bytes written.\n'.format(len(self.data)))
+        self._log.write('{} bytes written.\n'.format(len(self.data)))
