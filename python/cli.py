@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+"""
+Command line interface for the general binary parser.
+"""
 import argparse
 
 import yaml
@@ -28,7 +32,7 @@ def bin_reader(
     yaml.safe_dump(
         parser.parsed, output_handle, width=76, default_flow_style=False)
     if debug:
-        parser.write_debug_info()
+        parser.log_debug_info()
 
 
 def bin_writer(
@@ -49,7 +53,7 @@ def bin_writer(
         debug=debug)
     output_handle.write(parser.data)
     if debug:
-        parser.write_debug_info()
+        parser.log_debug_info()
 
 
 def main():

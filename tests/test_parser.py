@@ -1,7 +1,7 @@
 """
 Tests for the bin_parser.bin_parser module.
 """
-
+import yaml
 
 from bin_parser import BinReader
 
@@ -11,24 +11,24 @@ class TestReader(object):
     Test the python.fam_parser module.
     """
     def setup(self):
-        self.balance = BinReader(open('examples/balance/balance.dat'),
-            open('examples/balance/structure.yml'),
-            open('examples/balance/types.yml')).parsed
-        self.for_ = BinReader(open('examples/lists/for.dat'),
-            open('examples/lists/structure_for.yml'),
-            open('examples/lists/types.yml')).parsed
-        self.do_while = BinReader(open('examples/lists/do_while.dat'),
-            open('examples/lists/structure_do_while.yml'),
-            open('examples/lists/types.yml')).parsed
-        self.while_ = BinReader(open('examples/lists/while.dat'),
-            open('examples/lists/structure_while.yml'),
-            open('examples/lists/types.yml')).parsed
-        self.if_a = BinReader(open('examples/conditional/a.dat'),
-            open('examples/conditional/structure.yml'),
-            open('examples/conditional/types.yml')).parsed
-        self.if_b = BinReader(open('examples/conditional/b.dat'),
-            open('examples/conditional/structure.yml'),
-            open('examples/conditional/types.yml')).parsed
+        self.balance = BinReader(open('examples/balance/balance.dat').read(),
+            yaml.safe_load(open('examples/balance/structure.yml')),
+            yaml.safe_load(open('examples/balance/types.yml'))).parsed
+        self.for_ = BinReader(open('examples/lists/for.dat').read(),
+            yaml.safe_load(open('examples/lists/structure_for.yml')),
+            yaml.safe_load(open('examples/lists/types.yml'))).parsed
+        self.do_while = BinReader(open('examples/lists/do_while.dat').read(),
+            yaml.safe_load(open('examples/lists/structure_do_while.yml')),
+            yaml.safe_load(open('examples/lists/types.yml'))).parsed
+        self.while_ = BinReader(open('examples/lists/while.dat').read(),
+            yaml.safe_load(open('examples/lists/structure_while.yml')),
+            yaml.safe_load(open('examples/lists/types.yml'))).parsed
+        self.if_a = BinReader(open('examples/conditional/a.dat').read(),
+            yaml.safe_load(open('examples/conditional/structure.yml')),
+            yaml.safe_load(open('examples/conditional/types.yml'))).parsed
+        self.if_b = BinReader(open('examples/conditional/b.dat').read(),
+            yaml.safe_load(open('examples/conditional/structure.yml')),
+            yaml.safe_load(open('examples/conditional/types.yml'))).parsed
 
     def test_balance_1(self):
         assert self.balance['name'] == 'John Doe'

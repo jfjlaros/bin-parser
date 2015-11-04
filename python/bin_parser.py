@@ -10,14 +10,13 @@ from functions import BinReadFunctions, BinWriteFunctions, operators
 
 
 class BinParser(object):
-    def __init__(self, structure, types, functions=BinReadFunctions,
-            debug=0, log=sys.stderr):
+    def __init__(self, structure, types, functions, debug=0, log=sys.stderr):
         """
         Constructor.
 
         :arg dict structure: The structure definition.
         :arg dict types: The types definition.
-        :arg object functions: Object containing parsing functions.
+        :arg object functions: Object containing parsing or encoding functions.
         :arg int debug: Debugging level.
         :arg stream log: Debug stream to write to.
         """
@@ -146,7 +145,7 @@ class BinParser(object):
             return operands[0]
         return operators[expression['operator']](*operands)
 
-    def _write_debug_info(self):
+    def _log_debug_info(self):
         """
         Write additional debugging information to the log.
         """
@@ -359,11 +358,11 @@ class BinReader(BinParser):
             if self._debug > 1:
                 self._log.write(' --> {}\n'.format(name))
 
-    def write_debug_info(self):
+    def log_debug_info(self):
         """
         Write additional debugging information to the log.
         """
-        self._write_debug_info()
+        self._log_debug_info()
 
         data_length = len(self.data)
         parsed = data_length - self._raw_byte_count
@@ -509,10 +508,10 @@ class BinWriter(BinParser):
                 if self._debug > 1:
                     self._log.write(' --> {}\n'.format(name))
 
-    def write_debug_info(self):
+    def log_debug_info(self):
         """
         Write additional debugging information to the log.
         """
-        self._write_debug_info()
+        self._log_debug_info()
 
         self._log.write('{} bytes written.\n'.format(len(self.data)))

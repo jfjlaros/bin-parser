@@ -5,21 +5,22 @@ like integers, variable length (delimited) strings, dates, maps and bit fields
 (flags) and it can iterate over sub structures. Other data types are easily
 added.
 
-The file structure and the types are stored in YAML format. For practical
-purposes the structure is separated from the types, this way multiple file
-formats using the same types (within one project for example) can be easily
-supported without much duplication.
+The file structure and the types are stored in a nested dictionary. For
+practical purposes the structure is separated from the types, this way multiple
+file formats using the same types (within one project for example) can be
+easily supported without much duplication.
 
 The design of the library is such that all operations can be reversed. This is
 fully implemented in the Python version of the library. This means that fully
 functional binary editing is possible using this implementation; first use the
-reader to convert a binary file to a YAML representation, this representation
-is easily edited using a text editor, and then use the writer to convert back
-to binary.
+reader to convert a binary file to a serialised dictionary representation, this
+representation is easily edited using a text editor, and then use the writer to
+convert back to binary.
 
 This idea is implemented in two languages; Python and JavaScript. All main
 development is done in Python, all reading functionalities have been ported to
-JavaScript.
+JavaScript. We chose YAML as our preferred serialised dictionary format, but
+other serialisation formats (JSON for example) can be used too.
 
 ## Why use this library?
 The challenge of parsing binary files is not a new one, it requires reverse
@@ -121,7 +122,7 @@ can be used from the command line as follows:
 In order to parse a binary file, the library needs two pieces of information:
 it needs to know what the structure of the binary file is and it needs to know
 which types are used. Both of these information sources are provided to the
-library in YAML format.
+library as nested dictionaries.
 
 ## Example: Account balance
 Suppose we have a file (`balance.dat`) that contains the following:
@@ -427,16 +428,19 @@ The following statements are equal:
 To use the library from our own code, we need to use the following:
 
 ```python
+import yaml
+
 import bin_parser
 
 parser = bin_parser.BinReader(
-    open('balance.dat'), open('structure.yml'), open('types.yml'))
+    open('balance.dat').read(),
+    yaml.safe_load(open('structure.yml')),
+    yaml.safe_load(open('types.yml')))
 print parser.parsed['name']
 ```
 
-The `BinReader` object contains the original data in `data` and the parsed data
-in `parsed`. Furthermore it contains the function `write` to write the content
-of `parsed` in YAML format to a file handle.
+The `BinReader` object stores the original data in the `data` member variable
+and the parsed data in the `parsed` member variable.
 
 ### Defining new types
 Types can be added by subclassing the BinReadFunctions class. Suppose we need
@@ -456,7 +460,9 @@ Now we can initiate the parser with this new class:
 
 ```python
 parser = bin_parser.BinReader(
-    open('something.dat'), open('structure.yml'), open('types.yml'),
+    open('something.dat').read(),
+    yaml.safe_load(open('structure.yml')),
+    yaml.safe_load(open('types.yml')),
     functions=Invert)
 ```
 

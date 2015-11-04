@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-
 import sys
+
+import yaml
 
 from bin_parser import BinWriter
 from functions import PrinceWriteFunctions
 
 
 parser = BinWriter(
-    open('../prince.yml'), open('../structure.yml'), open('../types.yml'),
+    yaml.safe_load(open('../prince.yml')),
+    yaml.safe_load(open('../structure.yml')),
+    yaml.safe_load(open('../types.yml')),
     functions=PrinceWriteFunctions)
-parser.write(sys.stdout)
+sys.stdout.write(parser.data)
