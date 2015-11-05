@@ -9,7 +9,7 @@ test_cli() {
 
   echo "  $1"
   python -m python.cli read $1 $2 $3 $py
-  nodejs javascript/cli.js $1 $2 $3 > $js
+  nodejs javascript/cli.js $1 $2 $3 $js
 
   python -m extras.compare_yaml $py $js
 

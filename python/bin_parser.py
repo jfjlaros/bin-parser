@@ -416,9 +416,8 @@ class BinWriter(BinParser):
             # Clip the field if it is too large.
             # NOTE: This can result in a non-delimited trimmed field.
             field = field[:size]
-        if len(field) < size:
-            # Pad the field if necessary.
-            field += chr(0x00) * (size - len(field))
+        # Pad the field if necessary.
+        field += chr(0x00) * (size - len(field))
 
         self.data += field
 
@@ -455,9 +454,11 @@ class BinWriter(BinParser):
                 if operand == field['name']:
                     return field
 
+        return None
+
     def _encode(self, structure, source):
         """
-        Encode to a file.
+        Encode to a binary file.
 
         :arg dict structure: Structure of the binary file.
         :arg dict source: Source dictionary.

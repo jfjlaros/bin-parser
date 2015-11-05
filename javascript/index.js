@@ -6,8 +6,7 @@ General binary file parser.
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 */
 
-var Buffer = require('buffer-extend-split'),
-    yaml = require('js-yaml');
+var Buffer = require('buffer-extend-split');
 
 var Functions = require('./functions');
 
@@ -58,8 +57,8 @@ function numerical(a, b) {
 /*
 General binary file reader.
 */
-function BinParser(structureContent, typesContent, functions) {
-  var types_data = typesContent;
+function BinParser(structure, types, functions, kwargs) {
+  var typesData = types;
 
   /*
   Resolve the value of a variable.
@@ -174,7 +173,8 @@ function BinParser(structureContent, typesContent, functions) {
   */
   this.internal = {};
 
-  this.functions = functions || new Functions.BinReadFunctions();
+  this.functions = functions;
+  this.debug = kwargs.debug || 0;
 
   this.constants = {};
   this.defaults = {
@@ -190,24 +190,23 @@ function BinParser(structureContent, typesContent, functions) {
     'raw': {}
   };
 
-  if (types_data.constants) {
-    update(this.constants, types_data.constants);
+  if (typesData.constants) {
+    update(this.constants, typesData.constants);
   }
-  if (types_data.defaults) {
-    update(this.defaults, types_data.defaults);
+  if (typesData.defaults) {
+    update(this.defaults, typesData.defaults);
   }
-  if (types_data.types) {
-    update(this.types, types_data.types);
+  if (typesData.types) {
+    update(this.types, typesData.types);
   }
 
-  this.structure = structureContent;
+  this.structure = structure;
 }
 
 /*
 General binary file reader.
 */
-function BinReader(
-    fileContent, structureContent, typesContent, functions, prune) {
+function BinReader(data, structure, types, functions, prune) {
   var prune = prune || false,
       offset = 0;
 
@@ -381,7 +380,6 @@ function BinReader(
 
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
-      //console.log(item);
 
       if (item.if) {
         // Conditional statement.
@@ -425,19 +423,13 @@ function BinReader(
   };
 
   /*
-  Write the parsed binary file to the console.
-  */
-  this.dump = function() {
-    console.log('---');
-    console.log(yaml.dump(this.parsed));
-  };
-
-  /*
   Initialisation.
   */
-  BinParser.call(this, structureContent, typesContent, functions);
+  BinParser.call(
+    this, structure, types,
+    functions || new Functions.BinReadFunctions());
 
-  this.data = fileContent;
+  this.data = data;
   this.parsed = {};
 
   try {
@@ -450,8 +442,181 @@ function BinReader(
   }
 }
 
-module.exports.BinReader = BinReader;
-module.exports.update = update;
-module.exports.pop = pop;
-module.exports.numerical = numerical;
-module.exports.getOneValue = getOneValue;
+function BinWriter(parsed, structure, types, functions) {
+  /*
+  Append a field to {this.data} using either a fixed size, or a delimiter.
+
+  :arg int data: The content of the field.
+  :arg int size: Size of fixed size field.
+  :arg list(char) delimiter: Delimiter for variable sized fields.
+  */
+  this.setField = function(data, size, delimiter) {
+    var field = data,
+        index;
+
+    if (delimiter) {
+      // Add the delimiter for variable length fields.
+      field = Buffer.concat(
+        [field, Buffer(String.fromCharCode.apply(this, delimiter))]);
+    }
+    if (size) {
+      // Clip the field if it is too large.
+      // NOTE: This can result in a non-delimited trimmed field.
+      field = field.slice(0, size);
+    }
+    for (index = field.length; index < size; index++) {
+      // Pad the field if necessary.
+      field = Buffer.concat([field, Buffer(String.fromCharCode(0x00))]);
+    }
+
+    this.data = Buffer.concat([this.data, Buffer(field)]);
+  };
+
+  /*
+  Encode a primitive data type.
+
+  :arg dict item: Data structure.
+  :arg str dtype: Data type.
+  :arg unknown value: Value to be stored.
+  :arg str name: Field name used in the destination dictionary.
+  */
+  this.encodePrimitive = function(item, dtype, value, name) {
+    var temp = this.getFunction(item, dtype),
+        delim = temp[0],
+        size = temp[1],
+        func = temp[2],
+        kwargs = temp[3],
+        member;
+
+    if (value.constructor === Object) {
+      // Unpack dictionaries in order to use the items in evaluations.
+      for (member in value) {
+        this.internal[member] = value[member];
+      }
+    }
+    else {
+      this.internal[name] = value;
+    }
+
+    this.setField(this.functions[func](value, kwargs), size, delim);
+  };
+
+  /*
+  Resolve the `term` field in the `while` structure.
+
+  :arg dict item: Data structure.
+
+  :returns dict: Item that `term` points to.
+  */
+  this.getItem = function(item) {
+    var operand,
+        i,
+        j;
+
+    for (i = 0; i < item.while.operands.length; i++) {
+      for (j = 0; j < item.structure.length; j++) {
+        if (item.while.operands[i] === item.structure[j].name) {
+          return item.structure[j];
+        }
+      }
+    }
+    return undefined;
+  };
+
+  /*
+  Encode to a binary file.
+
+  :arg dict structure: Structure of the binary file.
+  :arg dict source: Source dictionary.
+  */
+  this.encode = function(structure, source) {
+    var rawCounter = 0,
+        item,
+        dtype,
+        name,
+        value,
+        term,
+        termItem,
+        i,
+        j;
+
+    for (i = 0; i < structure.length; i++) {
+      item = structure[i];
+
+      if (item.if) {
+        // Conditional statement.
+        if (!this.evaluate(item.if)) {
+          continue;
+        }
+      }
+
+      dtype = this.getDefault(item, '', 'type');
+      name = this.getDefault(item, dtype, 'name');
+
+      if (!name) {
+        // NOTE: Not sure if this is correct.
+        dtype = this.getDefault(item, dtype, 'unknown_function');
+        value = source[this.getDefault(
+          item, dtype, 'unknown_destination')][rawCounter];
+        rawCounter++;
+      }
+      else {
+        value = source[name];
+      }
+
+      if (!item.structure) {
+        // Primitive data types.
+        if (this.debug > 1) {
+          console.log(
+            '0x' + Functions.pad(Functions.hex(this.data.length), 6) + ': ' + 
+            name + ' --> ' + value);
+        }
+        this.encodePrimitive(item, dtype, value, name);
+      }
+      else {
+        // Nested structures.
+        if (this.debug > 1) {
+          console.log('-- ' + name);
+        }
+        if (item.for || item.do_while || item.while) {
+          for (j = 0; j < value.length; j++) {
+            this.encode(item.structure, value[j]);
+          }
+          if (item.while) {
+            term = this.getItem(item);
+            termItem = {};
+            termItem[term.name] = source[item.while.term];
+            this.encode([term], termItem);
+          }
+        }
+        else {
+          this.encode(item.structure, value);
+        }
+        if (this.debug > 1) {
+          console.log(' --> ' + name);
+        }
+      }
+    }
+  };
+
+  /*
+  Initialisation.
+  */
+  BinParser.call(
+    this, structure, types,
+    functions || new Functions.BinWriteFunctions(), {'debug': 2});
+
+  this.data = Buffer([])
+  this.parsed = parsed;
+
+  this.encode(this.structure, this.parsed);
+}
+
+module.exports = {
+  'BinReader': BinReader,
+  'BinWriter': BinWriter,
+  'update': update,
+  'pop': pop,
+  'numerical': numerical,
+  'getOneValue': getOneValue
+};

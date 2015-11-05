@@ -1,14 +1,13 @@
 'use strict';
 
-var iconv = require('iconv-lite');
-
 /*
 Field packing and unpacking functions for the general binary parser.
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 */
+var iconv = require('iconv-lite');
 
-module.exports.operators = {
+var operators = {
   'not': function(a) { return !a; },
   'and': function(a, b) { return a && b; },
   'or': function(a, b) { return a || b; },
@@ -237,7 +236,7 @@ encoding. Documentation of these functions is omitted.
 */
 function BinWriteFunctions() {
   this.raw = function(hexString) {
-    return hexString.split(' ').map(unHex);
+    return Buffer(hexString.split(' ').map(unHex));
   }
 
   this.bit = function(bitString) {
@@ -314,5 +313,10 @@ function BinWriteFunctions() {
   };
 }
 
-module.exports.BinReadFunctions = BinReadFunctions;
-module.exports.BinWriteFunctions = BinWriteFunctions;
+module.exports = {
+  'BinReadFunctions': BinReadFunctions,
+  'BinWriteFunctions': BinWriteFunctions,
+  'hex': hex,
+  'pad': pad,
+  'operators': operators
+};
