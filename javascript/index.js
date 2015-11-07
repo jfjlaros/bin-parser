@@ -169,12 +169,32 @@ function BinParser(structure, types, functions, kwargs) {
   };
 
   /*
+  Write additional debugging information to the log.
+  */
+  this._logDebugInfo = function() {
+    var item;
+
+    if (this.debug > 1) {
+      this.log.write('\n\n');
+    }
+
+    this.log.write('--- INTERNAL VARIABLES ---\n\n');
+    for (item in this.internal) {
+      this.log.write(item + ': ' + this.internal[item] + '\n');
+    }
+
+    this.log.write('\n\n--- DEBUG INFO ---\n\n');
+  };
+
+  /*
   Initialisation.
   */
   this.internal = {};
 
-  this.functions = functions;
   this.debug = kwargs.debug || 0;
+  this.log = kwargs.log || process.stderr;
+  
+  this.functions = functions;
 
   this.constants = {};
   this.defaults = {
@@ -201,6 +221,10 @@ function BinParser(structure, types, functions, kwargs) {
   }
 
   this.structure = structure;
+
+  if (this.debug > 1) {
+    this.log.write('--- PARSING DETAILS ---\n\n');
+  }
 }
 
 /*
@@ -208,7 +232,8 @@ General binary file reader.
 */
 function BinReader(data, structure, types, kwargs) {
   var prune = kwargs.prune || false,
-      offset = 0;
+      offset = 0,
+      rawByteCount = 0;
 
   /*
   Extract a field from {data} using either a fixed size, or a delimiter. After
@@ -240,6 +265,16 @@ function BinReader(data, structure, types, kwargs) {
       // Variable sized field.
       field = this.data.slice(offset, -1).split(separator)[0];
       extracted = field.length + 1;
+    }
+
+    if (this.debug > 1) {
+      this.log.write('0x' + Functions.pad(Functions.hex(offset), 6) + ': ')
+      if (size) {
+        this.log.write(this.functions.raw(field) + ' (' + size + ')');
+      }
+      else {
+        this.log.write(field);
+      }
     }
 
     offset += extracted;
@@ -297,6 +332,7 @@ function BinReader(data, structure, types, kwargs) {
         }
         dest[unknownDest].push(result);
       }
+      rawByteCount += size;
     }
   };
 
@@ -397,6 +433,10 @@ function BinReader(data, structure, types, kwargs) {
       }
       else {
         // Nested structures.
+        if (this.debug > 1) {
+          this.log.write('-- ' + name + '\n');
+        }
+
         if (!dest[name]) {
           if (item.for || item.do_while || item.while) {
             dest[name] = [];
@@ -419,7 +459,27 @@ function BinReader(data, structure, types, kwargs) {
           this.parse(item.structure, dest[name]);
         }
       }
+      if (this.debug > 1) {
+        this.log.write(' --> ' + name + '\n');
+      }
     }
+  };
+
+  /*
+  Write additional debugging information to the log.
+  */
+  this.logDebugInfo = function() {
+    var parsed;
+
+    this._logDebugInfo();
+
+    parsed = this.data.length - rawByteCount;
+
+    this.log.write(
+      'Reached byte ' + offset + ' out of ' + this.data.length + '.\n');
+    this.log.write(
+      parsed + ' bytes parsed (' +
+      Math.round(parsed * 100 / this.data.length) + ').\n');
   };
 
   /*
@@ -567,16 +627,16 @@ function BinWriter(parsed, structure, types, kwargs) {
       if (!item.structure) {
         // Primitive data types.
         if (this.debug > 1) {
-          console.log(
+          this.log.write(
             '0x' + Functions.pad(Functions.hex(this.data.length), 6) + ': ' + 
-            name + ' --> ' + value);
+            name + ' --> ' + value + '\n');
         }
         this.encodePrimitive(item, dtype, value, name);
       }
       else {
         // Nested structures.
         if (this.debug > 1) {
-          console.log('-- ' + name);
+          this.log.write('-- ' + name + '\n');
         }
         if (item.for || item.do_while || item.while) {
           for (j = 0; j < value.length; j++) {
@@ -593,10 +653,16 @@ function BinWriter(parsed, structure, types, kwargs) {
           this.encode(item.structure, value);
         }
         if (this.debug > 1) {
-          console.log(' --> ' + name);
+          this.log.write(' --> ' + name + '\n');
         }
       }
     }
+  };
+
+  this.logDebugInfo = function() {
+    this._logDebugInfo();
+
+    this.log.write(this.data.length + ' bytes written.\n');
   };
 
   /*

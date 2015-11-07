@@ -38,6 +38,9 @@ function binReader(inputFile, structureFile, typesFile, outputFile, kwargs) {
     fs.writeFileSync(outputFile, '---\n');
     fs.appendFileSync(outputFile, yaml.dump(parser.parsed));
   }
+  if (kwargs.debug) {
+    parser.logDebugInfo();
+  }
 }
 
 /*
@@ -61,6 +64,9 @@ function binWriter(inputFile, structureFile, typesFile, outputFile, kwargs) {
   }
   else {
     fs.writeFileSync(outputFile, parser.data);
+  }
+  if (kwargs.debug) {
+    parser.logDebugInfo();
   }
 }
 
