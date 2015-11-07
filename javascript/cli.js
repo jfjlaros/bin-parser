@@ -30,8 +30,14 @@ function binReader(inputFile, structureFile, typesFile, outputFile, kwargs) {
         yaml.load(fs.readFileSync(typesFile)),
         kwargs);
 
-  fs.writeFileSync(outputFile, '---\n');
-  fs.appendFileSync(outputFile, yaml.dump(parser.parsed));
+  if (outputFile === '-') {
+    process.stdout.write('---\n');
+    process.stdout.write(yaml.dump(parser.parsed));
+  }
+  else {
+    fs.writeFileSync(outputFile, '---\n');
+    fs.appendFileSync(outputFile, yaml.dump(parser.parsed));
+  }
 }
 
 /*
@@ -50,7 +56,12 @@ function binWriter(inputFile, structureFile, typesFile, outputFile, kwargs) {
         yaml.load(fs.readFileSync(typesFile)),
         kwargs);
 
-  fs.writeFileSync(outputFile, parser.data);
+  if (outputFile === '-') {
+    process.stdout.write(parser.data);
+  }
+  else {
+    fs.writeFileSync(outputFile, parser.data);
+  }
 }
 
 /*
