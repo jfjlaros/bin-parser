@@ -206,8 +206,8 @@ function BinParser(structure, types, functions, kwargs) {
 /*
 General binary file reader.
 */
-function BinReader(data, structure, types, functions, prune) {
-  var prune = prune || false,
+function BinReader(data, structure, types, kwargs) {
+  var prune = kwargs.prune || false,
       offset = 0;
 
   /*
@@ -427,7 +427,7 @@ function BinReader(data, structure, types, functions, prune) {
   */
   BinParser.call(
     this, structure, types,
-    functions || new Functions.BinReadFunctions());
+    kwargs.functions || new Functions.BinReadFunctions(), kwargs);
 
   this.data = data;
   this.parsed = {};
@@ -442,7 +442,7 @@ function BinReader(data, structure, types, functions, prune) {
   }
 }
 
-function BinWriter(parsed, structure, types, functions) {
+function BinWriter(parsed, structure, types, kwargs) {
   /*
   Append a field to {this.data} using either a fixed size, or a delimiter.
 
@@ -604,9 +604,9 @@ function BinWriter(parsed, structure, types, functions) {
   */
   BinParser.call(
     this, structure, types,
-    functions || new Functions.BinWriteFunctions(), {'debug': 2});
+    kwargs.functions || new Functions.BinWriteFunctions(), kwargs);
 
-  this.data = Buffer([])
+  this.data = Buffer([]);
   this.parsed = parsed;
 
   this.encode(this.structure, this.parsed);

@@ -25,6 +25,7 @@
   "author": "Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>",
   "license": "MIT",
   "dependencies": {
+    "argparse": "^1.0.3",
     "buffer-extend-split": "^0.0.0",
     "iconv-lite": "^0.4.13",
     "js-yaml": "^3.3.1"
@@ -36,5 +37,6 @@
     "example": "examples",
     "test": "tests"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "year": "2015"
 }
