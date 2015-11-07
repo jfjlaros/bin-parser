@@ -41,7 +41,7 @@ class BinParser(object):
             'raw': {}
         }
 
-        types_data = types
+        types_data = types or {}
         if 'constants' in types_data:
             self.constants.update(types_data['constants'])
         if 'defaults' in types_data:
@@ -51,7 +51,7 @@ class BinParser(object):
 
         self._structure = structure
 
-        if self._debug > 1:
+        if self._debug & 0x02:
             self._log.write('--- PARSING DETAILS ---\n\n')
 
     def _call(self, name, data, *args, **kwargs):
@@ -149,12 +149,12 @@ class BinParser(object):
         """
         Write additional debugging information to the log.
         """
-        if self._debug > 1:
-            self._log.write('\n\n')
-
-        self._log.write('--- INTERNAL VARIABLES ---\n\n')
-        for item in self._internal:
-            self._log.write('{}: {}\n'.format(item, self._internal[item]))
+        if self._debug & 0x01:
+            if self._debug & 0x02:
+                self._log.write('\n\n')
+            self._log.write('--- INTERNAL VARIABLES ---\n\n')
+            for item in self._internal:
+                self._log.write('{}: {}\n'.format(item, self._internal[item]))
 
         self._log.write('\n\n--- DEBUG INFO ---\n\n')
 
@@ -218,7 +218,7 @@ class BinReader(BinParser):
             field = self.data[self._offset:].split(separator)[0]
             extracted = len(field) + 1
 
-        if self._debug > 1:
+        if self._debug & 0x02:
             self._log.write('0x{:06x}: '.format(self._offset))
             if size:
                 self._log.write('{} ({})'.format(self._call(
@@ -337,7 +337,7 @@ class BinReader(BinParser):
                 self._parse_primitive(item, dtype, dest, name)
             else:
                 # Nested structures.
-                if self._debug > 1:
+                if self._debug & 0x02:
                     self._log.write('-- {}\n'.format(name))
 
                 if name not in dest:
@@ -355,7 +355,7 @@ class BinReader(BinParser):
                 else:
                     self._parse(item['structure'], dest[name])
 
-            if self._debug > 1:
+            if self._debug & 0x02:
                 self._log.write(' --> {}\n'.format(name))
 
     def log_debug_info(self):
@@ -485,14 +485,14 @@ class BinWriter(BinParser):
 
             if 'structure' not in item:
                 # Primitive data types.
-                if self._debug > 1:
+                if self._debug & 0x02:
                     self._log.write('0x{:06x}: {} --> {}\n'.format(
                         len(self.data), name, value))
 
                 self._encode_primitive(item, dtype, value, name)
             else:
                 # Nested structures.
-                if self._debug > 1:
+                if self._debug & 0x02:
                     self._log.write('-- {}\n'.format(name))
 
                 if set(['for', 'do_while', 'while']) & set(item):
@@ -506,7 +506,7 @@ class BinWriter(BinParser):
                 else:
                     self._encode(item['structure'], value)
 
-                if self._debug > 1:
+                if self._debug & 0x02:
                     self._log.write(' --> {}\n'.format(name))
 
     def log_debug_info(self):

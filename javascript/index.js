@@ -174,13 +174,15 @@ function BinParser(structure, types, functions, kwargs) {
   this._logDebugInfo = function() {
     var item;
 
-    if (this.debug > 1) {
-      this.log.write('\n\n');
-    }
 
-    this.log.write('--- INTERNAL VARIABLES ---\n\n');
-    for (item in this.internal) {
-      this.log.write(item + ': ' + this.internal[item] + '\n');
+    if (this.debug & 0x01) {
+      if (this.debug & 0x02) {
+        this.log.write('\n\n');
+      }
+      this.log.write('--- INTERNAL VARIABLES ---\n\n');
+      for (item in this.internal) {
+        this.log.write(item + ': ' + this.internal[item] + '\n');
+      }
     }
 
     this.log.write('\n\n--- DEBUG INFO ---\n\n');
@@ -222,7 +224,7 @@ function BinParser(structure, types, functions, kwargs) {
 
   this.structure = structure;
 
-  if (this.debug > 1) {
+  if (this.debug & 0x02) {
     this.log.write('--- PARSING DETAILS ---\n\n');
   }
 }
@@ -267,7 +269,7 @@ function BinReader(data, structure, types, kwargs) {
       extracted = field.length + 1;
     }
 
-    if (this.debug > 1) {
+    if (this.debug & 0x02) {
       this.log.write('0x' + Functions.pad(Functions.hex(offset), 6) + ': ')
       if (size) {
         this.log.write(this.functions.raw(field) + ' (' + size + ')');
@@ -433,7 +435,7 @@ function BinReader(data, structure, types, kwargs) {
       }
       else {
         // Nested structures.
-        if (this.debug > 1) {
+        if (this.debug & 0x02) {
           this.log.write('-- ' + name + '\n');
         }
 
@@ -459,7 +461,7 @@ function BinReader(data, structure, types, kwargs) {
           this.parse(item.structure, dest[name]);
         }
       }
-      if (this.debug > 1) {
+      if (this.debug & 0x02) {
         this.log.write(' --> ' + name + '\n');
       }
     }
@@ -626,7 +628,7 @@ function BinWriter(parsed, structure, types, kwargs) {
 
       if (!item.structure) {
         // Primitive data types.
-        if (this.debug > 1) {
+        if (this.debug & 0x02) {
           this.log.write(
             '0x' + Functions.pad(Functions.hex(this.data.length), 6) + ': ' + 
             name + ' --> ' + value + '\n');
@@ -635,7 +637,7 @@ function BinWriter(parsed, structure, types, kwargs) {
       }
       else {
         // Nested structures.
-        if (this.debug > 1) {
+        if (this.debug & 0x02) {
           this.log.write('-- ' + name + '\n');
         }
         if (item.for || item.do_while || item.while) {
@@ -652,7 +654,7 @@ function BinWriter(parsed, structure, types, kwargs) {
         else {
           this.encode(item.structure, value);
         }
-        if (this.debug > 1) {
+        if (this.debug & 0x02) {
           this.log.write(' --> ' + name + '\n');
         }
       }
