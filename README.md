@@ -18,9 +18,9 @@ representation is easily edited using a text editor, and then use the writer to
 convert back to binary.
 
 This idea is implemented in two languages; Python and JavaScript. All main
-development is done in Python, all reading functionalities have been ported to
-JavaScript. We chose YAML as our preferred serialised dictionary format, but
-other serialisation formats (JSON for example) can be used too.
+development is done in Python. We chose YAML as our preferred serialised
+dictionary format, but other serialisation formats (JSON for example) can be
+used too.
 
 ## Why use this library?
 The challenge of parsing binary files is not a new one, it requires reverse
@@ -113,10 +113,15 @@ To convert a YAML file to binary, use the `write` subcommand:
     bin_parser write input.yml structure.yml types.yml output.bin
 
 ## JavaScript
-Currently only the reader is implemented in JavaScript. After installation it
-can be used from the command line as follows:
+To convert a binary file to YAML, use the `read` subcommand:
 
-    ./node_modules/.bin/bin-parser input.bin structure.yml types.yml
+    ./node_modules/.bin/bin-parser read input.bin structure.yml types.yml \
+      output.yml
+
+To convert a YAML file to binary, use the `write` subcommand:
+
+    ./node_modules/.bin/bin_parser write input.yml structure.yml types.yml \
+      output.bin
 
 # Approach
 In order to parse a binary file, the library needs two pieces of information:

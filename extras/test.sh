@@ -22,16 +22,19 @@ test_writer() {
   seed=${RANDOM}
   yml_1="/tmp/${seed}_1.yml"
   yml_2="/tmp/${seed}_2.yml"
-  bin="/tmp/${seed}.bin"
+  bin_1="/tmp/${seed}_1.bin"
+  bin_2="/tmp/${seed}_2.bin"
 
   python -m python.cli read $1 $2 $3 $yml_1
-  python -m python.cli write $yml_1 $2 $3 $bin
-  python -m python.cli read $bin $2 $3 $yml_2
+  python -m python.cli write $yml_1 $2 $3 $bin_1
+  nodejs javascript/cli.js write $yml_1 $2 $3 $bin_2
+  python -m python.cli read $bin_1 $2 $3 $yml_2
 
   echo "  $1"
   python -m extras.compare_yaml $yml_1 $yml_2
+  diff $bin_1 $bin_2
 
-  rm $yml_1 $yml_2 $bin
+  rm $yml_1 $yml_2 $bin_1 $bin_2
 }
 
 echo Python vs. JavaScript tests:
