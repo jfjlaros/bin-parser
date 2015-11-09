@@ -5,7 +5,8 @@ Field packing and unpacking functions for the general binary parser.
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 */
-var iconv = require('iconv-lite');
+var Buffer = require('buffer-extend-split'),
+    iconv = require('iconv-lite');
 
 var operators = {
   'not': function(a) { return !a; },
@@ -236,11 +237,11 @@ encoding. Documentation of these functions is omitted.
 */
 function BinWriteFunctions() {
   this.raw = function(hexString) {
-    return Buffer(hexString.split(' ').map(unHex));
-  }
+    return new Buffer(hexString.split(' ').map(unHex));
+  };
 
   this.bit = function(bitString) {
-    return Buffer([parseInt(bitString, 2)]);
+    return new Buffer([parseInt(bitString, 2)]);
   };
 
   this.int = function(integer) {
@@ -253,9 +254,9 @@ function BinWriteFunctions() {
     }
 
     if (result.length) {
-      return Buffer(result);
+      return new Buffer(result);
     }
-    return Buffer([0x00]);
+    return new Buffer([0x00]);
   };
 
   this.colour = function(colourString) {
@@ -288,9 +289,9 @@ function BinWriteFunctions() {
     var inverseAnnotation = inverseDict(kwargs.annotation);
 
     if (mappedString in inverseAnnotation) {
-      return Buffer([inverseAnnotation[mappedString]]);
+      return new Buffer([inverseAnnotation[mappedString]]);
     }
-    return Buffer([parseInt(mappedString, 0x10)]);
+    return new Buffer([parseInt(mappedString, 0x10)]);
   };
 
   this.flags = function(flagsDict, kwargs) {
@@ -309,7 +310,7 @@ function BinWriteFunctions() {
         values += parseInt(key.slice(5), 0x10);
       }
     }
-    return Buffer([values]);
+    return new Buffer([values]);
   };
 }
 
