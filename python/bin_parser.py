@@ -25,7 +25,7 @@ class BinParser(object):
         self._debug = debug
         self._log = log
 
-        self._functions = functions()
+        self._functions = functions
 
         self.constants = {}
         self.defaults = {
@@ -164,7 +164,7 @@ class BinReader(BinParser):
     General binary file reader.
     """
     def __init__(
-            self, data, structure, types, functions=BinReadFunctions,
+            self, data, structure, types, functions=BinReadFunctions(),
             prune=False, debug=0, log=sys.stderr):
         """
         Constructor.
@@ -378,7 +378,7 @@ class BinWriter(BinParser):
     General binary file writer.
     """
     def __init__(
-            self, parsed, structure, types, functions=BinWriteFunctions,
+            self, parsed, structure, types, functions=BinWriteFunctions(),
             debug=0, log=sys.stderr):
         """
         Constructor.
