@@ -38,7 +38,8 @@ class BinParser(object):
         }
         self.types = {
             'int': {},
-            'raw': {}
+            'raw': {},
+            'text': {}
         }
 
         types_data = types or {}

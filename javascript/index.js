@@ -209,7 +209,8 @@ function BinParser(structure, types, functions, kwargs) {
   };
   this.types = {
     'int': {},
-    'raw': {}
+    'raw': {},
+    'text': {}
   };
 
   if (typesData.constants) {
