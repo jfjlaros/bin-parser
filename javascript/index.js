@@ -253,7 +253,7 @@ function BinReader(data, structure, types, kwargs) {
       throw('StopIteration');
     }
 
-    separator = String.fromCharCode.apply(this, delimiter)
+    separator = String.fromCharCode.apply(this, delimiter);
     if (size) {
       // Fixed sized field.
       field = this.data.slice(offset, offset + size);
@@ -356,7 +356,7 @@ function BinReader(data, structure, types, kwargs) {
 
     for (_ = 0; _ < length; _++) {
       structureDict = {};
-      this.parse(item['structure'], structureDict);
+      this.parse(item.structure, structureDict);
       dest[name].push(structureDict);
     }
   };
@@ -373,7 +373,7 @@ function BinReader(data, structure, types, kwargs) {
 
     while (true) {
       structureDict = {};
-      this.parse(item['structure'], structureDict);
+      this.parse(item.structure, structureDict);
       dest[name].push(structureDict);
       if (!this.evaluate(item.do_while)) {
         break;
@@ -519,7 +519,7 @@ function BinWriter(parsed, structure, types, kwargs) {
     if (delimiter) {
       // Add the delimiter for variable length fields.
       field = Buffer.concat(
-        [field, Buffer(String.fromCharCode.apply(this, delimiter))]);
+        [field, new Buffer(String.fromCharCode.apply(this, delimiter))]);
     }
     if (size) {
       // Clip the field if it is too large.
@@ -528,10 +528,10 @@ function BinWriter(parsed, structure, types, kwargs) {
     }
     for (index = field.length; index < size; index++) {
       // Pad the field if necessary.
-      field = Buffer.concat([field, Buffer(String.fromCharCode(0x00))]);
+      field = Buffer.concat([field, new Buffer(String.fromCharCode(0x00))]);
     }
 
-    this.data = Buffer.concat([this.data, Buffer(field)]);
+    this.data = Buffer.concat([this.data, new Buffer(field)]);
   };
 
   /*
@@ -674,7 +674,7 @@ function BinWriter(parsed, structure, types, kwargs) {
     this, structure, types,
     kwargs.functions || new Functions.BinWriteFunctions(), kwargs);
 
-  this.data = Buffer([]);
+  this.data = new Buffer([]);
   this.parsed = parsed;
 
   this.encode(this.structure, this.parsed);

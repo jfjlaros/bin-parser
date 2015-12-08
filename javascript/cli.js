@@ -89,7 +89,6 @@ function main() {
         dest:"subcommand_name"
       }),
       readParser,
-      writeParser,
       args;
 
   optParser.addArgument(['inputFile'], {help: 'Input file'});
@@ -111,18 +110,18 @@ function main() {
     ['-p'],
     {dest: 'prune', action: 'storeTrue', help: 'Remove unknown data fields'});
 
-  writeParser = subparsers.addParser(
+  subparsers.addParser(
     'write', {
       parents: [optParser], description: 'Convert a YAML file to binary.'});
 
   args = parser.parseArgs();
 
-  if (args.subcommand_name == 'read') {
+  if (args.subcommand_name === 'read') {
     binReader(
       args.inputFile, args.structureFile, args.typesFile, args.outputFile,
       {'prune': args.prune, 'debug': args.debug});
   }
-  if (args.subcommand_name == 'write') {
+  if (args.subcommand_name === 'write') {
     binWriter(
       args.inputFile, args.structureFile, args.typesFile, args.outputFile,
       {'debug': args.debug});
