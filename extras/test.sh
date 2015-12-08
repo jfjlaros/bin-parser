@@ -11,7 +11,7 @@ test_cli() {
   python -m python.cli read $1 $2 $3 $py
   nodejs javascript/cli.js read $1 $2 $3 $js
 
-  python -m extras.compare_yaml $py $js
+  compare_yaml $py $js
 
   rm $py $js
 }
@@ -31,7 +31,7 @@ test_writer() {
   python -m python.cli read $bin_1 $2 $3 $yml_2
 
   echo "  $1"
-  python -m extras.compare_yaml $yml_1 $yml_2
+  compare_yaml $yml_1 $yml_2
   diff $bin_1 $bin_2
 
   rm $yml_1 $yml_2 $bin_1 $bin_2
@@ -69,3 +69,27 @@ test_writer examples/lists/for.dat examples/lists/structure_for.yml \
   examples/lists/types.yml
 test_writer examples/lists/while.dat examples/lists/structure_while.yml \
   examples/lists/types.yml
+
+echo
+echo Interface test:
+cd examples/balance
+echo -n "  Balance"
+if [ "$(python parser.py)" != "$(nodejs parser.js)" ]; then
+  echo " failed."
+else
+  echo .
+fi
+cd - > /dev/null
+
+echo
+echo Inheritance tests:
+cd examples/prince/python
+echo "  Prince reader."
+compare_yaml <(python reader.py) <(nodejs ../javascript/reader.js)
+echo -n "  Prince writer"
+if [ "$(python writer.py)" != "$(nodejs ../javascript/writer.js)" ]; then
+  echo " failed."
+else
+  echo .
+fi
+cd - > /dev/null

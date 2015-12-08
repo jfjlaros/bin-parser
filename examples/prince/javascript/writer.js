@@ -7,16 +7,16 @@ var fs = require('fs'),
 
 var BinParser = require('../../../javascript/index');
 
-var PrinceReadFunctions = require('./functions');
+var PrinceWriteFunctions = require('./functions');
 
 function main() {
-  var parser = new BinParser.BinReader(
-    fs.readFileSync('../prince.hof'),
+  var parser = new BinParser.BinWriter(
+    yaml.load(fs.readFileSync('../prince.yml')),
     yaml.load(fs.readFileSync('../structure.yml')),
     yaml.load(fs.readFileSync('../types.yml')),
-    {'functions': new PrinceReadFunctions.PrinceReadFunctions()});
+    {'functions': new PrinceWriteFunctions.PrinceWriteFunctions()});
 
-  process.stdout.write(yaml.dump(parser.parsed));
+  process.stdout.write(parser.data);
 }
 
 // Wait for the stdout buffer to drain, see

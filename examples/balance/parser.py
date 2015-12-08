@@ -1,11 +1,14 @@
 #!/usr/bin/env python
-
-
 import sys
 
-import bin_parser
+import yaml
+
+from bin_parser import BinReader
 
 
-parser = bin_parser.BinReader(open('balance.dat'), open('structure.yml'),
-    open('types.yml'))
-parser.write(sys.stdout)
+parser = BinReader(
+    open('balance.dat').read(),
+    yaml.safe_load(open('structure.yml')),
+    yaml.safe_load(open('types.yml')))
+
+print parser.parsed['name']
