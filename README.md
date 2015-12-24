@@ -282,7 +282,7 @@ to `raw`:
 
 ```yml
 - name:
-  read 20
+  read: 20
 ```
 
 ### Overrides
