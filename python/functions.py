@@ -1,5 +1,4 @@
-"""
-Field packing and unpacking functions for the general binary parser.
+"""Field packing and unpacking functions for the general binary parser.
 
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
@@ -28,12 +27,10 @@ def _inverse_dict(dictionary):
 
 
 class BinReadFunctions(object):
-    """
-    Functions for decoding data.
+    """Functions for decoding data.
     """
     def raw(self, data):
-        """
-        Encode a string in hexadecimal, grouped by byte.
+        """Encode a string in hexadecimal, grouped by byte.
 
         :arg str data: Input data.
 
@@ -48,8 +45,7 @@ class BinReadFunctions(object):
         return '{:08b}'.format(ord(data))
 
     def int(self, data):
-        """
-        Decode a little-endian encoded integer.
+        """Decode a little-endian encoded integer.
 
         Decoding is done as follows:
         - Reverse the order of the bits.
@@ -67,8 +63,7 @@ class BinReadFunctions(object):
         return '0x{:06x}'.format(self.int(data))
 
     def text(self, data, split=[], encoding='utf-8'):
-        """
-        Decode a text string.
+        """Decode a text string.
 
         :arg str data: Text string.
         :arg list(byte) split: Internal delimiter for end of line.
@@ -83,8 +78,7 @@ class BinReadFunctions(object):
         return decoded_text
 
     def date(self, data, annotation):
-        """
-        Decode a date.
+        """Decode a date.
 
         The date is encoded as an integer, representing the year followed by
         the (zero padded) day of the year.
@@ -101,8 +95,7 @@ class BinReadFunctions(object):
         return str(date_int)
 
     def map(self, data, annotation):
-        """
-        Replace a value with its annotation.
+        """Replace a value with its annotation.
 
         :arg str data: Encoded data.
         :arg dict annotation: Annotation of {data}.
@@ -116,8 +109,7 @@ class BinReadFunctions(object):
         return '{:02x}'.format(index)
 
     def flags(self, data, annotation):
-        """
-        Explode a bitfield into flags.
+        """Explode a bitfield into flags.
 
         Note that if a flag is not annotated and false, it will not be included
         in the results.
@@ -143,8 +135,7 @@ class BinReadFunctions(object):
 
 
 class BinWriteFunctions(object):
-    """
-    Functions for encoding data.
+    """Functions for encoding data.
 
     Every decoding function in the BinReadFunctions class has a counterpart for
     encoding. Documentation of these functions is omitted.
