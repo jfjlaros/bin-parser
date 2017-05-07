@@ -11,5 +11,5 @@ parser = BinWriter(
     yaml.safe_load(open('../prince.yml')),
     yaml.safe_load(open('../structure.yml')),
     yaml.safe_load(open('../types.yml')),
-    functions=PrinceWriteFunctions())
+    functions=PrinceWriteFunctions)
 sys.stdout.write(parser.data)
