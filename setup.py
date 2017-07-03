@@ -51,7 +51,8 @@ setup(
     entry_points={
         'console_scripts': [
             'bin_parser = bin_parser.cli:main',
-            'compare_yaml = bin_parser_extras.compare_yaml:main'
+            'compare_yaml = bin_parser_extras.compare_yaml:main',
+            'make_skeleton = bin_parser_extras.make_skeleton:main'
         ]
     }
 )

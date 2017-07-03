@@ -29,7 +29,10 @@ def make_structure(data, delimiter):
     structure = []
 
     for index in range(len(data.split(''.join(map(chr, delimiter))))):
-        structure.append({'name': 'name_{:06d}'.format(index)})
+        structure.append({
+            'name': 'field_{:06d}'.format(index),
+            'type': 'raw'
+        })
 
     return structure
 
@@ -37,11 +40,14 @@ def make_structure(data, delimiter):
 def make_types(delimiter):
     return {
         'types': {
-            'text': {
+            'raw': {
                 'delimiter': map(HexInt, delimiter),
                 'function': {
                     'name': 'raw'
                 }
+            },
+            'text': {
+                'delimiter': map(HexInt, delimiter)
             }
         }
     }
@@ -63,7 +69,7 @@ def make_skeleton(input_handle, structure_handle, types_handle, delimiter):
     structure_handle.write(
         yaml.safe_dump(
             make_structure(input_handle.read(), delimiter),
-        width=76, default_style=False))
+        width=76, default_flow_style=False))
     types_handle.write('---\n')
     types_handle.write(
         yaml.dump(make_types(delimiter), width=76,
