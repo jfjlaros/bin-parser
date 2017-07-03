@@ -1,5 +1,4 @@
-"""
-General binary file parser.
+"""General binary file parser.
 
 
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
@@ -11,8 +10,7 @@ from functions import BinReadFunctions, BinWriteFunctions, operators
 
 class BinParser(object):
     def __init__(self, structure, types, functions, debug=0, log=sys.stderr):
-        """
-        Constructor.
+        """Constructor.
 
         :arg dict structure: The structure definition.
         :arg dict types: The types definition.
@@ -59,8 +57,7 @@ class BinParser(object):
         return getattr(self._functions, name)(data, *args, **kwargs)
 
     def _get_value(self, name):
-        """
-        Resolve the value of a variable.
+        """Resolve the value of a variable.
 
         First look in the cache to see if `name` is defined, then check the set
         of constants. If nothing can be found, the variable is considered to be
@@ -76,8 +73,7 @@ class BinParser(object):
         return name
 
     def _get_default(self, item, dtype, name):
-        """
-        Resolve the value of a member variable.
+        """Resolve the value of a member variable.
 
         First see if the variable is defined in `item`, then check the type
         definition and lastly check the defaults.
@@ -97,8 +93,7 @@ class BinParser(object):
         return None
 
     def _get_function(self, item, dtype):
-        """
-        Determine what to read and how to interpret what was read.
+        """Determine what to read and how to interpret what was read.
 
         First resolve the `delimiter` and `size`. If none are given, assume we
         read one byte. Then resolve the function that will interpret the data
@@ -126,8 +121,7 @@ class BinParser(object):
         return delim, size, func, kwargs
 
     def _evaluate(self, expression):
-        """
-        Evaluate an expression.
+        """Evaluate an expression.
 
         An expression is represented by a dictionary with the following
         structure:
@@ -147,8 +141,7 @@ class BinParser(object):
         return operators[expression['operator']](*operands)
 
     def _log_debug_info(self):
-        """
-        Write additional debugging information to the log.
+        """Write additional debugging information to the log.
         """
         if self._debug & 0x01:
             if self._debug & 0x02:
@@ -161,14 +154,12 @@ class BinParser(object):
 
 
 class BinReader(BinParser):
-    """
-    General binary file reader.
+    """General binary file reader.
     """
     def __init__(
             self, data, structure, types, functions=BinReadFunctions(),
             prune=False, debug=0, log=sys.stderr):
-        """
-        Constructor.
+        """Constructor.
 
         :arg stream data: Content of a binary file.
         :arg dict structure: The structure definition.
@@ -194,8 +185,7 @@ class BinReader(BinParser):
             pass
 
     def _get_field(self, size=0, delimiter=[]):
-        """
-        Extract a field from {self.data} using either a fixed size, or a
+        """Extract a field from {self.data} using either a fixed size, or a
         delimiter. After reading, {self._offset} is set to the next field.
 
         :arg int size: Size of fixed size field.
@@ -231,8 +221,7 @@ class BinReader(BinParser):
         return field
 
     def _parse_primitive(self, item, dtype, dest, name):
-        """
-        Parse a primitive data type.
+        """Parse a primitive data type.
 
         :arg dict item: Data structure.
         :arg str dtype: Data type.
@@ -265,8 +254,7 @@ class BinReader(BinParser):
             self._raw_byte_count += size
 
     def _parse_for(self, item, dest, name):
-        """
-        Parse a for loop.
+        """Parse a for loop.
 
         :arg dict item: Data structure.
         :arg dict dest: Destination dictionary.
@@ -282,8 +270,7 @@ class BinReader(BinParser):
             dest[name].append(structure_dict)
 
     def _parse_do_while(self, item, dest, name):
-        """
-        Parse a do-while loop.
+        """Parse a do-while loop.
 
         :arg dict item: Data structure.
         :arg dict dest: Destination dictionary.
@@ -297,8 +284,7 @@ class BinReader(BinParser):
                 break
 
     def _parse_while(self, item, dest, name):
-        """
-        Parse a while loop.
+        """Parse a while loop.
 
         :arg dict item: Data structure.
         :arg dict dest: Destination dictionary.
@@ -318,8 +304,7 @@ class BinReader(BinParser):
         dest[item['while']['term']] = dest[name].pop(-1).values()[0]
 
     def _parse(self, structure, dest):
-        """
-        Parse a binary file.
+        """Parse a binary file.
 
         :arg dict structure: Structure of the binary file.
         :arg dict dest: Destination dictionary.
@@ -360,8 +345,7 @@ class BinReader(BinParser):
                 self._log.write(' --> {}\n'.format(name))
 
     def log_debug_info(self):
-        """
-        Write additional debugging information to the log.
+        """Write additional debugging information to the log.
         """
         self._log_debug_info()
 
@@ -375,14 +359,12 @@ class BinReader(BinParser):
 
 
 class BinWriter(BinParser):
-    """
-    General binary file writer.
+    """General binary file writer.
     """
     def __init__(
             self, parsed, structure, types, functions=BinWriteFunctions(),
             debug=0, log=sys.stderr):
-        """
-        Constructor.
+        """Constructor.
 
         :arg dict parsed: Parsed representation of a binary file.
         :arg dict structure: The structure definition.
@@ -400,8 +382,7 @@ class BinWriter(BinParser):
         self._encode(self._structure, self.parsed)
 
     def _set_field(self, data, size=0, delimiter=[]):
-        """
-        Append a field to {self.data} using either a fixed size, or a
+        """Append a field to {self.data} using either a fixed size, or a
         delimiter.
 
         :arg int data: The content of the field.
@@ -423,8 +404,7 @@ class BinWriter(BinParser):
         self.data += field
 
     def _encode_primitive(self, item, dtype, value, name):
-        """
-        Encode a primitive data type.
+        """Encode a primitive data type.
 
         :arg dict item: Data structure.
         :arg str dtype: Data type.
@@ -443,8 +423,7 @@ class BinWriter(BinParser):
         self._set_field(self._call(func, value, **kwargs), size, delim)
 
     def _get_item(self, item):
-        """
-        Resolve the `term` field in the `while` structure.
+        """Resolve the `term` field in the `while` structure.
 
         :arg dict item: Data structure.
 
@@ -458,8 +437,7 @@ class BinWriter(BinParser):
         return None
 
     def _encode(self, structure, source):
-        """
-        Encode to a binary file.
+        """Encode to a binary file.
 
         :arg dict structure: Structure of the binary file.
         :arg dict source: Source dictionary.
@@ -511,8 +489,7 @@ class BinWriter(BinParser):
                     self._log.write(' --> {}\n'.format(name))
 
     def log_debug_info(self):
-        """
-        Write additional debugging information to the log.
+        """Write additional debugging information to the log.
         """
         self._log_debug_info()
 

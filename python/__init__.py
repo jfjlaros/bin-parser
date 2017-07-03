@@ -1,5 +1,4 @@
-"""
-General binary file parser.
+"""General binary file parser.
 
 
 Copyright (c) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>

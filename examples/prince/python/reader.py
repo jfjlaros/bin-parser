@@ -11,5 +11,5 @@ parser = BinReader(
     open('../prince.hof').read(),
     yaml.safe_load(open('../structure.yml')),
     yaml.safe_load(open('../types.yml')),
-    functions=PrinceReadFunctions())
+    functions=PrinceReadFunctions)
 yaml.safe_dump(parser.parsed, sys.stdout, width=76, default_flow_style=False)

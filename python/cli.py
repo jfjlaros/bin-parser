@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Command line interface for the general binary parser.
+"""Command line interface for the general binary parser.
 """
 import argparse
 
@@ -13,8 +12,7 @@ from .bin_parser import BinReader, BinWriter
 def bin_reader(
         input_handle, structure_handle, types_handle, output_handle,
         prune=False, debug=0):
-    """
-    Convert a binary file to YAML.
+    """Convert a binary file to YAML.
 
     :arg stream input_handle: Open readable handle to a binary file.
     :arg stream structure_handle: Open readable handle to the structure file.
@@ -37,8 +35,7 @@ def bin_reader(
 
 def bin_writer(
         input_handle, structure_handle, types_handle, output_handle, debug=0):
-    """
-    Convert a YAML file to binary.
+    """Convert a YAML file to binary.
 
     :arg stream input_handle: Open readable handle to a YAML file.
     :arg stream structure_handle: Open readable handle to the structure file.
@@ -57,8 +54,7 @@ def bin_writer(
 
 
 def main():
-    """
-    Command line argument parsing.
+    """Command line argument parsing.
     """
     opt_parser = argparse.ArgumentParser(add_help=False)
     opt_parser.add_argument(

@@ -1,0 +1,415 @@
+\documentclass[slidestop]{beamer}
+
+\author{Jeroen F.J. Laros}
+\title{Binary file parsing}
+\providecommand{\mySubTitle}{A general approach}
+\providecommand{\myConference}{Development work discussion}
+\providecommand{\myDate}{08-05-2017}
+\providecommand{\myGroup}{}
+\providecommand{\myDepartment}{Department of Human Genetics}
+\providecommand{\myCenter}{Center for Human and Clinical Genetics}
+
+\usetheme{lumc}
+
+\begin{document}
+
+% This disables the \pause command, handy in the editing phase.
+%\renewcommand{\pause}{}
+
+% Make the title slide.
+\makeTitleSlide{\includegraphics[height=2cm]{bin}}
+
+% First page of the presentation.
+\section{Introduction}
+\makeTableOfContents
+
+\subsection{Problem description}
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.7\textheight]{cyrillic_1}
+    \end{center}
+    \caption{Cyrillic 2.1.3.}
+  \end{figure}
+\end{pframe}
+
+\begin{pframe}
+  Cyrillic, a pedigree editor.
+  \begin{itemize}
+    \item Cyrillic was no longer usable (supported up to Windows XP).
+    \item Proprietary binary file format (not FAIR).
+    \item We have hundreds of pedigrees we can no longer access.
+  \end{itemize}
+  \bigskip
+
+  Goals:
+  \begin{itemize}
+    \item Portable, open source pedigree editor using open standards.
+    \item Can be used online.
+    \item Can be embedded.
+    \begin{itemize}
+      \item Miracle.
+      \item LOVD.
+    \end{itemize}
+  \end{itemize}
+\end{pframe}
+
+\subsection{Nested}
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[width=\textwidth]{nested}
+    \end{center}
+    \caption{Nested online editor.}
+  \end{figure}
+\end{pframe}
+
+\section{Reverse engineering}
+\subsection{Difference of hexadecimal dumps}
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.7\textheight]{fam_re}
+    \end{center}
+    \caption{A Cyrillic FAM file.}
+  \end{figure}
+\end{pframe}
+
+\subsection{Standard approach}
+\begin{pframe}
+  \begin{lstlisting}[language=Python, caption={Ad hoc parser snippet.}]
+    output['weight'] = bin_to_int(handle.read(2))
+    output['age'] = bin_to_int(handle.read(2))
+  \end{lstlisting}
+
+  Drawbacks:
+  \begin{itemize}
+    \item Knowledge of the file format is in code (no documentation).
+    \item Single purpose (only reading, one programming language).
+  \end{itemize}
+\end{pframe}
+
+\subsection{A general approach}
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.3\textheight]{bin_parser_hld}
+    \end{center}
+    \caption{High level design of a general binary parser.}
+  \end{figure}
+
+  Specification separate from implementation.
+  \begin{itemize}
+    \item Specification of the basic types.
+    \item Specification of the global file structure.
+  \end{itemize}
+\end{pframe}
+
+\section{General binary file parser}
+\subsection{Types}
+\begin{pframe}
+  Every basic type is processed in the following way:
+  \begin{itemize}
+    \item Data acquirement.
+    \begin{itemize}
+      \item Fixed number of bytes, delimited or a combination.
+    \end{itemize}
+    \item Data interpretation.
+    \begin{itemize}
+      \item Passing the data to a specific function.
+    \end{itemize}
+  \end{itemize}
+  \bigskip
+
+  The type \lstinline{short} ($2$ bytes passed to the \lstinline{int}
+  function).
+  \begin{lstlisting}[language=none, caption={Simple types definition.}]
+    short:
+      size: 2
+      function:
+        name: int
+  \end{lstlisting}
+\end{pframe}
+
+\begin{pframe}
+  A more complicated type.
+  \begin{lstlisting}[language=none, caption={Less simple types definition}].
+    comment:
+      delimiter:
+        - 0x00
+      function:
+        name: text
+        args:
+          split:
+            - 0x09
+  \end{lstlisting}
+
+  Zero delimited string that is passed to the function \lstinline{text}, this
+  function also receives the argument "\lstinline{split=[0x09]}".
+\end{pframe}
+
+\subsection{Structure}
+\begin{pframe}
+  We can now use the defined types in the structure definition.
+  \begin{lstlisting}[language=none, caption={Structure snippet.}]
+    - name age
+      type short
+    - name free_text
+      type comment
+  \end{lstlisting}
+
+  Output:
+  \begin{lstlisting}[language=none, caption={Output snippet.}]
+    age: 51
+    free_text: 'Blue eyes, yellow teeth.'
+  \end{lstlisting}
+\end{pframe}
+
+\begin{pframe}
+  Structures can be nested.
+  \begin{itemize}
+    \item \lstinline{for}-loops.
+    \item \lstinline{while}-loops.
+    \item Conditional statements (\lstinline{if}-clause).
+  \end{itemize}
+  \bigskip
+
+  Operators:
+  \begin{itemize}
+    \item Logical (\lstinline{not}, \lstinline{and}, \lstinline{or}, \ldots).
+    \item Arithmetical (\lstinline{eq}, \lstinline{lt}, \lstinline{ge},
+      \ldots).
+  \end{itemize}
+\end{pframe}
+
+\begin{pframe}
+  Simple looping over a sub-structure.
+  \begin{lstlisting}[language=none, caption={Simple for-loop.}]
+    - name: fixed_size_list
+      for: 2
+      structure:
+        - name: item
+        - name: value
+          type: int
+  \end{lstlisting}
+
+  The \lstinline{structure} keyword can also be used separately.
+  \begin{itemize}
+    \item Group certain variables in a logical way.
+  \end{itemize}
+\end{pframe}
+
+\begin{pframe}
+  Here we loop until \lstinline{value} is not equal to $2$.
+  \begin{lstlisting}[language=none, caption={More complicated do-while-loop.}]
+    - name: variable_size_list
+      do_while:
+        operands:
+          - value
+          - 2
+        operator: ne
+      structure:
+        - name: item
+        - name: value
+          type: int
+  \end{lstlisting}
+\end{pframe}
+
+\section{Implementations}
+\subsection{Programming libraries}
+\begin{pframe}
+  Python implementation:
+  \begin{itemize}
+    \item Library: $496$ lines.
+    \begin{itemize}
+      \item Base class: $142$ lines, reader: $202$ lines, writer: $135$ lines.
+    \end{itemize}
+    \item Type functions: $195$ lines.
+  \end{itemize}
+  \bigskip
+
+  JavaScript implementation:
+  \begin{itemize}
+    \item Library: $691$ lines.
+    \begin{itemize}
+      \item Base class: $174$ lines, reader: $273$ lines, writer: $174$ lines.
+    \end{itemize}
+    \item Type functions: $323$ lines.
+  \end{itemize}
+  \bigskip
+\end{pframe}
+
+\begin{pframe}
+  Both implementations have been packaged (PyPI, npm), install with one
+  command.
+  \bigskip
+
+  Both implementations have a command line interface.
+  \begin{lstlisting}[language=none, caption={Reader command line interface.}]
+    bin_parser read my_file.bin \
+      structure.yml types.yml my_file.yml
+  \end{lstlisting}
+
+  \begin{lstlisting}[language=none, caption={Writer command line interface.}]
+    bin_parser write my_file.yml \
+      structure.yml types.yml my_file.bin
+  \end{lstlisting}
+\end{pframe}
+
+
+\subsection{Adding new types}
+\begin{pframe}
+  \vspace{-0.5cm}
+  \begin{lstlisting}[language=none, caption={Adding a type in Python.}]
+    from bin_parser import BinReadFunctions
+
+    class Invert(BinReadFunctions):
+        def inv(self, data):
+                return data ^ 0xff
+  \end{lstlisting}
+
+  \vspace{-0.5cm}
+  \begin{lstlisting}[language=none, caption={Adding a type in JavaScript.}]
+    var Functions = require('functions');
+
+    function Invert() {
+      this.inv = function(data) {
+        return data ^ 0xff;
+      };
+
+      Functions.BinReadFunctions.call(this);
+    }
+  \end{lstlisting}
+\end{pframe}
+
+\section{Examples}
+\subsection{FAM parser}
+\begin{pframe}
+  Structure: $259$ lines, types: $183$ lines.
+  \begin{lstlisting}[language=none, caption={Structure snippet.}]
+    - name: members
+      for: number_of_members
+      structure:
+        - name: surname
+        - name: forenames
+        - name: address
+          type: comment
+        - name: spouses
+          for: number_of_spouses
+          structure:
+            - name: id
+              type: int
+            - name: flags
+              type: relationship
+            - name: name
+  \end{lstlisting}
+\end{pframe}
+
+\begin{pframe}
+  Resulting output in YAML format.
+  \begin{lstlisting}[language=none, caption={Output snippet.}]
+    members:
+      - surname: 'Gambolputty'
+        forenames: 'Johann'
+        address: 'Ulm'
+        spouses:
+          - flags:
+              consanguineous: false
+              divorced: false
+              informal: false
+              separated: false
+            id: 2
+            name: ''
+  \end{lstlisting}
+\end{pframe}
+
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.7\textheight]{cyrillic_1}
+    \end{center}
+    \caption{Original pedigree.}
+  \end{figure}
+\end{pframe}
+
+\begin{pframe}
+  We can edit the YAML file and convert it back to FAM format.
+  \begin{lstlisting}[language=none, caption={Updating date of death field.}]
+    date_of_birth: unknown
+    date_of_death: defined
+    father_id: 0
+    flags:
+      blood: false
+      cells: false
+      committed_suicide: false
+      dna: false
+      hide_info: false
+      loop_breakpoint: false
+  \end{lstlisting}
+\end{pframe}
+
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.7\textheight]{cyrillic_2}
+    \end{center}
+    \caption{Edited pedigree.}
+  \end{figure}
+\end{pframe}
+
+\subsection{Prince of Persia}
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.7\textheight]{prince}
+    \end{center}
+    \caption{Level 1.}
+  \end{figure}
+\end{pframe}
+
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.7\textheight]{prince_hs}
+    \end{center}
+    \caption{Original high scores.}
+  \end{figure}
+\end{pframe}
+
+\begin{pframe}
+  Like before, we convert, edit and convert back.
+  \begin{lstlisting}[language=none, caption={Output snippet.}]
+    entries:
+      - minutes: 31
+        name: Jeroen
+        seconds: 2
+      - minutes: 29
+        name: Hahahahah
+        seconds: 55
+      - minutes: 29
+        name: Jeroen
+        seconds: 53
+    ...
+
+    number_of_entries: 6
+  \end{lstlisting}
+\end{pframe}
+
+\begin{pframe}
+  \begin{figure}[]
+    \begin{center}
+      \includegraphics[height=0.7\textheight]{prince_hs2}
+    \end{center}
+    \caption{Edited high scores.}
+  \end{figure}
+\end{pframe}
+
+% Make the acknowledgements slide.
+\makeAcknowledgementsSlide{
+  \begin{tabular}{ll}
+    Martijn Vermaat\\
+    Zuotian Tatum
+  \end{tabular}
+}
+
+\end{document}
