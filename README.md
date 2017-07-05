@@ -494,7 +494,7 @@ parser = bin_parser.BinReader(
     open('something.dat').read(),
     yaml.safe_load(open('structure.yml')),
     yaml.safe_load(open('types.yml')),
-    functions=Invert)
+    functions=Invert())
 ```
 
 ## JavaScript

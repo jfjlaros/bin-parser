@@ -58,7 +58,7 @@ function numerical(a, b) {
 General binary file reader.
 */
 function BinParser(structure, types, functions, kwargs) {
-  var typesData = types;
+  var typesData = types || {};
 
   /*
   Resolve the value of a variable.
