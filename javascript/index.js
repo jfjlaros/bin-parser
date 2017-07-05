@@ -120,7 +120,7 @@ function BinParser(structure, types, functions, kwargs) {
   */
   this.getFunction = function(item, dtype) {
     var delim = this.getDefault(item, dtype, 'delimiter'),
-        size = this.getDefault(item, dtype, 'size'),
+        size = this.getValue(this.getDefault(item, dtype, 'size')),
         func = dtype,
         kwargs = {};
 

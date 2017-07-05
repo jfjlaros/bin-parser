@@ -105,7 +105,7 @@ class BinParser(object):
         :returns tuple: (`delim`, `size`, `func`, `kwargs`).
         """
         delim = self._get_default(item, dtype, 'delimiter')
-        size = self._get_default(item, dtype, 'size')
+        size = self._get_value(self._get_default(item, dtype, 'size'))
         if not (delim or size):
             size = 1
 

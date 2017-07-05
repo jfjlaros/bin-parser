@@ -69,6 +69,8 @@ test_writer examples/lists/for.dat examples/lists/structure_for.yml \
   examples/lists/types.yml
 test_writer examples/lists/while.dat examples/lists/structure_while.yml \
   examples/lists/types.yml
+test_writer examples/var_size/var_size.dat examples/var_size/structure.yml \
+  examples/var_size/types.yml
 
 echo
 echo Interface test:

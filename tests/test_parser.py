@@ -29,6 +29,10 @@ class TestReader(object):
         self.if_b = BinReader(open('examples/conditional/b.dat').read(),
             yaml.safe_load(open('examples/conditional/structure.yml')),
             yaml.safe_load(open('examples/conditional/types.yml'))).parsed
+        self.var_size = BinReader(
+            open('examples/var_size/var_size.dat').read(),
+            yaml.safe_load(open('examples/var_size/structure.yml')),
+            yaml.safe_load(open('examples/var_size/types.yml'))).parsed
 
     def test_balance_1(self):
         assert self.balance['name'] == 'John Doe'
@@ -80,3 +84,6 @@ class TestReader(object):
 
     def test_if_4(self):
         assert self.if_b['related_to_b'] == 'not skipped'
+
+    def test_var_size(self):
+        assert self.var_size['field_2_size'] == 4
