@@ -1,6 +1,7 @@
 *.pyc
 *.swp
 *.egg-info
+.cache
 dist
 build
 node_modules
