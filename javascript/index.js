@@ -55,6 +55,24 @@ function numerical(a, b) {
 }
 
 /*
+Strip trailing characters.
+
+:arg Buffer buf: A buffer.
+:arg byte chr: A character.
+
+:returns Buffer: `buf` without trailing characters.
+*/
+function rstrip(buf, chr) {
+  var index = buf.length;
+
+  while (index && buf[index - 1] === chr) {
+    index--;
+  }
+
+  return buf.slice(0, index);
+}
+
+/*
 General binary file reader.
 */
 function BinParser(structure, types, functions, kwargs) {
@@ -116,11 +134,12 @@ function BinParser(structure, types, functions, kwargs) {
   :arg object item: Data structure.
   :arg str dtype: Name of the data type.
 
-  :returns tuple: (`delim`, `size`, `func`, `kwargs`).
+  :returns tuple: (`delim`, `size`, `trim`, `func`, `kwargs`).
   */
   this.getFunction = function(item, dtype) {
     var delim = this.getDefault(item, dtype, 'delimiter'),
         size = this.getValue(this.getDefault(item, dtype, 'size')),
+        trim = this.getDefault(item, dtype, 'trim'),
         func = dtype,
         kwargs = {};
 
@@ -137,7 +156,7 @@ function BinParser(structure, types, functions, kwargs) {
         kwargs = this.types[dtype].function.args;
       }
     }
-    return [delim, size, func, kwargs];
+    return [delim, size, trim, func, kwargs];
   };
 
   /*
@@ -243,9 +262,12 @@ function BinReader(data, structure, types, kwargs) {
   reading, {offset} is set to the next field.
 
   :arg int size: Size of fixed size field.
+  :arg list(char) delimiter: Delimiter for variable sized fields.
+  :arg byte trim: Padding character.
+
   :return str: Content of the requested field.
   */
-  this.getField = function(size, delimiter) {
+  this.getField = function(size, delimiter, trim) {
     var field,
         extracted,
         separator;
@@ -262,6 +284,9 @@ function BinReader(data, structure, types, kwargs) {
       if (delimiter.length) {
         // A variable sized field in a fixed sized field.
         field = field.split(separator)[0];
+      }
+      if (trim) {
+        field = rstrip(field, trim);
       }
     }
     else {
@@ -300,6 +325,7 @@ function BinReader(data, structure, types, kwargs) {
         result,
         size,
         temp,
+        trim,
         unknownDest;
 
     // Read and process the data.
@@ -309,9 +335,10 @@ function BinReader(data, structure, types, kwargs) {
     temp = this.getFunction(item, dtype);
     delim = temp[0];
     size = temp[1];
-    func = temp[2];
-    kwargs = temp[3];
-    result = this.functions[func](this.getField(size, delim), kwargs);
+    trim = temp[2];
+    func = temp[3];
+    kwargs = temp[4];
+    result = this.functions[func](this.getField(size, delim, trim), kwargs);
 
     if (name) {
       // Store the data.
@@ -512,8 +539,9 @@ function BinWriter(parsed, structure, types, kwargs) {
   :arg int data: The content of the field.
   :arg int size: Size of fixed size field.
   :arg list(char) delimiter: Delimiter for variable sized fields.
+  :arg byte trim: Padding character.
   */
-  this.setField = function(data, size, delimiter) {
+  this.setField = function(data, size, delimiter, trim) {
     var field = data,
         index;
 
@@ -529,7 +557,8 @@ function BinWriter(parsed, structure, types, kwargs) {
     }
     for (index = field.length; index < size; index++) {
       // Pad the field if necessary.
-      field = Buffer.concat([field, new Buffer(String.fromCharCode(0x00))]);
+      field = Buffer.concat(
+        [field, new Buffer(String.fromCharCode(trim || 0x00))]);
     }
 
     this.data = Buffer.concat([this.data, new Buffer(field)]);
@@ -547,8 +576,9 @@ function BinWriter(parsed, structure, types, kwargs) {
     var temp = this.getFunction(item, dtype),
         delim = temp[0],
         size = temp[1],
-        func = temp[2],
-        kwargs = temp[3],
+        trim = temp[2],
+        func = temp[3],
+        kwargs = temp[4],
         member;
 
     if (value.constructor === Object) {
@@ -561,7 +591,7 @@ function BinWriter(parsed, structure, types, kwargs) {
       this.internal[name] = value;
     }
 
-    this.setField(this.functions[func](value, kwargs), size, delim);
+    this.setField(this.functions[func](value, kwargs), size, delim, trim);
   };
 
   /*

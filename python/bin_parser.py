@@ -186,7 +186,6 @@ class BinReader(BinParser):
             pass
 
     def _get_field(self, size=0, delimiter=[], trim=None):
-        #FIXME: `trim` should be a list of bytes?
         """Extract a field from {self.data} using either a fixed size, or a
         delimiter. After reading, {self._offset} is set to the next field.
 

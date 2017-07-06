@@ -33,6 +33,10 @@ class TestReader(object):
             open('examples/var_size/var_size.dat').read(),
             yaml.safe_load(open('examples/var_size/structure.yml')),
             yaml.safe_load(open('examples/var_size/types.yml'))).parsed
+        self.padding = BinReader(
+            open('examples/padding/padding.dat').read(),
+            yaml.safe_load(open('examples/padding/structure.yml')),
+            yaml.safe_load(open('examples/padding/types.yml'))).parsed
 
     def test_balance_1(self):
         assert self.balance['name'] == 'John Doe'
@@ -87,3 +91,12 @@ class TestReader(object):
 
     def test_var_size(self):
         assert self.var_size['field_2_size'] == 4
+
+    def test_padding_1(self):
+        assert self.padding['string_1'] == '123'
+
+    def test_padding_2(self):
+        assert self.padding['string_2'] == '456789'
+
+    def test_padding_3(self):
+        assert self.padding['string_3'] == ''
