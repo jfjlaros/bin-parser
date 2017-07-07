@@ -494,7 +494,7 @@ parser = bin_parser.BinReader(
     open('something.dat').read(),
     yaml.safe_load(open('structure.yml')),
     yaml.safe_load(open('types.yml')),
-    functions=Invert)
+    functions=Invert())
 ```
 
 ## JavaScript
@@ -522,3 +522,13 @@ var parser = new BinParser.BinReader(
   yaml.load(fs.readFileSync('types.yml')),
   {'functions': new Invert()});
 ```
+
+# Extras
+
+    make_skeleton -d 0x0d input.bin structure.yml types.yml
+    bin_parser read -d 2 input.bin structure.yml types.yml output.yml 2>&1 | \
+      less
+
+and in an other terminal:
+
+    less output.yml

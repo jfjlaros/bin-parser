@@ -1,0 +1,5 @@
+---
+types:
+  text:
+    size: 6
+    trim: 0x20

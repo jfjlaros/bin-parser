@@ -52,6 +52,10 @@ test_cli examples/lists/for.dat examples/lists/structure_for.yml \
   examples/lists/types.yml
 test_cli examples/lists/while.dat examples/lists/structure_while.yml \
   examples/lists/types.yml
+test_cli examples/var_size/var_size.dat examples/var_size/structure.yml \
+  examples/var_size/types.yml
+test_cli examples/padding/padding.dat examples/padding/structure.yml \
+  examples/padding/types.yml
 
 echo
 echo Writer tests:
@@ -69,6 +73,10 @@ test_writer examples/lists/for.dat examples/lists/structure_for.yml \
   examples/lists/types.yml
 test_writer examples/lists/while.dat examples/lists/structure_while.yml \
   examples/lists/types.yml
+test_writer examples/var_size/var_size.dat examples/var_size/structure.yml \
+  examples/var_size/types.yml
+test_writer examples/padding/padding.dat examples/padding/structure.yml \
+  examples/padding/types.yml
 
 echo
 echo Interface test:
@@ -87,7 +95,9 @@ cd examples/prince/python
 echo "  Prince reader."
 compare_yaml <(python reader.py) <(nodejs ../javascript/reader.js)
 echo -n "  Prince writer"
-if [ "$(python writer.py)" != "$(nodejs ../javascript/writer.js)" ]; then
+py_checksum=$(python writer.py | md5sum)
+js_checksum=$(nodejs ../javascript/writer.js | md5sum)
+if [ "$py_checksum" != "$js_checksum" ]; then
   echo " failed."
 else
   echo .
