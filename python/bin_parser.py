@@ -9,6 +9,8 @@ from functions import BinReadFunctions, BinWriteFunctions, operators
 
 
 class BinParser(object):
+    """General binary file parser.
+    """
     def __init__(self, structure, types, functions, debug=0, log=sys.stderr):
         """Constructor.
 

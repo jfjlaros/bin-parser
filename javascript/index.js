@@ -73,7 +73,13 @@ function rstrip(buf, chr) {
 }
 
 /*
-General binary file reader.
+General binary file parser.
+
+:arg dict structure: The structure definition.
+:arg dict types: The types definition.
+:arg object functions: Object containing parsing or encoding functions.
+:arg int kwargs.debug: Debugging level.
+:arg stream kwargs.log: Debug stream to write to.
 */
 function BinParser(structure, types, functions, kwargs) {
   var typesData = types || {};
@@ -86,6 +92,7 @@ function BinParser(structure, types, functions, kwargs) {
   a literal.
  
   :arg any name: The name or value of a variable.
+
   :returns any: The resolved value.
   */
   this.getValue = function(name) {
@@ -171,6 +178,7 @@ function BinParser(structure, types, functions, kwargs) {
       }
 
   :arg object expression: An expression.
+
   :returns any: Result of the evaluation.
   */
   this.evaluate = function(expression) {
@@ -251,6 +259,14 @@ function BinParser(structure, types, functions, kwargs) {
 
 /*
 General binary file reader.
+
+:arg stream data: Content of a binary file.
+:arg dict structure: The structure definition.
+:arg dict types: The types definition.
+:arg object kwargs.functions: Object containing parsing functions.
+:arg bool kwargs.prune: Remove all unknown data fields from the output.
+:arg int kwargs.debug: Debugging level.
+:arg stream kwargs.log: Debug stream to write to.
 */
 function BinReader(data, structure, types, kwargs) {
   var prune = kwargs.prune || false,
@@ -532,6 +548,16 @@ function BinReader(data, structure, types, kwargs) {
   }
 }
 
+/*
+General binary file writer.
+
+:arg dict parsed: Parsed representation of a binary file.
+:arg dict structure: The structure definition.
+:arg dict types: The types definition.
+:arg object kwargs.functions: Object containing parsing functions.
+:arg int kwargs.debug: Debugging level.
+:arg stream kwargs.log: Debug stream to write to.
+*/
 function BinWriter(parsed, structure, types, kwargs) {
   /*
   Append a field to {this.data} using either a fixed size, or a delimiter.
