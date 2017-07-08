@@ -230,6 +230,7 @@ function BinParser(structure, types, functions, kwargs) {
     'delimiter': [],
     'name': '',
     'size': 0,
+    'trim': undefined,
     'type': 'text',
     'unknown_destination': '__raw__',
     'unknown_function': 'raw'

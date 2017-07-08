@@ -32,6 +32,7 @@ class BinParser(object):
             'delimiter': [],
             'name': '',
             'size': 0,
+            'trim': None,
             'type': 'text',
             'unknown_destination': '__raw__',
             'unknown_function': 'raw'

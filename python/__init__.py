@@ -21,7 +21,7 @@ usage = __doc__.split('\n\n\n')
 
 
 def doc_split(func):
-    return func.__doc__.split("\n\n")[0]
+    return func.__doc__.split('\n\n')[0]
 
 
 def version(name):
