@@ -1,0 +1,9 @@
+---
+types:
+  int:
+    size: 4
+  int_b:
+    size: 4
+    order: -1
+    function:
+      name: int

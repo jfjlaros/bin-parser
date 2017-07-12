@@ -1,0 +1,5 @@
+---
+- name: val_1
+  type: int
+- name: val_2
+  type: int_b
