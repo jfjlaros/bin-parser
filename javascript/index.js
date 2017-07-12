@@ -27,11 +27,18 @@ Update an object with the properties of an other object.
 :arg object target: Target object.
 :arg object source: Source object.
 */
-function update(target, source) {
-  var item;
+function deepUpdate(target, source) { // FIXME: This is wrong.
+  var key;
 
-  for (item in source) {
-    target[item] = source[item];
+  if (typeof(target) === 'object') {
+    for (key in source) {
+      if (key in target) {
+        deepUpdate(target[key], source[key]);
+      }
+      else {
+        target[key] = source[key];
+      }
+    }
   }
 }
 
@@ -141,12 +148,13 @@ function BinParser(structure, types, functions, kwargs) {
   :arg object item: Data structure.
   :arg str dtype: Name of the data type.
 
-  :returns tuple: (`delim`, `size`, `trim`, `func`, `kwargs`).
+  :returns tuple: (`delim`, `size`, `trim`, `order`, `func`, `kwargs`).
   */
   this.getFunction = function(item, dtype) {
     var delim = this.getDefault(item, dtype, 'delimiter'),
         size = this.getValue(this.getDefault(item, dtype, 'size')),
         trim = this.getDefault(item, dtype, 'trim'),
+        order = this.getDefault(item, dtype, 'order'),
         func = dtype,
         kwargs = {};
 
@@ -163,7 +171,7 @@ function BinParser(structure, types, functions, kwargs) {
         kwargs = this.types[dtype].function.args;
       }
     }
-    return [delim, size, trim, func, kwargs];
+    return [delim, size, trim, order, func, kwargs];
   };
 
   /*
@@ -231,6 +239,7 @@ function BinParser(structure, types, functions, kwargs) {
     'name': '',
     'size': 0,
     'trim': undefined,
+    'order': 1,
     'type': 'text',
     'unknown_destination': '__raw__',
     'unknown_function': 'raw'
@@ -242,13 +251,13 @@ function BinParser(structure, types, functions, kwargs) {
   };
 
   if (typesData.constants) {
-    update(this.constants, typesData.constants);
+    deepUpdate(this.constants, typesData.constants);
   }
   if (typesData.defaults) {
-    update(this.defaults, typesData.defaults);
+    deepUpdate(this.defaults, typesData.defaults);
   }
   if (typesData.types) {
-    update(this.types, typesData.types);
+    deepUpdate(this.types, typesData.types);
   }
 
   this.structure = structure;
@@ -281,10 +290,11 @@ function BinReader(data, structure, types, kwargs) {
   :arg int size: Size of fixed size field.
   :arg list(char) delimiter: Delimiter for variable sized fields.
   :arg byte trim: Padding character.
+  :arg int order: Byte order.
 
   :return str: Content of the requested field.
   */
-  this.getField = function(size, delimiter, trim) {
+  this.getField = function(size, delimiter, trim, order) {
     var field,
         extracted,
         separator;
@@ -294,6 +304,7 @@ function BinReader(data, structure, types, kwargs) {
     }
 
     separator = String.fromCharCode.apply(this, delimiter);
+
     if (size) {
       // Fixed sized field.
       field = this.data.slice(offset, offset + size);
@@ -302,14 +313,21 @@ function BinReader(data, structure, types, kwargs) {
         // A variable sized field in a fixed sized field.
         field = field.split(separator)[0];
       }
-      if (trim) {
-        field = rstrip(field, trim);
-      }
     }
     else {
       // Variable sized field.
       field = this.data.slice(offset, -1).split(separator)[0];
-      extracted = field.length + 1;
+      extracted = field.length + 1; // FIXME: len(separator)
+    }
+
+    if (order === -1) {
+      // Endianness.
+      field = field.reverse();
+    }
+
+    if (trim) {
+      // Strip trailing characters.
+      field = rstrip(field, trim);
     }
 
     if (this.debug & 0x02) {
@@ -339,6 +357,7 @@ function BinReader(data, structure, types, kwargs) {
         func,
         kwargs,
         member,
+        order,
         result,
         size,
         temp,
@@ -353,9 +372,11 @@ function BinReader(data, structure, types, kwargs) {
     delim = temp[0];
     size = temp[1];
     trim = temp[2];
-    func = temp[3];
-    kwargs = temp[4];
-    result = this.functions[func](this.getField(size, delim, trim), kwargs);
+    order = temp[3];
+    func = temp[4];
+    kwargs = temp[5];
+    result = this.functions[func](
+      this.getField(size, delim, trim, order), kwargs);
 
     if (name) {
       // Store the data.
@@ -567,10 +588,22 @@ function BinWriter(parsed, structure, types, kwargs) {
   :arg int size: Size of fixed size field.
   :arg list(char) delimiter: Delimiter for variable sized fields.
   :arg byte trim: Padding character.
+  :arg int order: Byte order.
   */
-  this.setField = function(data, size, delimiter, trim) {
+  this.setField = function(data, size, delimiter, trim, order) {
     var field = data,
         index;
+
+    for (index = field.length; index < size; index++) {
+      // Pad the field if necessary.
+      field = Buffer.concat(
+        [field, new Buffer(String.fromCharCode(trim || 0x00))]);
+    }
+
+    if (order === -1) {
+      // Endianness.
+      field = field.reverse();
+    }
 
     if (delimiter) {
       // Add the delimiter for variable length fields.
@@ -581,11 +614,6 @@ function BinWriter(parsed, structure, types, kwargs) {
       // Clip the field if it is too large.
       // NOTE: This can result in a non-delimited trimmed field.
       field = field.slice(0, size);
-    }
-    for (index = field.length; index < size; index++) {
-      // Pad the field if necessary.
-      field = Buffer.concat(
-        [field, new Buffer(String.fromCharCode(trim || 0x00))]);
     }
 
     this.data = Buffer.concat([this.data, new Buffer(field)]);
@@ -604,8 +632,9 @@ function BinWriter(parsed, structure, types, kwargs) {
         delim = temp[0],
         size = temp[1],
         trim = temp[2],
-        func = temp[3],
-        kwargs = temp[4],
+        order = temp[3],
+        func = temp[4],
+        kwargs = temp[5],
         member;
 
     if (value.constructor === Object) {
@@ -618,7 +647,8 @@ function BinWriter(parsed, structure, types, kwargs) {
       this.internal[name] = value;
     }
 
-    this.setField(this.functions[func](value, kwargs), size, delim, trim);
+    this.setField(
+      this.functions[func](value, kwargs), size, delim, trim, order);
   };
 
   /*
@@ -741,7 +771,7 @@ function BinWriter(parsed, structure, types, kwargs) {
 module.exports = {
   'BinReader': BinReader,
   'BinWriter': BinWriter,
-  'update': update,
+  'deepUpdate': deepUpdate,
   'pop': pop,
   'numerical': numerical,
   'getOneValue': getOneValue

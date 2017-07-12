@@ -56,6 +56,8 @@ test_cli examples/var_size/var_size.dat examples/var_size/structure.yml \
   examples/var_size/types.yml
 test_cli examples/padding/padding.dat examples/padding/structure.yml \
   examples/padding/types.yml
+test_cli examples/order/order.dat examples/order/structure.yml \
+  examples/order/types.yml
 
 echo
 echo Writer tests:
@@ -77,6 +79,8 @@ test_writer examples/var_size/var_size.dat examples/var_size/structure.yml \
   examples/var_size/types.yml
 test_writer examples/padding/padding.dat examples/padding/structure.yml \
   examples/padding/types.yml
+test_writer examples/order/order.dat examples/order/structure.yml \
+  examples/order/types.yml
 
 echo
 echo Interface test:

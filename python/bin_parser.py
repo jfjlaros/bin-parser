@@ -8,18 +8,18 @@ import sys
 from .functions import BinReadFunctions, BinWriteFunctions, operators
 
 
-def deep_update(d1, d2):
-    """Recursively update dictionary `d1` with values from `d2`.
+def deep_update(target, source): # FIXME: This is wrong.
+    """Recursively update dictionary `target` with values from `source`.
 
-    :arg dict d1: A dictionary.
-    :arg dict d2: A dictionary.
+    :arg dict target: Target dictionary.
+    :arg dict source: Source dictionary.
     """
-    if type(d1) == dict:
-        for key in d2.keys():
-            if key in d1 and key in d2:
-                deep_update(d1[key], d2[key])
+    if type(target) == dict:
+        for key in source.keys():
+            if key in target:
+                deep_update(target[key], source[key])
             else:
-                d1[key] = d2[key]
+                target[key] = source[key]
 
 
 class BinParser(object):
@@ -230,14 +230,13 @@ class BinReader(BinParser):
         else:
             # Variable sized field.
             field = self.data[self._offset:].split(separator)[0]
-            extracted = len(field) + 1 # len(separator)
+            extracted = len(field) + 1 # FIXME: len(separator)
 
         # Endianness.
         field = field[::order]
 
         if trim:
             # Strip trailing characters.
-            # NOTE Debatable: before or after order?
             field = field.rstrip(chr(trim))
 
         if self._debug & 0x02:
