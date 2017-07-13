@@ -27,17 +27,16 @@ Update an object with the properties of an other object.
 :arg object target: Target object.
 :arg object source: Source object.
 */
-function deepUpdate(target, source) { // FIXME: This is wrong.
+function deepUpdate(target, source) {
   var key;
 
-  if (typeof(target) === 'object') {
-    for (key in source) {
-      if (key in target) {
-        deepUpdate(target[key], source[key]);
-      }
-      else {
-        target[key] = source[key];
-      }
+  for (key in source) {
+    if (key in target && typeof(target[key]) === 'object' &&
+        typeof(source[key]) === 'object') {
+      deepUpdate(target[key], source[key]);
+    }
+    else {
+      target[key] = source[key];
     }
   }
 }

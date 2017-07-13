@@ -8,18 +8,17 @@ import sys
 from .functions import BinReadFunctions, BinWriteFunctions, operators
 
 
-def deep_update(target, source): # FIXME: This is wrong.
+def deep_update(target, source):
     """Recursively update dictionary `target` with values from `source`.
 
     :arg dict target: Target dictionary.
     :arg dict source: Source dictionary.
     """
-    if type(target) == dict:
-        for key in source.keys():
-            if key in target:
-                deep_update(target[key], source[key])
-            else:
-                target[key] = source[key]
+    for key in source:
+        if key in target and type(target[key]) == type(source[key]) == dict:
+            deep_update(target[key], source[key])
+        else:
+            target[key] = source[key]
 
 
 class BinParser(object):
