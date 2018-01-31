@@ -1,0 +1,10 @@
+---
+types:
+  int:
+    size: 2
+  text:
+    delimiter:
+      - 0x00
+  float:
+    size: 4
+    order: 1

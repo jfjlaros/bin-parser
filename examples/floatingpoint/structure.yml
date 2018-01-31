@@ -1,0 +1,9 @@
+---
+- name: year_of_birth
+  type: int
+- name: name
+  type: text
+- name: balance
+  type: int
+- name: number
+  type: float

@@ -16,3 +16,4 @@ var parser = new BinParser.BinReader(
 console.log(parser.parsed.name);
 console.log(parser.parsed.year_of_birth);
 console.log(parser.parsed.balance);
+console.log(parser.parsed.number);
