@@ -246,8 +246,7 @@ function BinParser(structure, types, functions, kwargs) {
   this.types = {
     'int': {},
     'raw': {},
-    'text': {},
-    'float':{}
+    'text': {}
   };
 
   if (typesData.constants) {
@@ -313,7 +312,6 @@ function BinReader(data, structure, types, kwargs) {
         // A variable sized field in a fixed sized field.
         field = field.split(separator)[0];
       }
-      console.log("Size delimited",field);
     }
     else {
       // Variable sized field.
@@ -370,14 +368,12 @@ function BinReader(data, structure, types, kwargs) {
       dtype = this.getDefault(item, '', 'unknown_function');
     }
     temp = this.getFunction(item, dtype);
-    console.log("temp",temp);
     delim = temp[0];
     size = temp[1];
     trim = temp[2];
     order = temp[3];
     func = temp[4];
     kwargs = temp[5];
-    console.log("temp",temp,"size",size,"order",order);
     result = this.functions[func](
       this.getField(size, delim, trim, order), kwargs);
 
@@ -385,7 +381,6 @@ function BinReader(data, structure, types, kwargs) {
       // Store the data.
       if (result.constructor === Object) {
         // Unpack dictionaries in order to use the items in evaluations.
-        console.log("result",result);
         for (member in result) {
           this.internal[member] = result[member];
         }
@@ -486,8 +481,6 @@ function BinReader(data, structure, types, kwargs) {
         dtype,
         index;
 
-    console.log(structure,structure.length);
-
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
 
@@ -500,8 +493,6 @@ function BinReader(data, structure, types, kwargs) {
 
       dtype = this.getDefault(item, '', 'type');
       name = this.getDefault(item, dtype, 'name');
-      console.log(dtype,name);
-      console.log("item.structure",item.structure);
 
       if (!item.structure) {
         // Primitive data types.
@@ -561,22 +552,18 @@ function BinReader(data, structure, types, kwargs) {
   /*
   Initialisation.
   */
-  console.log("init",kwargs.functions || new Functions.BinReadFunctions(), kwargs);
   BinParser.call(
     this, structure, types,
     kwargs.functions || new Functions.BinReadFunctions(), kwargs);
 
   this.data = data;
   this.parsed = {};
-  console.log("parse",this.structure,this.parsed);
   try {
     this.parse(this.structure, this.parsed);
   }
   catch(err) {
     if (err !== 'StopIteration') {
-      console.log("err",err)
       throw(err);
-
     }
   }
 }

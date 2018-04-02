@@ -12,3 +12,5 @@ parser = BinReader(
     yaml.safe_load(open('types.yml')))
 
 print parser.parsed['name']
+print parser.parsed['year_of_birth']
+print parser.parsed['balance']

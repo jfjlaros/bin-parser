@@ -8,13 +8,13 @@ var fs = require('fs'),
 var BinParser = require('../../../javascript/index');
 
 function main() {
-  var parser = new BinParser.BinReader(
-    fs.readFileSync('../float.dat'),
+  var parser = new BinParser.BinWriter(
+    yaml.load(fs.readFileSync('../float.yml')),
     yaml.load(fs.readFileSync('../structure.yml')),
     yaml.load(fs.readFileSync('../types.yml')),
-    {})
+    {});
 
-  process.stdout.write(yaml.dump(parser.parsed));
+    process.stdout.write(parser.data);
 }
 
 // Wait for the stdout buffer to drain, see
