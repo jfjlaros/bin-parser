@@ -92,11 +92,11 @@ function BinParser(structure, types, functions, kwargs) {
 
   /*
   Resolve the value of a variable.
- 
+
   First look in the cache to see if `name` is defined, then check the set
   of constants. If nothing can be found, the variable is considered to be
   a literal.
- 
+
   :arg any name: The name or value of a variable.
 
   :returns any: The resolved value.
@@ -229,7 +229,7 @@ function BinParser(structure, types, functions, kwargs) {
 
   this.debug = kwargs.debug || 0;
   this.log = kwargs.log || process.stderr;
-  
+
   this.functions = functions;
 
   this.constants = {};
@@ -246,7 +246,8 @@ function BinParser(structure, types, functions, kwargs) {
   this.types = {
     'int': {},
     'raw': {},
-    'text': {}
+    'text': {},
+    'float':{}
   };
 
   if (typesData.constants) {
@@ -312,6 +313,7 @@ function BinReader(data, structure, types, kwargs) {
         // A variable sized field in a fixed sized field.
         field = field.split(separator)[0];
       }
+      console.log("Size delimited",field);
     }
     else {
       // Variable sized field.
@@ -345,7 +347,7 @@ function BinReader(data, structure, types, kwargs) {
 
   /*
   Parse a primitive data type.
-  
+
   :arg object item: Data structure.
   :arg str dtype: Data type.
   :arg object dest: Destination object.
@@ -368,12 +370,14 @@ function BinReader(data, structure, types, kwargs) {
       dtype = this.getDefault(item, '', 'unknown_function');
     }
     temp = this.getFunction(item, dtype);
+    console.log("temp",temp);
     delim = temp[0];
     size = temp[1];
     trim = temp[2];
     order = temp[3];
     func = temp[4];
     kwargs = temp[5];
+    console.log("temp",temp,"size",size,"order",order);
     result = this.functions[func](
       this.getField(size, delim, trim, order), kwargs);
 
@@ -381,6 +385,7 @@ function BinReader(data, structure, types, kwargs) {
       // Store the data.
       if (result.constructor === Object) {
         // Unpack dictionaries in order to use the items in evaluations.
+        console.log("result",result);
         for (member in result) {
           this.internal[member] = result[member];
         }
@@ -405,7 +410,7 @@ function BinReader(data, structure, types, kwargs) {
 
   /*
   Parse a for loop.
-  
+
   :arg object item: Data structure.
   :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
@@ -428,7 +433,7 @@ function BinReader(data, structure, types, kwargs) {
 
   /*
   Parse a do-while loop.
-  
+
   :arg object item: Data structure.
   :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
@@ -448,7 +453,7 @@ function BinReader(data, structure, types, kwargs) {
 
   /*
   Parse a while loop.
-  
+
   :arg object item: Data structure.
   :arg object dest: Destination object.
   :arg str name: Field name used in the destination dictionary.
@@ -481,6 +486,8 @@ function BinReader(data, structure, types, kwargs) {
         dtype,
         index;
 
+    console.log(structure,structure.length);
+
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
 
@@ -493,6 +500,8 @@ function BinReader(data, structure, types, kwargs) {
 
       dtype = this.getDefault(item, '', 'type');
       name = this.getDefault(item, dtype, 'name');
+      console.log(dtype,name);
+      console.log("item.structure",item.structure);
 
       if (!item.structure) {
         // Primitive data types.
@@ -552,19 +561,22 @@ function BinReader(data, structure, types, kwargs) {
   /*
   Initialisation.
   */
+  console.log("init",kwargs.functions || new Functions.BinReadFunctions(), kwargs);
   BinParser.call(
     this, structure, types,
     kwargs.functions || new Functions.BinReadFunctions(), kwargs);
 
   this.data = data;
   this.parsed = {};
-
+  console.log("parse",this.structure,this.parsed);
   try {
     this.parse(this.structure, this.parsed);
   }
   catch(err) {
     if (err !== 'StopIteration') {
+      console.log("err",err)
       throw(err);
+
     }
   }
 }
@@ -717,7 +729,7 @@ function BinWriter(parsed, structure, types, kwargs) {
         // Primitive data types.
         if (this.debug & 0x02) {
           this.log.write(
-            '0x' + Functions.pad(Functions.hex(this.data.length), 6) + ': ' + 
+            '0x' + Functions.pad(Functions.hex(this.data.length), 6) + ': ' +
             name + ' --> ' + value + '\n');
         }
         this.encodePrimitive(item, dtype, value, name);

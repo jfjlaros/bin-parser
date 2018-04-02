@@ -111,9 +111,19 @@ function BinReadFunctions() {
     return result;
   };
 
-  /*
-  Decode a little-endian encoded integer.
+  /* IEEE 754 single-precision binary floating-point format
 
+    :arg str data: Big-endian encoded 32bit single precision floating point.
+
+    :returns float: Integer representation of {data}
+
+  */
+  this.float = function(data) {
+    var result = 0;
+    result = data.readFloatBE(0);
+    return result;
+  };
+ /*
   Decoding is done as follows:
   - Reverse the order of the bits.
   - Convert the bits to ordinals.
@@ -245,6 +255,7 @@ function BinWriteFunctions() {
   };
 
   this.int = function(integer) {
+    console.log("integer",integer);
     var dataInt = integer,
         result = [];
 
@@ -257,6 +268,12 @@ function BinWriteFunctions() {
       return new Buffer(result);
     }
     return new Buffer([0x00]);
+  };
+// write Big Endian 32 bit floating number
+  this.float = function(realnumber){
+    console.log("float",realnumber);
+    var buf =  Buffer.allocUnsafe(4);
+    return buf.writeFloatBE(realnumber,0);
   };
 
   this.colour = function(colourString) {

@@ -1,0 +1,7 @@
+---
+- name: voltage
+  type: float
+- name: frequency
+  type: float
+- name: current
+  type: float
