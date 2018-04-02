@@ -4,6 +4,7 @@
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 """
 import operator
+import struct
 
 
 operators = {
@@ -58,6 +59,15 @@ class BinReadFunctions(object):
         """
         return reduce(
             lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
+
+    def float(self, data):
+        """Decode an IEEE 754 single precision encoded floating-point.
+
+        :arg str data: Big-endian encoded 32bit single precision floating point.
+
+        :returns float: Float representation of {data}.
+        """
+        return struct.unpack('>f', data)
 
     def colour(self, data):
         return '0x{:06x}'.format(self.int(data))
@@ -155,6 +165,9 @@ class BinWriteFunctions(object):
             data_int >>= 8
 
         return result or chr(0x00)
+
+    def float(self, real_number):
+        return struct.pack('>f', real_number)
 
     def colour(self, colour_string):
         return self.int(int(colour_string, 0x10))

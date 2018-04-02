@@ -558,6 +558,7 @@ function BinReader(data, structure, types, kwargs) {
 
   this.data = data;
   this.parsed = {};
+
   try {
     this.parse(this.structure, this.parsed);
   }

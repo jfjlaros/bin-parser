@@ -14,7 +14,7 @@ function main() {
     yaml.load(fs.readFileSync('../types.yml')),
     {});
 
-    process.stdout.write(parser.data);
+  process.stdout.write(parser.data);
 }
 
 // Wait for the stdout buffer to drain, see

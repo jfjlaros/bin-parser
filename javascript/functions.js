@@ -111,20 +111,6 @@ function BinReadFunctions() {
     return result;
   };
 
-  /*
-  Decode an IEEE 754 single precision encoded floating-point.
-
-  :arg str data: Big-endian encoded 32bit single precision floating point.
-
-  :returns float: Float representation of {data}.
-  */
-  this.float = function(data) {
-    var result = 0;
-
-    result = data.readFloatBE(0);
-    return result;
-  };
-
  /*
   Decode a little-endian encoded integer.
 
@@ -145,6 +131,17 @@ function BinReadFunctions() {
       result = result * 0x100 + data[index];
     }
     return result;
+  };
+
+  /*
+  Decode an IEEE 754 single precision encoded floating-point.
+
+  :arg str data: Big-endian encoded 32bit single precision floating point.
+
+  :returns float: Float representation of {data}.
+  */
+  this.float = function(data) {
+    return data.readFloatBE();
   };
 
   this.colour = function(data) {
@@ -274,9 +271,10 @@ function BinWriteFunctions() {
   };
 
   this.float = function(realNumber) {
-    var buf = Buffer.allocUnsafe(4);
+    var data = new Buffer(4);
 
-    return buf.writeFloatBE(realNumber, 0);
+    data.writeFloatBE(realNumber);
+    return data;
   };
 
   this.colour = function(colourString) {
