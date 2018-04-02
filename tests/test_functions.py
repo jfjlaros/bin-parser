@@ -1,21 +1,18 @@
-"""
-Tests for the bin_parser.functions module.
-"""
+"""Tests for the bin_parser.functions module."""
 
 
 from bin_parser import functions
 
 
 class TestParser(object):
-    """
-    Test the python.fam_parser module.
-    """
+    """Test the bin_parser.functions module."""
     def setup(self):
         self.brf = functions.BinReadFunctions()
         self.bwf = functions.BinWriteFunctions()
         self.string = '012'
         self.byte = '0'
         self.annotation = 'xxxx'
+        self.float = '\x42\xf6\xcc\xcd'
         self.date_annotation = {3289392: self.annotation}
         self.map_annotation = {48: self.annotation}
         self.flags_annotation = {0x10: self.annotation, 0x01: 'unused'}
@@ -31,6 +28,9 @@ class TestParser(object):
 
     def test_int_2(self):
         assert self.bwf.int(0) == chr(0x00)
+
+    def test_float(self):
+        assert self.float == self.bwf.float(self.brf.float(self.float))
 
     def test_colour(self):
         assert self.string == self.bwf.colour(self.brf.colour(self.string))

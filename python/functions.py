@@ -67,7 +67,7 @@ class BinReadFunctions(object):
 
         :returns float: Float representation of {data}.
         """
-        return struct.unpack('>f', data)
+        return struct.unpack('>f', data)[0]
 
     def colour(self, data):
         return '0x{:06x}'.format(self.int(data))

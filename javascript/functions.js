@@ -111,7 +111,7 @@ function BinReadFunctions() {
     return result;
   };
 
- /*
+  /*
   Decode a little-endian encoded integer.
 
   Decoding is done as follows:
