@@ -1,6 +1,6 @@
 ---
 - name: number_of_entries
-  type: int
+  type: short
 - name: entries
   for: number_of_entries
   structure:

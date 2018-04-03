@@ -1,6 +1,6 @@
 ---
 types:
-  int:
+  short:
     size: 2
     function:
       name: struct

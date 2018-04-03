@@ -8,5 +8,5 @@
     term: lines_term
   structure:
     - name: id
-      type: short
+      type: s_char
     - name: content

@@ -1,12 +1,12 @@
 ---
 - name: a
-  type: short
+  type: s_char
 - name: related_to_a
   if:
     operands:
       - a
 - name: b
-  type: short
+  type: s_char
 - name: related_to_b
   if:
     operands:

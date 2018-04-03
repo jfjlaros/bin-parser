@@ -6,8 +6,8 @@ deprication_text = """
 ---
 warning: type `{}` is depricated. use `struct` instead.
 
-See https://github.com/jfjlaros/bin-parser/blob/master/README.md#struct for
-more information.
+See https://github.com/jfjlaros/bin-parser/blob/master/README.md#basic_types
+for more information.
 ---
 
 """

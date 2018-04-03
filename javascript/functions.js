@@ -93,7 +93,7 @@ Functions for decoding data.
 */
 function BinReadFunctions() {
   this.struct = function(data, kwargs) {
-    var fmt = kwargs.fmt || '<i';
+    var fmt = kwargs.fmt || 'b';
 
     return struct.unpack(fmt, data)[0]
   };
@@ -259,7 +259,7 @@ encoding. Documentation of these functions is omitted.
 */
 function BinWriteFunctions() {
   this.struct = function(data, kwargs) {
-    var fmt = kwargs.fmt || '<i';
+    var fmt = kwargs.fmt || 'b';
 
     return struct.pack(fmt, data)
   };

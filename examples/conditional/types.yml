@@ -1,10 +1,8 @@
 ---
 types:
-  short:
+  s_char:
     function:
       name: struct
-      args:
-        fmt: 'b'
   text:
     delimiter:
       - 0x00

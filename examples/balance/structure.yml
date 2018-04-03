@@ -1,7 +1,7 @@
 ---
 - name: year_of_birth
-  type: int
+  type: short
 - name: name
   type: text
 - name: balance
-  type: int
+  type: short

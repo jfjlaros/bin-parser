@@ -1,6 +1,6 @@
 ---
 - name: size_of_list
-  type: short
+  type: s_char
 - name: lines
   for: size_of_list
   structure:

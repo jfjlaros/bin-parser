@@ -1,12 +1,12 @@
 ---
 types:
-  int:
+  int_le:
     size: 4
     function:
       name: struct
       args:
         fmt: '<i'
-  int_b:
+  int_be:
     size: 4
     function:
       name: struct

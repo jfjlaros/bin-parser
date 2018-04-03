@@ -1,5 +1,5 @@
 ---
 - name: val_1
-  type: int
+  type: int_le
 - name: val_2
-  type: int_b
+  type: int_be

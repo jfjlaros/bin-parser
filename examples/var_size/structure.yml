@@ -1,9 +1,9 @@
 ---
 - name: field_1_size
-  type: int
+  type: s_char
 - name: field_1
   size: field_1_size
 - name: field_2_size
-  type: int
+  type: s_char
 - name: field_2
   size: field_2_size

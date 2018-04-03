@@ -1,7 +1,5 @@
 ---
 types:
-  int:
+  s_char:
     function:
       name: struct
-      args:
-        fmt: 'b'

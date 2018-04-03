@@ -2,11 +2,11 @@ var Functions = require('../../../javascript/functions');
 
 function PrinceReadFunctions() {
   this.min = function(data) {
-    return this.struct(data, '<h') - 1;
+    return this.struct(data, {'fmt': '<h'}) - 1;
   };
 
   this.sec = function(data) {
-    return Math.floor(this.struct(data, '<h') / 12);
+    return Math.floor(this.struct(data, {'fmt': '<h'}) / 12);
   };
 
   Functions.BinReadFunctions.call(this);
@@ -14,11 +14,11 @@ function PrinceReadFunctions() {
 
 function PrinceWriteFunctions() {
   this.min = function(minutes) {
-    return this.struct(minutes + 1, '<h');
+    return this.struct(minutes + 1, {'fmt': '<h'});
   };
 
   this.sec = function(seconds) {
-    return this.struct(seconds * 12, '<h');
+    return this.struct(seconds * 12, {'fmt': '<h'});
   };
 
   Functions.BinWriteFunctions.call(this);

@@ -4,7 +4,7 @@ types:
     size: 25
     delimiter:
       - 0x00
-  int:
+  short:
     size: 2
     function:
       name: struct
