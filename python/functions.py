@@ -28,8 +28,10 @@ def _inverse_dict(dictionary):
 
 
 class BinReadFunctions(object):
-    """Functions for decoding data.
-    """
+    """Functions for decoding data."""
+    def struct(self, data, fmt='<i'):
+        return struct.unpack(fmt, data)[0]
+
     def raw(self, data):
         """Encode a string in hexadecimal, grouped by byte.
 
@@ -150,6 +152,9 @@ class BinWriteFunctions(object):
     Every decoding function in the BinReadFunctions class has a counterpart for
     encoding. Documentation of these functions is omitted.
     """
+    def struct(self, data, fmt='<i'):
+        return struct.pack(fmt, data)
+
     def raw(self, hex_string):
         return ''.join(hex_string.split()).decode('hex')
 

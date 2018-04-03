@@ -2,9 +2,16 @@
 types:
   int:
     size: 2
+    function:
+      name: struct
+      args:
+        fmt: '<i'
   text:
     delimiter:
       - 0x00
   float:
     size: 4
-    order: 1
+    function:
+      name: struct
+      args:
+        fmt: '>f'

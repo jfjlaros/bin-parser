@@ -28,7 +28,8 @@
     "argparse": "^1.0.3",
     "buffer-extend-split": "^0.0.0",
     "iconv-lite": "^0.4.13",
-    "js-yaml": "^3.3.1"
+    "js-yaml": "^3.3.1",
+    "python-struct": "^1.0.6"
   },
   "bugs": {
     "url": "https://github.com/jfjlaros/bin-parser/issues"

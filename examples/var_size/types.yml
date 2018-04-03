@@ -1,1 +1,7 @@
 ---
+types:
+  int:
+    function:
+      name: struct
+      args:
+        fmt: 'b'

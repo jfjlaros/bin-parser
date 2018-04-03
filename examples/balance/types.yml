@@ -2,6 +2,10 @@
 types:
   int:
     size: 2
+    function:
+      name: struct
+      args:
+        fmt: '<h'
   text:
     delimiter:
       - 0x00

@@ -6,6 +6,10 @@ types:
       - 0x00
   int:
     size: 2
+    function:
+      name: struct
+      args:
+        fmt: '<h'
   min:
     size: 2
   sec:

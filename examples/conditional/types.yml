@@ -2,7 +2,9 @@
 types:
   short:
     function:
-      name: int
+      name: struct
+      args:
+        fmt: 'b'
   text:
     delimiter:
       - 0x00

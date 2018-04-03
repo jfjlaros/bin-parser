@@ -2,8 +2,13 @@
 types:
   int:
     size: 4
+    function:
+      name: struct
+      args:
+        fmt: '<i'
   int_b:
     size: 4
-    order: -1
     function:
-      name: int
+      name: struct
+      args:
+        fmt: '>i'

@@ -6,7 +6,8 @@ Field packing and unpacking functions for the general binary parser.
 (C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
 */
 var Buffer = require('buffer-extend-split'),
-    iconv = require('iconv-lite');
+    iconv = require('iconv-lite'),
+    struct = require('python-struct');
 
 var operators = {
   'not': function(a) { return !a; },
@@ -89,6 +90,12 @@ function convertToHex(data) {
 Functions for decoding data.
 */
 function BinReadFunctions() {
+  this.struct = function(data, kwargs) {
+    var fmt = kwargs.fmt || '<i';
+
+    return struct.unpack(fmt, data)[0]
+  };
+
   /*
   Encode a string in hexadecimal, grouped by byte.
 
@@ -247,6 +254,12 @@ Every decoding function in the BinReadFunctions class has a counterpart for
 encoding. Documentation of these functions is omitted.
 */
 function BinWriteFunctions() {
+  this.struct = function(data, kwargs) {
+    var fmt = kwargs.fmt || '<i';
+
+    return struct.pack(fmt, data)
+  };
+
   this.raw = function(hexString) {
     return new Buffer(hexString.split(' ').map(unHex));
   };
