@@ -6,6 +6,8 @@
 import operator
 import struct
 
+from .depricated import deprication_warning
+
 
 operators = {
     'not': operator.not_,
@@ -59,6 +61,7 @@ class BinReadFunctions(object):
 
         :returns int: Integer representation of {data}
         """
+        deprication_warning('int')
         return reduce(
             lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
 
@@ -69,6 +72,7 @@ class BinReadFunctions(object):
 
         :returns float: Float representation of {data}.
         """
+        deprication_warning('float')
         return struct.unpack('>f', data)[0]
 
     def colour(self, data):
@@ -162,6 +166,7 @@ class BinWriteFunctions(object):
         return chr(int('0b{}'.format(bit_string), 2))
 
     def int(self, integer):
+        deprication_warning('int')
         data_int = integer
         result = ''
 
@@ -172,6 +177,7 @@ class BinWriteFunctions(object):
         return result or chr(0x00)
 
     def float(self, real_number):
+        deprication_warning('float')
         return struct.pack('>f', real_number)
 
     def colour(self, colour_string):

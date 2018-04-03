@@ -9,6 +9,8 @@ var Buffer = require('buffer-extend-split'),
     iconv = require('iconv-lite'),
     struct = require('python-struct');
 
+var depricated = require('./depricated');
+
 var operators = {
   'not': function(a) { return !a; },
   'and': function(a, b) { return a && b; },
@@ -134,6 +136,7 @@ function BinReadFunctions() {
     var result = 0,
         index;
 
+    depricated.deprication_warning('int');
     for (index = data.length - 1; index >= 0; index--) {
       result = result * 0x100 + data[index];
     }
@@ -148,6 +151,7 @@ function BinReadFunctions() {
   :returns float: Float representation of {data}.
   */
   this.float = function(data) {
+    depricated.deprication_warning('float');
     return data.readFloatBE();
   };
 
@@ -272,6 +276,7 @@ function BinWriteFunctions() {
     var dataInt = integer,
         result = [];
 
+    depricated.deprication_warning('int');
     while (dataInt) {
       result.push(dataInt % 0x100);
       dataInt >>= 8;
@@ -286,6 +291,7 @@ function BinWriteFunctions() {
   this.float = function(realNumber) {
     var data = new Buffer(4);
 
+    depricated.deprication_warning('float');
     data.writeFloatBE(realNumber);
     return data;
   };
