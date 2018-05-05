@@ -1,6 +1,6 @@
 # Submit a pull request
-Thank you for submitting a pull request! To speed up the review process, please ensure that everything below
-is true:
+Thank you for submitting a pull request. To speed up the review process, please
+ensure that everything below is true:
 
 1. This is not a duplicate of an [existing pull request][1].
 2. No existing features have been broken without good reason.
