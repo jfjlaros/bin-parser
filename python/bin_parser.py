@@ -1,8 +1,4 @@
-"""General binary file parser.
-
-
-(C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
-"""
+"""General binary file parser."""
 import sys
 
 from .functions import BinReadFunctions, BinWriteFunctions, operators
@@ -22,8 +18,7 @@ def deep_update(target, source):
 
 
 class BinParser(object):
-    """General binary file parser.
-    """
+    """General binary file parser."""
     def __init__(self, structure, types, functions, debug=0, log=sys.stderr):
         """Constructor.
 
@@ -160,8 +155,7 @@ class BinParser(object):
         return operators[expression['operator']](*operands)
 
     def _log_debug_info(self):
-        """Write additional debugging information to the log.
-        """
+        """Write additional debugging information to the log."""
         if self._debug & 0x01:
             if self._debug & 0x02:
                 self._log.write('\n\n')
@@ -173,8 +167,7 @@ class BinParser(object):
 
 
 class BinReader(BinParser):
-    """General binary file reader.
-    """
+    """General binary file reader."""
     def __init__(
             self, data, structure, types, functions=BinReadFunctions(),
             prune=False, debug=0, log=sys.stderr):
@@ -376,8 +369,7 @@ class BinReader(BinParser):
                 self._log.write(' --> {}\n'.format(name))
 
     def log_debug_info(self):
-        """Write additional debugging information to the log.
-        """
+        """Write additional debugging information to the log."""
         self._log_debug_info()
 
         data_length = len(self.data)
@@ -390,8 +382,7 @@ class BinReader(BinParser):
 
 
 class BinWriter(BinParser):
-    """General binary file writer.
-    """
+    """General binary file writer."""
     def __init__(
             self, parsed, structure, types, functions=BinWriteFunctions(),
             debug=0, log=sys.stderr):
@@ -528,8 +519,7 @@ class BinWriter(BinParser):
                     self._log.write(' --> {}\n'.format(name))
 
     def log_debug_info(self):
-        """Write additional debugging information to the log.
-        """
+        """Write additional debugging information to the log."""
         self._log_debug_info()
 
         self._log.write('{} bytes written.\n'.format(len(self.data)))

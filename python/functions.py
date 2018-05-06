@@ -1,8 +1,4 @@
-"""Field packing and unpacking functions for the general binary parser.
-
-
-(C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
-"""
+"""Field packing and unpacking functions for the general binary parser."""
 import operator
 import struct
 

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-"""Command line interface for the general binary parser.
-"""
+"""Command line interface for the general binary parser."""
 import argparse
 
 import yaml
@@ -54,8 +52,7 @@ def bin_writer(
 
 
 def main():
-    """Command line argument parsing.
-    """
+    """Command line argument parsing."""
     opt_parser = argparse.ArgumentParser(add_help=False)
     opt_parser.add_argument(
         'input_handle', metavar='INPUT', type=argparse.FileType('r'),
