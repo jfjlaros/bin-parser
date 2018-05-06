@@ -1,34 +1,29 @@
-'use strict';
+"use strict";
 
-/*
-Field packing and unpacking functions for the general binary parser.
+/* Field packing and unpacking functions for the general binary parser. */
 
-(C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
-*/
-var Buffer = require('buffer-extend-split'),
-    iconv = require('iconv-lite'),
-    struct = require('python-struct');
+var Buffer = require("buffer-extend-split"),
+    iconv = require("iconv-lite"),
+    struct = require("python-struct");
 
-var depricated = require('./depricated');
+var depricated = require("./depricated");
 
 var operators = {
-  'not': function(a) { return !a; },
-  'and': function(a, b) { return a && b; },
-  'or': function(a, b) { return a || b; },
-  'xor': function(a, b) { return a ^ b; },
-  'eq': function(a, b) { return a === b; },
-  'ne': function(a, b) { return a !== b; },
-  'ge': function(a, b) { return a >= b; },
-  'gt': function(a, b) { return a > b; },
-  'le': function(a, b) { return a <= b; },
-  'lt': function(a, b) { return a < b; },
-  'mod': function(a, b) { return a % b; },
-  'contains': function(a, b) { return a in b; }
+  "not": function(a) { return !a; },
+  "and": function(a, b) { return a && b; },
+  "or": function(a, b) { return a || b; },
+  "xor": function(a, b) { return a ^ b; },
+  "eq": function(a, b) { return a === b; },
+  "ne": function(a, b) { return a !== b; },
+  "ge": function(a, b) { return a >= b; },
+  "gt": function(a, b) { return a > b; },
+  "le": function(a, b) { return a <= b; },
+  "lt": function(a, b) { return a < b; },
+  "mod": function(a, b) { return a % b; },
+  "contains": function(a, b) { return a in b; }
 };
 
-/*
-Miscellaneous functions.
-*/
+/* Miscellaneous functions. */
 
 function ord(character) {
   return character[0];
@@ -52,34 +47,34 @@ function inverseDict(dictionary) {
   return result;
 }
 
-/*
-Pad a string with leading zeroes.
-
-:arg any input: String to be padded.
-:arg int length: Length of the resulting string.
-
-:returns str: Padded string.
-*/
+/**
+ * Pad a string with leading zeroes.
+ *
+ * @arg {} input - String to be padded.
+ * @arg {number} length - Length of the resulting string.
+ *
+ * @return {string} - Padded string.
+ */
 function pad(input, length) {
   var string = input.toString(),
-      padding = '',
+      padding = "",
       index;
 
   for (index = 0; index < length - string.length; index++) {
-    padding += '0';
+    padding += "0";
   }
   return padding + string;
 }
 
-/*
-Encode a string in hexadecimal, grouped by byte.
-
-:arg str data: Input string.
-
-:returns str: Hexadecimal representation of {data}.
-*/
+/**
+ * Encode a string in hexadecimal, grouped by byte.
+ *
+ * @arg {string} data - Input string.
+ *
+ * @return {string} - Hexadecimal representation of {data}.
+ */
 function convertToHex(data) {
-  var result = '',
+  var result = "",
       index;
 
   for (index = 0; index < data.length; index++) {
@@ -88,30 +83,28 @@ function convertToHex(data) {
   return result;
 }
 
-/*
-Functions for decoding data.
-*/
+/* Functions for decoding data. */
 function BinReadFunctions() {
   this.struct = function(data, kwargs) {
-    var fmt = kwargs.fmt || 'b';
+    var fmt = kwargs.fmt || "b";
 
     return struct.unpack(fmt, data)[0]
   };
 
-  /*
-  Encode a string in hexadecimal, grouped by byte.
-
-  :arg str data: Input data.
-
-  :returns str: Hexadecimal representation of {data}.
-  */
+  /**
+   * Encode a string in hexadecimal, grouped by byte.
+   *
+   * @arg {string} data - Input data.
+   *
+   * @returns {string} - Hexadecimal representation of {data}.
+   */
   this.raw = function(data) {
-    return convertToHex(data).match(/.{1,2}/g).join(' ');
+    return convertToHex(data).match(/.{1,2}/g).join(" ");
   };
 
   this.bit = function(data) {
     var bitField = data[0],
-        result = '',
+        result = "",
         mask;
 
     for (mask = 0x80; mask; mask >>= 1) {
@@ -120,78 +113,79 @@ function BinReadFunctions() {
     return result;
   };
 
-  /*
-  Decode a little-endian encoded integer.
-
-  Decoding is done as follows:
-  - Reverse the order of the bits.
-  - Convert the bits to ordinals.
-  - Interpret the list of ordinals as digits in base 256.
-
-  :arg str data: Little-endian encoded integer.
-
-  :returns int: Integer representation of {data}.
-  */
+  /**
+   * Decode a little-endian encoded integer.
+   *
+   * Decoding is done as follows:
+   * - Reverse the order of the bits.
+   * - Convert the bits to ordinals.
+   * - Interpret the list of ordinals as digits in base 256.
+   *
+   * @arg {string} data - Little-endian encoded integer.
+   *
+   * @return {number} - Integer representation of {data}.
+   */
   this.int = function(data) {
     var result = 0,
         index;
 
-    depricated.deprication_warning('int');
+    depricated.deprication_warning("int");
     for (index = data.length - 1; index >= 0; index--) {
       result = result * 0x100 + data[index];
     }
     return result;
   };
 
-  /*
-  Decode an IEEE 754 single precision encoded floating-point.
-
-  :arg str data: Big-endian encoded 32bit single precision floating point.
-
-  :returns float: Float representation of {data}.
-  */
+  /**
+   * Decode an IEEE 754 single precision encoded floating-point.
+   *
+   * @arg {string} data - Big-endian encoded 32bit single precision floating
+   *   point.
+   *
+   * @return {number} - Float representation of {data}.
+   */
   this.float = function(data) {
-    depricated.deprication_warning('float');
+    depricated.deprication_warning("float");
     return data.readFloatBE();
   };
 
   this.colour = function(data) {
-    return '0x' + pad(hex(this.int(data)), 6);
+    return "0x" + pad(hex(this.int(data)), 6);
   };
 
-  /*
-  Decode a text string.
-
-  :arg str data: Text string.
-  :arg list(byte) kwargs.split: Internal delimiter for end of line.
-  :arg str kwargs.encoding: Character encoding.
-
-  :returns str: Decoded text.
-  */
+  /**
+   * Decode a text string.
+   *
+   * @arg {string} data - Text string.
+   * @arg {Array} kwargs.split - Internal delimiter for end of line.
+   * @arg {string} kwargs.encoding - Character encoding.
+   *
+   * @return {string} - Decoded text.
+   */
   this.text = function(data, kwargs) {
     var split = kwargs.split,
-        encoding = kwargs.encoding || 'utf-8',
+        encoding = kwargs.encoding || "utf-8",
         decodedText = iconv.decode(data, encoding);
 
     if (split) {
       return decodedText.split(
-        String.fromCharCode.apply(this, split)).join('\n');
+        String.fromCharCode.apply(this, split)).join("\n");
     }
     return decodedText;
   };
 
-  /*
-  Decode a date.
-
-  The date is encoded as an integer, representing the year followed by the
-  (zero padded) day of the year.
-
-  :arg str data: Binary encoded date.
-  :arg dict kwargs.annotation: Names for special cases.
-
-
-  :returns str: Date in format '%Y%j', 'defined' or 'unknown'.
-  */
+  /**
+   * Decode a date.
+   *
+   *  The date is encoded as an integer, representing the year followed by the
+   *  (zero padded) day of the year.
+   *
+   *  @arg {string} data - Binary encoded date.
+   *  @arg {Object} kwargs.annotation - Names for special cases.
+   *
+   *
+   *  @return {string} - Date in format "%Y%j", "defined" or "unknown".
+   */
   this.date = function(data, kwargs) {
     var annotation = kwargs.annotation,
         dateInt = this.int(data);
@@ -202,14 +196,14 @@ function BinReadFunctions() {
     return dateInt.toString();
   };
 
-  /*
-  Replace a value with its annotation.
-
-  :arg str data: Encoded data.
-  :arg dict kwargs.annotation: Annotation of {data}.
-
-  :returns str: Annotated representation of {data}.
-  */
+  /**
+   * Replace a value with its annotation.
+   *
+   * @arg {string} data - Encoded data.
+   * @arg {Object} kwargs.annotation - Annotation of {data}.
+   *
+   * @return str - Annotated representation of {data}.
+   */
   this.map = function(data, kwargs) {
     var annotation = kwargs.annotation,
         index = ord(data);
@@ -220,14 +214,14 @@ function BinReadFunctions() {
     return convertToHex(data);
   };
 
-  /*
-  Explode a bitfield into flags.
-
-  :arg int data: Bit field.
-  :arg str kwargs.annotation: Annotation of {data}.
-
-  :returns dict: Dictionary of flags and their values.
-  */
+  /**
+   * Explode a bitfield into flags.
+   *
+   * @arg {number} data - Bit field.
+   * @arg {string} kwargs.annotation - Annotation of {data}.
+   *
+   * @return {Object} - Dictionary of flags and their values.
+   */
   this.flags = function(data, kwargs) {
     var annotation = kwargs.annotation,
         bitfield = this.int(data),
@@ -240,7 +234,7 @@ function BinReadFunctions() {
 
       if (!annotation[flag]) {
         if (value) {
-          flags_dict['flag_' + pad(hex(flag), 2)] = value;
+          flags_dict["flag_" + pad(hex(flag), 2)] = value;
         }
       }
       else {
@@ -252,20 +246,20 @@ function BinReadFunctions() {
 }
 
 /*
-Functions for encoding data.
-
-Every decoding function in the BinReadFunctions class has a counterpart for
-encoding. Documentation of these functions is omitted.
-*/
+ * Functions for encoding data.
+ *
+ * Every decoding function in the BinReadFunctions class has a counterpart for
+ * encoding. Documentation of these functions is omitted.
+ */
 function BinWriteFunctions() {
   this.struct = function(data, kwargs) {
-    var fmt = kwargs.fmt || 'b';
+    var fmt = kwargs.fmt || "b";
 
     return struct.pack(fmt, data)
   };
 
   this.raw = function(hexString) {
-    return new Buffer(hexString.split(' ').map(unHex));
+    return new Buffer(hexString.split(" ").map(unHex));
   };
 
   this.bit = function(bitString) {
@@ -276,7 +270,7 @@ function BinWriteFunctions() {
     var dataInt = integer,
         result = [];
 
-    depricated.deprication_warning('int');
+    depricated.deprication_warning("int");
     while (dataInt) {
       result.push(dataInt % 0x100);
       dataInt >>= 8;
@@ -291,7 +285,7 @@ function BinWriteFunctions() {
   this.float = function(realNumber) {
     var data = new Buffer(4);
 
-    depricated.deprication_warning('float');
+    depricated.deprication_warning("float");
     data.writeFloatBE(realNumber);
     return data;
   };
@@ -302,11 +296,11 @@ function BinWriteFunctions() {
 
   this.text = function(textString, kwargs) {
     var split = kwargs.split,
-        encoding = kwargs.encoding || 'utf-8',
+        encoding = kwargs.encoding || "utf-8",
         decodedText = textString;
 
     if (split) {
-      decodedText = decodedText.split('\n').join(
+      decodedText = decodedText.split("\n").join(
         String.fromCharCode.apply(this, split));
     }
     return iconv.encode(decodedText, encoding);
@@ -333,7 +327,7 @@ function BinWriteFunctions() {
 
   this.flags = function(flagsDict, kwargs) {
     var inverseAnnotation = inverseDict(kwargs.annotation),
-        prefixLen = 'flag_'.length,
+        prefixLen = "flag_".length,
         values = 0x00,
         key;
 
@@ -352,9 +346,9 @@ function BinWriteFunctions() {
 }
 
 module.exports = {
-  'BinReadFunctions': BinReadFunctions,
-  'BinWriteFunctions': BinWriteFunctions,
-  'hex': hex,
-  'pad': pad,
-  'operators': operators
+  "BinReadFunctions": BinReadFunctions,
+  "BinWriteFunctions": BinWriteFunctions,
+  "hex": hex,
+  "pad": pad,
+  "operators": operators
 };

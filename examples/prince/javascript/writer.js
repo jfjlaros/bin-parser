@@ -19,8 +19,10 @@ function main() {
   process.stdout.write(parser.data);
 }
 
-// Wait for the stdout buffer to drain, see
-// https://github.com/eslint/eslint/issues/317
+/*
+ * Wait for the stdout buffer to drain, see
+ * https://github.com/eslint/eslint/issues/317
+ */
 process.on('exit', function() {
   process.reallyExit(main());
 });

@@ -1,38 +1,34 @@
-'use strict';
+"use strict";
 
-/*
-General binary file parser.
+/* General binary file parser. */
 
-(C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
-*/
+var Buffer = require("buffer-extend-split");
 
-var Buffer = require('buffer-extend-split');
+var Functions = require("./functions");
 
-var Functions = require('./functions');
-
-/*
-Get the first value in an object.
-
-:arg object object: An object.
-
-:returns object: The first value encountered in an object.
-*/
+/**
+ * Get the first value in an object.
+ *
+ * @arg {Object} object - An object.
+ *
+ * @return {Object} - The first value encountered in an object.
+ */
 function getOneValue(object) {
   return object[Object.keys(object)[0]];
 }
 
-/*
-Update an object with the properties of an other object.
-
-:arg object target: Target object.
-:arg object source: Source object.
-*/
+/**
+ * Update an object with the properties of an other object.
+ *
+ * @arg {Object} target - Target object.
+ * @arg {Object} source - Source object.
+ */
 function deepUpdate(target, source) {
   var key;
 
   for (key in source) {
-    if (key in target && typeof(target[key]) === 'object' &&
-        typeof(source[key]) === 'object') {
+    if (key in target && typeof(target[key]) === "object" &&
+        typeof(source[key]) === "object") {
       deepUpdate(target[key], source[key]);
     }
     else {
@@ -41,14 +37,14 @@ function deepUpdate(target, source) {
   }
 }
 
-/*
-Pop an item from an object.
-
-:arg object object: An object.
-:arg str key: Name of an item.
-
-:returns object: The desired item.
-*/
+/**
+ * Pop an item from an object.
+ *
+ * @arg {Object} object - An object.
+ * @arg {string} key - Name of an item.
+ *
+ * @return {Object} - The desired item.
+ */
 function pop(object, key) {
   var result = object[key];
 
@@ -60,14 +56,14 @@ function numerical(a, b) {
   return a - b;
 }
 
-/*
-Strip trailing characters.
-
-:arg Buffer buf: A buffer.
-:arg byte chr: A character.
-
-:returns Buffer: `buf` without trailing characters.
-*/
+/**
+ * Strip trailing characters.
+ *
+ * @arg {Buffer} buf - A buffer.
+ * @arg {string} chr - A character.
+ *
+ * @return {Buffer} - `buf` without trailing characters.
+ */
 function rstrip(buf, chr) {
   var index = buf.length;
 
@@ -78,29 +74,29 @@ function rstrip(buf, chr) {
   return buf.slice(0, index);
 }
 
-/*
-General binary file parser.
-
-:arg dict structure: The structure definition.
-:arg dict types: The types definition.
-:arg object functions: Object containing parsing or encoding functions.
-:arg int kwargs.debug: Debugging level.
-:arg stream kwargs.log: Debug stream to write to.
-*/
+/**
+ * General binary file parser.
+ *
+ * @arg {Object} structure - The structure definition.
+ * @arg {Object} types - The types definition.
+ * @arg {Object} functions - Object containing parsing or encoding functions.
+ * @arg {number} kwargs.debug - Debugging level.
+ * @arg {Object} kwargs.log - Debug stream to write to.
+ */
 function BinParser(structure, types, functions, kwargs) {
   var typesData = types || {};
 
-  /*
-  Resolve the value of a variable.
-
-  First look in the cache to see if `name` is defined, then check the set
-  of constants. If nothing can be found, the variable is considered to be
-  a literal.
-
-  :arg any name: The name or value of a variable.
-
-  :returns any: The resolved value.
-  */
+  /**
+   * Resolve the value of a variable.
+   *
+   * First look in the cache to see if `name` is defined, then check the set of
+   * constants. If nothing can be found, the variable is considered to be a
+   * literal.
+   *
+   * @arg {} name - The name or value of a variable.
+   *
+   * @return {} - The resolved value.
+   */
   this.getValue = function(name) {
     if (this.internal[name] !== undefined) {
       return this.internal[name];
@@ -111,18 +107,18 @@ function BinParser(structure, types, functions, kwargs) {
     return name;
   };
 
-  /*
-  Resolve the value of a member variable.
-
-  First see if the variable is defined in `item`, then check the type
-  definition and lastly check the defaults.
-
-  :arg object item: Data structure.
-  :arg str dtype: Name of the data type.
-  :arg str name: The name of the variable.
-
-  :returns any: The resolved value.
-  */
+  /**
+   * Resolve the value of a member variable.
+   *
+   * First see if the variable is defined in `item`, then check the type
+   * definition and lastly check the defaults.
+   *
+   * @arg {Object} item - Data structure.
+   * @arg {string} dtype - Name of the data type.
+   * @arg {string} name - The name of the variable.
+   *
+   * @return {} - The resolved value.
+   */
   this.getDefault = function(item, dtype, name) {
     if (item[name] !== undefined) {
       return item[name];
@@ -137,23 +133,23 @@ function BinParser(structure, types, functions, kwargs) {
     return undefined;
   };
 
-  /*
-  Determine what to read and how to interpret what was read.
-
-  First resolve the `delimiter` and `size`. If none are given, assume we
-  read one byte. Then resolve the function that will interpret the data
-  (either delimited or fixed size).
-
-  :arg object item: Data structure.
-  :arg str dtype: Name of the data type.
-
-  :returns tuple: (`delim`, `size`, `trim`, `order`, `func`, `kwargs`).
-  */
+  /**
+   * Determine what to read and how to interpret what was read.
+   *
+   * First resolve the `delimiter` and `size`. If none are given, assume we
+   * read one byte. Then resolve the function that will interpret the data
+   * (either delimited or fixed size).
+   *
+   * @arg {Object} item - Data structure.
+   * @arg {string} dtype - Name of the data type.
+   *
+   * @return {Array} - (`delim`, `size`, `trim`, `order`, `func`, `kwargs`).
+   */
   this.getFunction = function(item, dtype) {
-    var delim = this.getDefault(item, dtype, 'delimiter'),
-        size = this.getValue(this.getDefault(item, dtype, 'size')),
-        trim = this.getDefault(item, dtype, 'trim'),
-        order = this.getDefault(item, dtype, 'order'),
+    var delim = this.getDefault(item, dtype, "delimiter"),
+        size = this.getValue(this.getDefault(item, dtype, "size")),
+        trim = this.getDefault(item, dtype, "trim"),
+        order = this.getDefault(item, dtype, "order"),
         func = dtype,
         kwargs = {};
 
@@ -162,32 +158,31 @@ function BinParser(structure, types, functions, kwargs) {
     }
 
     // Determine the function and its arguments.
-    if ('function' in this.types[dtype]) {
-      if ('name' in this.types[dtype].function) {
+    if ("function" in this.types[dtype]) {
+      if ("name" in this.types[dtype].function) {
         func = this.types[dtype].function.name;
       }
-      if ('args' in this.types[dtype].function) {
+      if ("args" in this.types[dtype].function) {
         kwargs = this.types[dtype].function.args;
       }
     }
     return [delim, size, trim, order, func, kwargs];
   };
 
-  /*
-  Evaluate an expression.
-
-  An expression is represented by an object with the following
-  structure:
-
-      expression = {
-          'operator': '',
-          'operands': []
-      }
-
-  :arg object expression: An expression.
-
-  :returns any: Result of the evaluation.
-  */
+  /**
+   * Evaluate an expression.
+   *
+   * An expression is represented by an object with the following structure:
+   *
+   *     expression = {
+   *         "operator": "",
+   *         "operands": []
+   *     }
+   *
+   * @arg {Object} expression - An expression.
+   *
+   * @returns {} - Result of the evaluation.
+   */
   this.evaluate = function(expression) {
     var operands = [],
         index;
@@ -202,29 +197,25 @@ function BinParser(structure, types, functions, kwargs) {
     return Functions.operators[expression.operator].apply(this, operands);
   };
 
-  /*
-  Write additional debugging information to the log.
-  */
+  /* Write additional debugging information to the log. */
   this._logDebugInfo = function() {
     var item;
 
 
     if (this.debug & 0x01) {
       if (this.debug & 0x02) {
-        this.log.write('\n\n');
+        this.log.write("\n\n");
       }
-      this.log.write('--- INTERNAL VARIABLES ---\n\n');
+      this.log.write("--- INTERNAL VARIABLES ---\n\n");
       for (item in this.internal) {
-        this.log.write(item + ': ' + this.internal[item] + '\n');
+        this.log.write(item + ": " + this.internal[item] + "\n");
       }
     }
 
-    this.log.write('\n\n--- DEBUG INFO ---\n\n');
+    this.log.write("\n\n--- DEBUG INFO ---\n\n");
   };
 
-  /*
-  Initialisation.
-  */
+  /* Initialisation. */
   this.internal = {};
 
   this.debug = kwargs.debug || 0;
@@ -234,19 +225,19 @@ function BinParser(structure, types, functions, kwargs) {
 
   this.constants = {};
   this.defaults = {
-    'delimiter': [],
-    'name': '',
-    'size': 0,
-    'trim': undefined,
-    'order': 1,
-    'type': 'text',
-    'unknown_destination': '__raw__',
-    'unknown_function': 'raw'
+    "delimiter": [],
+    "name": "",
+    "size": 0,
+    "trim": undefined,
+    "order": 1,
+    "type": "text",
+    "unknown_destination": "__raw__",
+    "unknown_function": "raw"
   };
   this.types = {
-    'int': {},
-    'raw': {},
-    'text': {}
+    "int": {},
+    "raw": {},
+    "text": {}
   };
 
   if (typesData.constants) {
@@ -262,44 +253,44 @@ function BinParser(structure, types, functions, kwargs) {
   this.structure = structure;
 
   if (this.debug & 0x02) {
-    this.log.write('--- PARSING DETAILS ---\n\n');
+    this.log.write("--- PARSING DETAILS ---\n\n");
   }
 }
 
-/*
-General binary file reader.
-
-:arg stream data: Content of a binary file.
-:arg dict structure: The structure definition.
-:arg dict types: The types definition.
-:arg object kwargs.functions: Object containing parsing functions.
-:arg bool kwargs.prune: Remove all unknown data fields from the output.
-:arg int kwargs.debug: Debugging level.
-:arg stream kwargs.log: Debug stream to write to.
-*/
+/**
+ * General binary file reader.
+ *
+ * @arg {Object} data - Content of a binary file.
+ * @arg {Object} structure - The structure definition.
+ * @arg {Object} types - The types definition.
+ * @arg {Object} kwargs.functions - Object containing parsing functions.
+ * @arg {Boolean} kwargs.prune - Remove all unknown data fields from the output.
+ * @arg {number} kwargs.debug - Debugging level.
+ * @arg {Object} kwargs.log - Debug stream to write to.
+ */
 function BinReader(data, structure, types, kwargs) {
   var prune = kwargs.prune || false,
       offset = 0,
       rawByteCount = 0;
 
-  /*
-  Extract a field from {data} using either a fixed size, or a delimiter. After
-  reading, {offset} is set to the next field.
-
-  :arg int size: Size of fixed size field.
-  :arg list(char) delimiter: Delimiter for variable sized fields.
-  :arg byte trim: Padding character.
-  :arg int order: Byte order.
-
-  :return str: Content of the requested field.
-  */
+  /**
+   * Extract a field from {data} using either a fixed size, or a delimiter.
+   * After reading, {offset} is set to the next field.
+   *
+   * @arg {number} size - Size of fixed size field.
+   * @arg {Array} delimiter - Delimiter for variable sized fields.
+   * @arg {string} trim - Padding character.
+   * @arg {number} order - Byte order.
+   *
+   * @return {string} - Content of the requested field.
+   */
   this.getField = function(size, delimiter, trim, order) {
     var field,
         extracted,
         separator;
 
     if (offset >= this.data.length) {
-      throw('StopIteration');
+      throw("StopIteration");
     }
 
     separator = String.fromCharCode.apply(this, delimiter);
@@ -330,9 +321,9 @@ function BinReader(data, structure, types, kwargs) {
     }
 
     if (this.debug & 0x02) {
-      this.log.write('0x' + Functions.pad(Functions.hex(offset), 6) + ': ')
+      this.log.write("0x" + Functions.pad(Functions.hex(offset), 6) + ": ")
       if (size) {
-        this.log.write(this.functions.raw(field) + ' (' + size + ')');
+        this.log.write(this.functions.raw(field) + " (" + size + ")");
       }
       else {
         this.log.write(field);
@@ -343,14 +334,14 @@ function BinReader(data, structure, types, kwargs) {
     return field;
   };
 
-  /*
-  Parse a primitive data type.
-
-  :arg object item: Data structure.
-  :arg str dtype: Data type.
-  :arg object dest: Destination object.
-  :arg str name: Field name used in the destination dictionary.
-  */
+  /**
+   * Parse a primitive data type.
+   *
+   * @arg {Object} item - Data structure.
+   * @arg {string} dtype - Data type.
+   * @arg {Object} dest - Destination object.
+   * @arg {string} name - Field name used in the destination dictionary.
+   */
   this.parsePrimitive = function(item, dtype, dest, name) {
     var delim,
         func,
@@ -365,7 +356,7 @@ function BinReader(data, structure, types, kwargs) {
 
     // Read and process the data.
     if (!name) {
-      dtype = this.getDefault(item, '', 'unknown_function');
+      dtype = this.getDefault(item, "", "unknown_function");
     }
     temp = this.getFunction(item, dtype);
     delim = temp[0];
@@ -393,7 +384,7 @@ function BinReader(data, structure, types, kwargs) {
     else {
       // Stow unknown data away in a list.
       if (!prune) {
-        unknownDest = this.getDefault(item, dtype, 'unknown_destination');
+        unknownDest = this.getDefault(item, dtype, "unknown_destination");
         if (!(unknownDest in dest)) {
           dest[unknownDest] = [];
         }
@@ -403,13 +394,13 @@ function BinReader(data, structure, types, kwargs) {
     }
   };
 
-  /*
-  Parse a for loop.
-
-  :arg object item: Data structure.
-  :arg object dest: Destination object.
-  :arg str name: Field name used in the destination dictionary.
-  */
+  /**
+   * Parse a for loop.
+   *
+   * @arg {Object} item - Data structure.
+   * @arg {Object} dest - Destination object.
+   * @arg {string} name - Field name used in the destination dictionary.
+   */
   this.parseFor = function(item, dest, name) {
     var length = item.for,
         structureDict,
@@ -426,13 +417,13 @@ function BinReader(data, structure, types, kwargs) {
     }
   };
 
-  /*
-  Parse a do-while loop.
-
-  :arg object item: Data structure.
-  :arg object dest: Destination object.
-  :arg str name: Field name used in the destination dictionary.
-  */
+  /**
+   * Parse a do-while loop.
+   *
+   * @arg {Object} item - Data structure.
+   * @arg {Object} dest - Destination object.
+   * @arg {string} name - Field name used in the destination dictionary.
+   */
   this.parseDoWhile = function(item, dest, name) {
     var structureDict;
 
@@ -446,13 +437,13 @@ function BinReader(data, structure, types, kwargs) {
     }
   };
 
-  /*
-  Parse a while loop.
-
-  :arg object item: Data structure.
-  :arg object dest: Destination object.
-  :arg str name: Field name used in the destination dictionary.
-  */
+  /**
+   * Parse a while loop.
+   *
+   * @arg {Object} item - Data structure.
+   * @arg {Object} dest - Destination object.
+   * @arg {string} name - Field name used in the destination dictionary.
+   */
   this.parseWhile = function(item, dest, name) {
     var delim = item.structure[0];
 
@@ -469,12 +460,12 @@ function BinReader(data, structure, types, kwargs) {
     dest[item.while.term] = getOneValue(dest[name].pop(-1));
   };
 
-  /*
-  Parse a binary file.
-
-  :arg object structure: Structure of the binary file.
-  :arg object dest: Destination object.
-  */
+  /**
+   * Parse a binary file.
+   *
+   * @arg {Object} structure - Structure of the binary file.
+   * @arg {Object} dest - Destination object.
+   */
   this.parse = function(structure, dest) {
     var item,
         name,
@@ -491,8 +482,8 @@ function BinReader(data, structure, types, kwargs) {
         }
       }
 
-      dtype = this.getDefault(item, '', 'type');
-      name = this.getDefault(item, dtype, 'name');
+      dtype = this.getDefault(item, "", "type");
+      name = this.getDefault(item, dtype, "name");
 
       if (!item.structure) {
         // Primitive data types.
@@ -501,7 +492,7 @@ function BinReader(data, structure, types, kwargs) {
       else {
         // Nested structures.
         if (this.debug & 0x02) {
-          this.log.write('-- ' + name + '\n');
+          this.log.write("-- " + name + "\n");
         }
 
         if (!dest[name]) {
@@ -527,14 +518,12 @@ function BinReader(data, structure, types, kwargs) {
         }
       }
       if (this.debug & 0x02) {
-        this.log.write(' --> ' + name + '\n');
+        this.log.write(" --> " + name + "\n");
       }
     }
   };
 
-  /*
-  Write additional debugging information to the log.
-  */
+  /* Write additional debugging information to the log. */
   this.logDebugInfo = function() {
     var parsed;
 
@@ -543,15 +532,13 @@ function BinReader(data, structure, types, kwargs) {
     parsed = this.data.length - rawByteCount;
 
     this.log.write(
-      'Reached byte ' + offset + ' out of ' + this.data.length + '.\n');
+      "Reached byte " + offset + " out of " + this.data.length + ".\n");
     this.log.write(
-      parsed + ' bytes parsed (' +
-      Math.round(parsed * 100 / this.data.length) + ').\n');
+      parsed + " bytes parsed (" +
+      Math.round(parsed * 100 / this.data.length) + ").\n");
   };
 
-  /*
-  Initialisation.
-  */
+  /* Initialisation. */
   BinParser.call(
     this, structure, types,
     kwargs.functions || new Functions.BinReadFunctions(), kwargs);
@@ -563,32 +550,32 @@ function BinReader(data, structure, types, kwargs) {
     this.parse(this.structure, this.parsed);
   }
   catch(err) {
-    if (err !== 'StopIteration') {
+    if (err !== "StopIteration") {
       throw(err);
     }
   }
 }
 
-/*
-General binary file writer.
-
-:arg dict parsed: Parsed representation of a binary file.
-:arg dict structure: The structure definition.
-:arg dict types: The types definition.
-:arg object kwargs.functions: Object containing parsing functions.
-:arg int kwargs.debug: Debugging level.
-:arg stream kwargs.log: Debug stream to write to.
-*/
+/**
+ * General binary file writer.
+ *
+ * @arg {Object} parsed - Parsed representation of a binary file.
+ * @arg {Object} structure - The structure definition.
+ * @arg {Object} types - The types definition.
+ * @arg {Object} kwargs.functions - Object containing parsing functions.
+ * @arg {number} kwargs.debug - Debugging level.
+ * @arg {Object} kwargs.log - Debug stream to write to.
+ */
 function BinWriter(parsed, structure, types, kwargs) {
-  /*
-  Append a field to {this.data} using either a fixed size, or a delimiter.
-
-  :arg int data: The content of the field.
-  :arg int size: Size of fixed size field.
-  :arg list(char) delimiter: Delimiter for variable sized fields.
-  :arg byte trim: Padding character.
-  :arg int order: Byte order.
-  */
+  /**
+   * Append a field to {this.data} using either a fixed size, or a delimiter.
+   *
+   * @arg {number} data - The content of the field.
+   * @arg {number} size - Size of fixed size field.
+   * @arg {Array} delimiter - Delimiter for variable sized fields.
+   * @arg {string} trim - Padding character.
+   * @arg {number} order - Byte order.
+   */
   this.setField = function(data, size, delimiter, trim, order) {
     var field = data,
         index;
@@ -618,14 +605,14 @@ function BinWriter(parsed, structure, types, kwargs) {
     this.data = Buffer.concat([this.data, new Buffer(field)]);
   };
 
-  /*
-  Encode a primitive data type.
-
-  :arg dict item: Data structure.
-  :arg str dtype: Data type.
-  :arg unknown value: Value to be stored.
-  :arg str name: Field name used in the destination dictionary.
-  */
+  /**
+   * Encode a primitive data type.
+   *
+   * @arg {Object} item - Data structure.
+   * @arg {string} dtype - Data type.
+   * @arg {} value - Value to be stored.
+   * @arg {string} name - Field name used in the destination dictionary.
+   */
   this.encodePrimitive = function(item, dtype, value, name) {
     var temp = this.getFunction(item, dtype),
         delim = temp[0],
@@ -650,13 +637,13 @@ function BinWriter(parsed, structure, types, kwargs) {
       this.functions[func](value, kwargs), size, delim, trim, order);
   };
 
-  /*
-  Resolve the `term` field in the `while` structure.
-
-  :arg dict item: Data structure.
-
-  :returns dict: Item that `term` points to.
-  */
+  /**
+   * Resolve the `term` field in the `while` structure.
+   *
+   * @arg {Object} item - Data structure.
+   *
+   * @return {Object} - Item that `term` points to.
+   */
   this.getItem = function(item) {
     var operand,
         i,
@@ -672,12 +659,12 @@ function BinWriter(parsed, structure, types, kwargs) {
     return undefined;
   };
 
-  /*
-  Encode to a binary file.
-
-  :arg dict structure: Structure of the binary file.
-  :arg dict source: Source dictionary.
-  */
+  /**
+   * Encode to a binary file.
+   *
+   * @arg {Object} structure - Structure of the binary file.
+   * @arg {Object} source - Source dictionary.
+   */
   this.encode = function(structure, source) {
     var rawCounter = 0,
         item,
@@ -699,14 +686,14 @@ function BinWriter(parsed, structure, types, kwargs) {
         }
       }
 
-      dtype = this.getDefault(item, '', 'type');
-      name = this.getDefault(item, dtype, 'name');
+      dtype = this.getDefault(item, "", "type");
+      name = this.getDefault(item, dtype, "name");
 
       if (!name) {
         // NOTE: Not sure if this is correct.
-        dtype = this.getDefault(item, dtype, 'unknown_function');
+        dtype = this.getDefault(item, dtype, "unknown_function");
         value = source[this.getDefault(
-          item, dtype, 'unknown_destination')][rawCounter];
+          item, dtype, "unknown_destination")][rawCounter];
         rawCounter++;
       }
       else {
@@ -717,15 +704,15 @@ function BinWriter(parsed, structure, types, kwargs) {
         // Primitive data types.
         if (this.debug & 0x02) {
           this.log.write(
-            '0x' + Functions.pad(Functions.hex(this.data.length), 6) + ': ' +
-            name + ' --> ' + value + '\n');
+            "0x" + Functions.pad(Functions.hex(this.data.length), 6) + ": " +
+            name + " --> " + value + "\n");
         }
         this.encodePrimitive(item, dtype, value, name);
       }
       else {
         // Nested structures.
         if (this.debug & 0x02) {
-          this.log.write('-- ' + name + '\n');
+          this.log.write("-- " + name + "\n");
         }
         if (item.for || item.do_while || item.while) {
           for (j = 0; j < value.length; j++) {
@@ -742,7 +729,7 @@ function BinWriter(parsed, structure, types, kwargs) {
           this.encode(item.structure, value);
         }
         if (this.debug & 0x02) {
-          this.log.write(' --> ' + name + '\n');
+          this.log.write(" --> " + name + "\n");
         }
       }
     }
@@ -751,12 +738,10 @@ function BinWriter(parsed, structure, types, kwargs) {
   this.logDebugInfo = function() {
     this._logDebugInfo();
 
-    this.log.write(this.data.length + ' bytes written.\n');
+    this.log.write(this.data.length + " bytes written.\n");
   };
 
-  /*
-  Initialisation.
-  */
+  /* Initialisation. */
   BinParser.call(
     this, structure, types,
     kwargs.functions || new Functions.BinWriteFunctions(), kwargs);
@@ -768,10 +753,10 @@ function BinWriter(parsed, structure, types, kwargs) {
 }
 
 module.exports = {
-  'BinReader': BinReader,
-  'BinWriter': BinWriter,
-  'deepUpdate': deepUpdate,
-  'pop': pop,
-  'numerical': numerical,
-  'getOneValue': getOneValue
+  "BinReader": BinReader,
+  "BinWriter": BinWriter,
+  "deepUpdate": deepUpdate,
+  "pop": pop,
+  "numerical": numerical,
+  "getOneValue": getOneValue
 };
