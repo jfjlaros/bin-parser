@@ -10,12 +10,11 @@ practical purposes the structure is separated from the types, this way multiple
 file formats using the same types (within one project for example) can be
 easily supported without much duplication.
 
-The design of the library is such that all operations can be reversed. This is
-fully implemented in the Python version of the library. This means that fully
-functional binary editing is possible using this implementation; first use the
-reader to convert a binary file to a serialised dictionary representation, this
-representation is easily edited using a text editor, and then use the writer to
-convert back to binary.
+The design of the library is such that all operations can be reversed. This
+means that fully functional binary editing is possible using this
+implementation; first use the reader to convert a binary file to a serialised
+dictionary representation, this representation is easily edited using a text
+editor, and then use the writer to convert back to binary.
 
 This idea is implemented in two languages; Python and JavaScript. All main
 development is done in Python. We chose YAML as our preferred serialised

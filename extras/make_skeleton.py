@@ -1,7 +1,10 @@
-#!/usr/bin/env python
-"""
-Use an example file and a delimiter to extract a rudimentary structure and a
+"""Use an example file and a delimiter to extract a rudimentary structure and a
 types definition.
+
+
+(C) 2015 Jeroen F.J. Laros <J.F.J.Laros@lumc.nl>
+
+Licensed under the MIT license, see the LICENSE file.
 """
 import argparse
 import yaml
@@ -20,8 +23,7 @@ def hex_int(string):
 
 
 def make_structure(data, delimiter):
-    """
-    Split the input data and extract a rudimentary structure.
+    """Split the input data and extract a rudimentary structure.
 
     :arg str data: The input data.
     :arg list(int) delimiter: The delimiter to split {data}.
@@ -31,8 +33,7 @@ def make_structure(data, delimiter):
     for index in range(len(data.split(''.join(map(chr, delimiter))))):
         structure.append({
             'name': 'field_{:06d}'.format(index),
-            'type': 'raw'
-        })
+            'type': 'raw'})
 
     return structure
 
@@ -43,24 +44,18 @@ def make_types(delimiter):
             'raw': {
                 'delimiter': map(HexInt, delimiter),
                 'function': {
-                    'name': 'raw'
-                }
-            },
+                    'name': 'raw'}},
             'text': {
-                'delimiter': map(HexInt, delimiter)
-            }
-        }
-    }
+                'delimiter': map(HexInt, delimiter)}}}
 
 
 def make_skeleton(input_handle, structure_handle, types_handle, delimiter):
-    """
-    Use an example file and a delimiter to extract a rudimentary structure and
-    a types definition.
+    """Use an example file and a delimiter to extract a rudimentary structure
+    and a types definition.
 
-    :arg stream input_handle:
-    :arg stream structure_handle:
-    :arg stream types_handle:
+    :arg stream input_handle: Open readable handle to a binary input file.
+    :arg stream structure_handle: Open writeable handle to the structure file.
+    :arg stream types_handle: Open writeable handle to the types file.
     :arg list(int) delimiter: The delimiter.
     """
     yaml.add_representer(HexInt, representer)
@@ -77,11 +72,9 @@ def make_skeleton(input_handle, structure_handle, types_handle, delimiter):
 
 
 def main():
-    """
-    Main entry point.
-    """
-    parser = argparse.ArgumentParser(
-        description=__doc__.split('\n\n')[0],
+    """Main entry point."""
+    usage = __doc__.split('\n\n\n')
+    parser = argparse.ArgumentParser(description=usage[0], epilog=usage[1],
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument(
@@ -95,6 +88,7 @@ def main():
         help='types definition file')
     parser.add_argument(
         '-d', dest='delimiter', type=hex_int, action='append', default=[],
+        required=True,
         help='delimiter (use multiple times for multi byte delimiters)')
 
     args = parser.parse_args()
