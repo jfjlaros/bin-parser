@@ -516,8 +516,8 @@ console.log(parser.parsed.name);
 
 
 ## Defining new types
-See `examples/prince/` for a working example of a reader and a writer in both
-Python and JavaScript.
+See [Prince](examples/prince/) for a working example of a reader and a writer
+in both Python and JavaScript.
 
 ### Python
 Types can be added by subclassing the `BinReadFunctions` class. Suppose we need
@@ -573,11 +573,145 @@ var parser = new BinParser.BinReader(
 
 
 ## Extras
+### `make_skeleton`
+To facilitate the development of support for a new file type, the
+`make_skeleton` command can be used to generate a working definition. It takes
+an example file and a delimiter as input and outputs a structure and types
+files definition. The input files is scanned for every occurrence of the
+delimiter and creates a field of type `raw` for the preceding bytes. All fields
+are treated as delimited variable length strings that are processed by the
+`raw` function, any fixed sized fields are appended to the start of these
+strings.
 
-    make_skeleton -d 0x0d input.bin structure.yml types.yml
-    bin_parser read -d 2 input.bin structure.yml types.yml output.yml 2>&1 | \
+#### Example
+Suppose we know that the string delimiter in our [balance](examples/balance)
+example is `0x00`. We can create a stub for the structure and types definitions
+as follows:
+
+    make_skeleton -d 0x00 balance.dat structure.yml types.yml
+
+The `-d` parameter can be used multiple times for multi-byte delimiters.
+
+This will generate the following types definition
+
+```yaml
+---
+types:
+  raw:
+    delimiter:
+    - 0x00
+    function:
+      name: raw
+  text:
+    delimiter:
+    - 0x00
+```
+
+and the following structure definition.
+
+```yaml
+---
+- name: field_000000
+  type: raw
+- name: field_000001
+  type: raw
+```
+
+The performance of these generated definitions can be assessed by using the
+binary parser in debug mode:
+
+    bin_parser read -d 2 balance.dat structure.yml types.yml output.yml 2>&1 | \
       less
 
-and in an other terminal:
+Resulting in the following output:
 
-    less output.yml
+    0x000000: <CF>^GJohn Doe --> field_000000
+    0x00000b: <8A>^L --> field_000001
+
+We see that the first field has two extra bytes preceding the text field. This
+indicates that one or more fields need to be added to the start of the
+structure definition. If we also know that in this file format only strings and
+16-bit integers are used, we can change the definitions as follows:
+
+We add a type for parsing 16-bit integers
+
+```yaml
+---
+types:
+  short:
+    size: 2
+    function:
+      name: struct
+      args:
+        fmt: '<h'
+  text:
+    delimiter:
+      - 0x00
+```
+
+and we change the structure to reflect the newly found integers.
+
+```yaml
+---
+- name: number_1
+  type: short
+- name: name
+  type: text
+- name: number_2
+  type: short
+```
+
+By iterating this process, the reverse engineering of this particular file
+format is greatly simplified.
+
+### `compare_yaml`
+Since YAML files are serialised dictionaries or JavaScript objects, the order
+of the keys is not fixed. Also, differences in indentation, line wrapping and
+other formatting differences can lead to false positive classification of
+differences when using rudimentary tools like `diff`.
+
+`compare_yaml` takes two YAML files as input and outputs differences in the
+content of these files:
+
+    compare_yaml input_1.yaml input_2.yaml
+
+The program recursively compares the contents of dictionaries, lists and
+values. The following differences are reported:
+
+- Missing keys at any level.
+- Lists of unequal size.
+- Differences in values.
+
+When a difference is detected, no further recursive comparison attempted, so
+the reported differences are not guaranteed to be complete. Conversely, if no
+differences are reported, then the YAML files are guaranteed to have the same
+content.
+
+### `test.sh`
+To keep the Python- and JavaScript implementations in sync, we use a shell
+script that compares the output of both the parser and the writer for various
+examples.
+
+    bash extras/test.sh
+
+This will perform a parser test and an invariant test for all examples.
+
+#### Parser test
+Run the Python- and JavaScript implementation to convert from binary to YAML
+and use `compare_yaml` to check for any differences.
+
+#### Invariant test
+This test performs the following:
+
+1. Use the Python implementation to convert from binary to YAML.
+2. Use the Python implementation to convert the output of step 1 back to
+   binary.
+3. Use the JavaScript implementation to convert the output of step 1 back to
+   binary.
+4. Use the Python implementation to convert the output of step 2 to YAML.
+
+We then compare the output of step 1 and 4 using `compare_yaml` to assure that
+the generated YAML is invariant under conversion to binary and back in the
+Python implementation. The two generated binary files in step 2 and 3 are
+compared with `diff` to confirm that the Python- and JavaScript implementations
+behave identically.
