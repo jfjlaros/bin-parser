@@ -660,8 +660,8 @@ and we change the structure to enable parsing of the newly found integers:
   type: short
 ```
 
-By iterating this process, the reverse engineering of this particular file
-format is greatly simplified.
+By iterating this process, reverse engineering of these types of file formats
+is greatly simplified.
 
 ### `compare_yaml`
 Since YAML files are serialised dictionaries or JavaScript objects, the order
