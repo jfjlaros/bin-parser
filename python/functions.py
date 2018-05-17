@@ -85,6 +85,7 @@ class BinReadFunctions(object):
 
         :returns int: Integer representation of {data}
         """
+        # TODO: Depricated, remove.
         deprication_warning('int')
         return reduce(
             lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
@@ -96,10 +97,13 @@ class BinReadFunctions(object):
 
         :returns float: Float representation of {data}.
         """
+        # TODO: Depricated, remove.
         deprication_warning('float')
         return struct.unpack('>f', data)[0]
 
     def colour(self, data):
+        # TODO: Depricated, remove.
+        deprication_warning('colour')
         return '0x{:06x}'.format(self.int(data))
 
     def text(self, data, split=[], encoding='utf-8'):
@@ -128,6 +132,8 @@ class BinReadFunctions(object):
 
         :returns str: Date in format '%Y%j', 'defined' or 'unknown'.
         """
+        # TODO: Depricated, remove.
+        deprication_warning('date')
         date_int = self.int(data)
 
         if date_int in annotation:
@@ -142,6 +148,8 @@ class BinReadFunctions(object):
 
         :returns str: Annotated representation of {data}.
         """
+        # TODO: Depricated, remove.
+        deprication_warning('map')
         index = ord(data)
 
         if index in annotation:
@@ -159,7 +167,7 @@ class BinReadFunctions(object):
 
         :returns dict: Dictionary of flags and their values.
         """
-        bitfield = self.int(data)
+        bitfield = ord(data)
         flags_dict = {}
 
         for flag in map(lambda x: 2 ** x, range(8)):
@@ -204,6 +212,7 @@ class BinWriteFunctions(object):
         return chr(int('0b{}'.format(bit_string), 2))
 
     def int(self, integer):
+        # TODO: Depricated, remove.
         deprication_warning('int')
         data_int = integer
         result = ''
@@ -215,10 +224,13 @@ class BinWriteFunctions(object):
         return result or chr(0x00)
 
     def float(self, real_number):
+        # TODO: Depricated, remove.
         deprication_warning('float')
         return struct.pack('>f', real_number)
 
     def colour(self, colour_string):
+        # TODO: Depricated, remove.
+        deprication_warning('colour')
         return self.int(int(colour_string, 0x10))
 
     def text(self, text_string, split=[], encoding='utf-8'):
@@ -230,6 +242,8 @@ class BinWriteFunctions(object):
         return decoded_text.encode(encoding)
 
     def date(self, date_int, annotation):
+        # TODO: Depricated, remove.
+        deprication_warning('date')
         inverse_annotation = _inverse_dict(annotation)
 
         if date_int in inverse_annotation:
@@ -237,6 +251,8 @@ class BinWriteFunctions(object):
         return self.int(int(date_int))
 
     def map(self, mapped_string, annotation):
+        # TODO: Depricated, remove.
+        deprication_warning('map')
         inverse_annotation = _inverse_dict(annotation)
 
         if mapped_string in inverse_annotation:
