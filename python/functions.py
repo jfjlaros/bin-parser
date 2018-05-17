@@ -207,9 +207,10 @@ class BinWriteFunctions(object):
         values = 0x00
 
         for key in flags_dict:
-            if key in inverse_annotation:
-                if flags_dict[key]:
+            if flags_dict[key]:
+                if key in inverse_annotation:
                     values += inverse_annotation[key]
-            else:
-                values += int(key[prefix_len:], 0x10)
+                else:
+                    values += int(key[prefix_len:], 0x10)
+
         return chr(values)
