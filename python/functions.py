@@ -27,8 +27,36 @@ def _inverse_dict(dictionary):
 
 class BinReadFunctions(object):
     """Functions for decoding data."""
-    def struct(self, data, fmt='b'):
-        return struct.unpack(fmt, data)[0]
+    def struct(self, data, fmt='b', labels=None, annotation=None):
+        """Decode basic and simple compound data types.
+
+        Primary decoding is controlled with the `fmt` parameter (see
+        https://docs.python.org/2/library/struct.html for more information),
+        which yields a list of values. These values are optionally substituted
+        using `annotation` as a substitution scheme.
+        If the list has only one element, this element is returned,
+        If `labels` is defined, a set of key-value pairs is returned, the bare
+        list is returned otherwise.
+
+        :arg str data: Input data.
+        :arg str fmt: Format characters.
+        :arg list labels: Labels for the decoded data units.
+        :arg dict annotation: Names for special cases.
+
+        :returns any: Decoded data.
+        """
+        decoded = list(struct.unpack(fmt, data))
+
+        if annotation:
+            for index, value in enumerate(decoded):
+                if value in annotation:
+                    decoded[index] = annotation[value]
+
+        if len(decoded) > 1:
+            if labels:
+                return dict(zip(labels, decoded))
+            return list(decoded)
+        return decoded[0]
 
     def raw(self, data):
         """Encode a string in hexadecimal, grouped by byte.
@@ -152,8 +180,22 @@ class BinWriteFunctions(object):
     Every decoding function in the BinReadFunctions class has a counterpart for
     encoding. Documentation of these functions is omitted.
     """
-    def struct(self, data, fmt='b'):
-        return struct.pack(fmt, data)
+    def struct(self, data, fmt='b', labels=None, annotation=None):
+        if type(data) == dict:
+            data_list = map(lambda x: data[x], labels)
+        elif type(data) == list:
+            data_list = data
+        else:
+            data_list = [data]
+
+        if annotation:
+            inverse_annotation = _inverse_dict(annotation)
+
+            for index, value in enumerate(data_list):
+                if value in inverse_annotation:
+                    data_list[index] = inverse_annotation[value]
+
+        return struct.pack(fmt, *data_list)
 
     def raw(self, hex_string):
         return ''.join(hex_string.split()).decode('hex')
