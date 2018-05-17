@@ -3,9 +3,9 @@
 # Test whether the YAML produced by the JavaScript version equals that of the
 # Python version.
 test_cli() {
-  seed=${RANDOM}
-  py="/tmp/${seed}_py.yml"
-  js="/tmp/${seed}_js.yml"
+  local seed=${RANDOM}
+  local py="/tmp/${seed}_py.yml"
+  local js="/tmp/${seed}_js.yml"
 
   echo "  $1"
   python -m python.cli read $1 $2 $3 $py
@@ -19,11 +19,11 @@ test_cli() {
 # Test whether the generated YAML is invariant under writing to binary and
 # back.
 test_writer() {
-  seed=${RANDOM}
-  yml_1="/tmp/${seed}_1.yml"
-  yml_2="/tmp/${seed}_2.yml"
-  bin_1="/tmp/${seed}_1.bin"
-  bin_2="/tmp/${seed}_2.bin"
+  local seed=${RANDOM}
+  local yml_1="/tmp/${seed}_1.yml"
+  local yml_2="/tmp/${seed}_2.yml"
+  local bin_1="/tmp/${seed}_1.bin"
+  local bin_2="/tmp/${seed}_2.bin"
 
   python -m python.cli read $1 $2 $3 $yml_1
   python -m python.cli write $yml_1 $2 $3 $bin_1
