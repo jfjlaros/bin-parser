@@ -274,7 +274,7 @@ function BinReadFunctions() {
    */
   this.flags = function(data, kwargs) {
     var annotation = kwargs.annotation,
-        bitfield = this.int(data),
+        bitfield = ord(data),
         flagsDict = {},
         flag,
         value;

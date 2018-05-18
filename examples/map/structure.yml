@@ -1,0 +1,5 @@
+---
+- name: choice
+  type: choices
+- name: number
+  type: numbers

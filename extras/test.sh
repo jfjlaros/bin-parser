@@ -58,6 +58,12 @@ test_cli examples/padding/padding.dat examples/padding/structure.yml \
   examples/padding/types.yml
 test_cli examples/order/order.dat examples/order/structure.yml \
   examples/order/types.yml
+test_cli examples/map/map.dat examples/map/structure.yml \
+  examples/map/types.yml
+test_cli examples/flags/flags.dat examples/flags/structure.yml \
+  examples/flags/types.yml
+test_cli examples/colour/colour.dat examples/colour/structure.yml \
+  examples/colour/types.yml
 
 echo
 echo Writer tests:
@@ -81,6 +87,12 @@ test_writer examples/padding/padding.dat examples/padding/structure.yml \
   examples/padding/types.yml
 test_writer examples/order/order.dat examples/order/structure.yml \
   examples/order/types.yml
+test_writer examples/map/map.dat examples/map/structure.yml \
+  examples/map/types.yml
+test_writer examples/flags/flags.dat examples/flags/structure.yml \
+  examples/flags/types.yml
+test_writer examples/colour/colour.dat examples/colour/structure.yml \
+  examples/colour/types.yml
 
 echo
 echo Interface test:

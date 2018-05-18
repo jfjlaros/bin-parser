@@ -1,0 +1,10 @@
+---
+types:
+  bitfield:
+    function:
+      name: flags
+      args:
+        annotation:
+          0x01: bit_one
+          0x02: bit_two
+          0x08: bit_four

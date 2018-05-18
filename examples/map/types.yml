@@ -1,0 +1,20 @@
+---
+types:
+  choices:
+    function:
+      name: struct
+      args:
+        fmt: B
+        annotation:
+          0x00: empty
+          0xff: full
+  numbers:
+    size: 2
+    function:
+      name: struct
+      args:
+        fmt: <H
+        annotation:
+          0x0000: zero
+          0x0102: two hunderd and fifty-eight
+          0xffff: a lot
