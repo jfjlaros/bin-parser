@@ -2,7 +2,7 @@
 import operator
 import struct
 
-from .depricated import deprication_warning
+from .deprecated import deprecation_warning
 
 
 operators = {
@@ -34,9 +34,9 @@ class BinReadFunctions(object):
         https://docs.python.org/2/library/struct.html for more information),
         which yields a list of values. These values are optionally substituted
         using `annotation` as a substitution scheme.
-        If the list has only one element, this element is returned,
-        If `labels` is defined, a set of key-value pairs is returned, the bare
-        list is returned otherwise.
+        If the list has only one element, this element is returned, if `labels`
+        is defined, a set of key-value pairs is returned, the bare list is
+        returned otherwise.
 
         :arg str data: Input data.
         :arg str fmt: Format characters.
@@ -85,8 +85,8 @@ class BinReadFunctions(object):
 
         :returns int: Integer representation of {data}
         """
-        # TODO: Depricated, remove.
-        deprication_warning('int')
+        # TODO: Deprecated, remove.
+        deprecation_warning('int')
         return reduce(
             lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
 
@@ -97,13 +97,13 @@ class BinReadFunctions(object):
 
         :returns float: Float representation of {data}.
         """
-        # TODO: Depricated, remove.
-        deprication_warning('float')
+        # TODO: Deprecated, remove.
+        deprecation_warning('float')
         return struct.unpack('>f', data)[0]
 
     def colour(self, data):
-        # TODO: Depricated, remove.
-        deprication_warning('colour')
+        # TODO: Deprecated, remove.
+        deprecation_warning('colour')
         return '0x{:06x}'.format(self.int(data))
 
     def text(self, data, split=[], encoding='utf-8'):
@@ -132,8 +132,8 @@ class BinReadFunctions(object):
 
         :returns str: Date in format '%Y%j', 'defined' or 'unknown'.
         """
-        # TODO: Depricated, remove.
-        deprication_warning('date')
+        # TODO: Deprecated, remove.
+        deprecation_warning('date')
         date_int = self.int(data)
 
         if date_int in annotation:
@@ -148,8 +148,8 @@ class BinReadFunctions(object):
 
         :returns str: Annotated representation of {data}.
         """
-        # TODO: Depricated, remove.
-        deprication_warning('map')
+        # TODO: Deprecated, remove.
+        deprecation_warning('map')
         index = ord(data)
 
         if index in annotation:
@@ -159,7 +159,7 @@ class BinReadFunctions(object):
     def flags(self, data, annotation):
         """Explode a bitfield into flags.
 
-        Note that if a flag is not annotated and false, it will not be included
+        Note that if a flag is not annotated and False, it will not be included
         in the results.
 
         :arg int data: Bit field.
@@ -212,8 +212,8 @@ class BinWriteFunctions(object):
         return chr(int('0b{}'.format(bit_string), 2))
 
     def int(self, integer):
-        # TODO: Depricated, remove.
-        deprication_warning('int')
+        # TODO: Deprecated, remove.
+        deprecation_warning('int')
         data_int = integer
         result = ''
 
@@ -224,13 +224,13 @@ class BinWriteFunctions(object):
         return result or chr(0x00)
 
     def float(self, real_number):
-        # TODO: Depricated, remove.
-        deprication_warning('float')
+        # TODO: Deprecated, remove.
+        deprecation_warning('float')
         return struct.pack('>f', real_number)
 
     def colour(self, colour_string):
-        # TODO: Depricated, remove.
-        deprication_warning('colour')
+        # TODO: Deprecated, remove.
+        deprecation_warning('colour')
         return self.int(int(colour_string, 0x10))
 
     def text(self, text_string, split=[], encoding='utf-8'):
@@ -242,8 +242,8 @@ class BinWriteFunctions(object):
         return decoded_text.encode(encoding)
 
     def date(self, date_int, annotation):
-        # TODO: Depricated, remove.
-        deprication_warning('date')
+        # TODO: Deprecated, remove.
+        deprecation_warning('date')
         inverse_annotation = _inverse_dict(annotation)
 
         if date_int in inverse_annotation:
@@ -251,8 +251,8 @@ class BinWriteFunctions(object):
         return self.int(int(date_int))
 
     def map(self, mapped_string, annotation):
-        # TODO: Depricated, remove.
-        deprication_warning('map')
+        # TODO: Deprecated, remove.
+        deprecation_warning('map')
         inverse_annotation = _inverse_dict(annotation)
 
         if mapped_string in inverse_annotation:

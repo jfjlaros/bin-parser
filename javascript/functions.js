@@ -6,7 +6,7 @@ var Buffer = require("buffer-extend-split"),
     iconv = require("iconv-lite"),
     struct = require("python-struct");
 
-var depricated = require("./depricated");
+var deprecated = require("./deprecated");
 
 var operators = {
   "not": function(a) { return !a; },
@@ -85,10 +85,52 @@ function convertToHex(data) {
 
 /* Functions for decoding data. */
 function BinReadFunctions() {
+  /**
+   * Decode basic and simple compound data types.
+   *
+   * Primary decoding is controlled with the `fmt` parameter (see
+   * https://docs.python.org/2/library/struct.html for more information),
+   * which yields a list of values. These values are optionally substituted
+   * using `annotation` as a substitution scheme.
+   * If the list has only one element, this element is returned, if `labels`
+   * is defined, a set of key-value pairs is returned, the bare list is
+   * returned otherwise.
+   *
+   * @arg {string} data - Input data.
+   * @arg {string} fmt - Format characters.
+   * @arg {Array} labels - Labels for the decoded data units.
+   * @arg {Object} annotation - Names for special cases.
+   *
+   * @returns {} - Decoded data.
+   */
   this.struct = function(data, kwargs) {
-    var fmt = kwargs.fmt || "b";
+    var fmt = kwargs.fmt || "b",
+        labels = kwargs.labels,
+        annotation = kwargs.annotation,
+        decoded = struct.unpack(fmt, data),
+        kvSet = {},
+        index, value;
 
-    return struct.unpack(fmt, data)[0]
+    if (annotation !== undefined) {
+      for (index = 0; index < decoded.length; index++) {
+        value = decoded[index];
+
+        if (value in annotation) {
+          decoded[index] = annotation[value];
+        }
+      }
+    }
+
+    if (decoded.length > 1) {
+      if (labels !== undefined) {
+        for (index = 0; index < labels.length; index++) {
+          kvSet[labels[index]] = decoded[index];
+        }
+        return kvSet;
+      }
+      return decoded;
+    }
+    return decoded[0];
   };
 
   /**
@@ -125,11 +167,12 @@ function BinReadFunctions() {
    *
    * @return {number} - Integer representation of {data}.
    */
+  // TODO: Deprecated, remove.
   this.int = function(data) {
     var result = 0,
         index;
 
-    depricated.deprication_warning("int");
+    deprecated.deprecationWarning("int");
     for (index = data.length - 1; index >= 0; index--) {
       result = result * 0x100 + data[index];
     }
@@ -144,12 +187,15 @@ function BinReadFunctions() {
    *
    * @return {number} - Float representation of {data}.
    */
+  // TODO: Deprecated, remove.
   this.float = function(data) {
-    depricated.deprication_warning("float");
+    deprecated.deprecationWarning("float");
     return data.readFloatBE();
   };
 
+  // TODO: Deprecated, remove.
   this.colour = function(data) {
+    deprecated.deprecationWarning("colour");
     return "0x" + pad(hex(this.int(data)), 6);
   };
 
@@ -186,10 +232,12 @@ function BinReadFunctions() {
    *
    *  @return {string} - Date in format "%Y%j", "defined" or "unknown".
    */
+  // TODO: Deprecated, remove.
   this.date = function(data, kwargs) {
     var annotation = kwargs.annotation,
         dateInt = this.int(data);
 
+    deprecated.deprecationWarning("date");
     if (dateInt in annotation) {
       return annotation[dateInt];
     }
@@ -204,10 +252,12 @@ function BinReadFunctions() {
    *
    * @return str - Annotated representation of {data}.
    */
+  // TODO: Deprecated, remove.
   this.map = function(data, kwargs) {
     var annotation = kwargs.annotation,
         index = ord(data);
 
+    deprecated.deprecationWarning("map");
     if (index in annotation) {
       return annotation[index];
     }
@@ -225,7 +275,7 @@ function BinReadFunctions() {
   this.flags = function(data, kwargs) {
     var annotation = kwargs.annotation,
         bitfield = this.int(data),
-        flags_dict = {},
+        flagsDict = {},
         flag,
         value;
 
@@ -234,14 +284,14 @@ function BinReadFunctions() {
 
       if (!annotation[flag]) {
         if (value) {
-          flags_dict["flag_" + pad(hex(flag), 2)] = value;
+          flagsDict["flag_" + pad(hex(flag), 2)] = value;
         }
       }
       else {
-        flags_dict[annotation[flag]] = value;
+        flagsDict[annotation[flag]] = value;
       }
     }
-    return flags_dict;
+    return flagsDict;
   };
 }
 
@@ -253,9 +303,40 @@ function BinReadFunctions() {
  */
 function BinWriteFunctions() {
   this.struct = function(data, kwargs) {
-    var fmt = kwargs.fmt || "b";
+    var fmt = kwargs.fmt || "b",
+        labels = kwargs.labels,
+        annotation = kwargs.annotation,
+        dataList = [],
+        inverseAnnotation,
+        index, value;
 
-    return struct.pack(fmt, data)
+    if (typeof(data) === "object") {
+      if (!Array.isArray(data)) {
+        for (index = 0; index < labels.length; index++) {
+          dataList.push(data[labels[index]]);
+        }
+      }
+      else {
+        dataList = data;
+      }
+    }
+    else {
+      dataList.push(data);
+    }
+
+    if (annotation !== undefined) {
+      inverseAnnotation = inverseDict(annotation);
+
+      for (index = 0; index < dataList.length; index++) {
+        value = dataList[index];
+
+        if (value in inverseAnnotation) {
+          dataList[index] = inverseAnnotation[value];
+        }
+      }
+    }
+
+    return struct.pack(fmt, dataList);
   };
 
   this.raw = function(hexString) {
@@ -266,11 +347,12 @@ function BinWriteFunctions() {
     return new Buffer([parseInt(bitString, 2)]);
   };
 
+  // TODO: Deprecated, remove.
   this.int = function(integer) {
     var dataInt = integer,
         result = [];
 
-    depricated.deprication_warning("int");
+    deprecated.deprecationWarning("int");
     while (dataInt) {
       result.push(dataInt % 0x100);
       dataInt >>= 8;
@@ -282,15 +364,18 @@ function BinWriteFunctions() {
     return new Buffer([0x00]);
   };
 
+  // TODO: Deprecated, remove.
   this.float = function(realNumber) {
     var data = new Buffer(4);
 
-    depricated.deprication_warning("float");
+    deprecated.deprecationWarning("float");
     data.writeFloatBE(realNumber);
     return data;
   };
 
+  // TODO: Deprecated, remove.
   this.colour = function(colourString) {
+    deprecated.deprecationWarning("colour");
     return this.int(parseInt(colourString, 0x10));
   };
 
@@ -306,17 +391,21 @@ function BinWriteFunctions() {
     return iconv.encode(decodedText, encoding);
   };
 
+  // TODO: Deprecated, remove.
   this.date = function(dateInt, kwargs) {
     var inverseAnnotation = inverseDict(kwargs.annotation),
         dateString = dateInt;
 
+    deprecated.deprecationWarning("date");
     if (dateInt in inverseAnnotation) {
       dateString = parseInt(inverseAnnotation[dateInt]);
     }
     return this.int(parseInt(dateString));
   };
 
+  // TODO: Deprecated, remove.
   this.map = function(mappedString, kwargs) {
+    deprecated.deprecationWarning("map");
     var inverseAnnotation = inverseDict(kwargs.annotation);
 
     if (mappedString in inverseAnnotation) {
@@ -332,13 +421,13 @@ function BinWriteFunctions() {
         key;
 
     for (key in flagsDict) {
-      if (key in inverseAnnotation) {
-        if (flagsDict[key]) {
-          values += parseInt(inverseAnnotation[key]);
+      if (flagsDict[key]) {
+        if (key in inverseAnnotation) {
+            values += parseInt(inverseAnnotation[key]);
         }
-      }
-      else {
-        values += parseInt(key.slice(5), 0x10);
+        else {
+          values += parseInt(key.slice(5), 0x10);
+        }
       }
     }
     return new Buffer([values]);
