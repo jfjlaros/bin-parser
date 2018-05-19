@@ -47,10 +47,11 @@ class BinParser(object):
             'unknown_function': 'raw'
         }
         self.types = {
-            'int': {},
+            'int': {}, # TODO: Deprecated, remove.
             'raw': {},
             'text': {}
         }
+        self.macros = {}
 
         types_data = types or {}
         if 'constants' in types_data:
@@ -59,6 +60,8 @@ class BinParser(object):
             deep_update(self.defaults, types_data['defaults'])
         if 'types' in types_data:
             deep_update(self.types, types_data['types'])
+        if 'macros' in types_data:
+            deep_update(self.macros, types_data['macros'])
 
         self._structure = structure
 
@@ -342,7 +345,7 @@ class BinReader(BinParser):
             dtype = self._get_default(item, '', 'type')
             name = self._get_default(item, dtype, 'name')
 
-            if 'structure' not in item:
+            if not set(['macro', 'structure']) & set(item):
                 # Primitive data types.
                 self._parse_primitive(item, dtype, dest, name)
             else:
@@ -362,6 +365,8 @@ class BinReader(BinParser):
                     self._parse_do_while(item, dest, name)
                 elif 'while' in item:
                     self._parse_while(item, dest, name)
+                elif 'macro' in item:
+                    self._parse(self.macros[item['macro']], dest[name])
                 else:
                     self._parse(item['structure'], dest[name])
 
@@ -492,7 +497,7 @@ class BinWriter(BinParser):
             else:
                 value = source[name]
 
-            if 'structure' not in item:
+            if not set(['macro', 'structure']) & set(item):
                 # Primitive data types.
                 if self._debug & 0x02:
                     self._log.write('0x{:06x}: {} --> {}\n'.format(
@@ -512,6 +517,8 @@ class BinWriter(BinParser):
                         self._encode(
                             [term],
                             {term['name']: source[item['while']['term']]})
+                elif 'macro' in item:
+                    self._encode(self.macros[item['macro']], value)
                 else:
                     self._encode(item['structure'], value)
 

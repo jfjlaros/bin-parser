@@ -1,0 +1,19 @@
+---
+- name: person_1
+  structure:
+  - name: name
+  - name: age
+    type: u_char
+  - name: weight
+    type: u_char
+  - name: height
+    type: u_char
+- name: person_2
+  structure:
+  - name: name
+  - name: age
+    type: u_char
+  - name: weight
+    type: u_char
+  - name: height
+    type: u_char

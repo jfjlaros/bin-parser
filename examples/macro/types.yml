@@ -1,0 +1,19 @@
+---
+types:
+  u_char:
+    function:
+      name: struct
+      args:
+        fmt: B
+  text:
+    delimiter:
+      - 0x00
+macros:
+  person:
+    - name: name
+    - name: age
+      type: u_char
+    - name: weight
+      type: u_char
+    - name: height
+      type: u_char

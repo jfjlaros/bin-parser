@@ -1,0 +1,5 @@
+---
+- name: person_1
+  macro: person
+- name: person_2
+  macro: person

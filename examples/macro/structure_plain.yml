@@ -1,0 +1,15 @@
+---
+- name: name_1
+- name: age_1
+  type: u_char
+- name: weight_1
+  type: u_char
+- name: height_1
+  type: u_char
+- name: name_2
+- name: age_2
+  type: u_char
+- name: weight_2
+  type: u_char
+- name: height_2
+  type: u_char

@@ -235,10 +235,11 @@ function BinParser(structure, types, functions, kwargs) {
     "unknown_function": "raw"
   };
   this.types = {
-    "int": {},
+    "int": {}, // TODO: Deprecated, remove.
     "raw": {},
     "text": {}
   };
+  this.macros = {};
 
   if (typesData.constants) {
     deepUpdate(this.constants, typesData.constants);
@@ -248,6 +249,9 @@ function BinParser(structure, types, functions, kwargs) {
   }
   if (typesData.types) {
     deepUpdate(this.types, typesData.types);
+  }
+  if (typesData.macros) {
+    deepUpdate(this.macros, typesData.macros);
   }
 
   this.structure = structure;
@@ -485,7 +489,7 @@ function BinReader(data, structure, types, kwargs) {
       dtype = this.getDefault(item, "", "type");
       name = this.getDefault(item, dtype, "name");
 
-      if (!item.structure) {
+      if (!(item.macro || item.structure)) {
         // Primitive data types.
         this.parsePrimitive(item, dtype, dest, name);
       }
@@ -512,6 +516,9 @@ function BinReader(data, structure, types, kwargs) {
         }
         else if (item.while) {
           this.parseWhile(item, dest, name);
+        }
+        else if (item.macro) {
+          this.parse(this.macros[item.macro], dest[name]);
         }
         else {
           this.parse(item.structure, dest[name]);
@@ -700,7 +707,7 @@ function BinWriter(parsed, structure, types, kwargs) {
         value = source[name];
       }
 
-      if (!item.structure) {
+      if (!(item.macro || item.structure)) {
         // Primitive data types.
         if (this.debug & 0x02) {
           this.log.write(
@@ -724,6 +731,9 @@ function BinWriter(parsed, structure, types, kwargs) {
             termItem[term.name] = source[item.while.term];
             this.encode([term], termItem);
           }
+        }
+        else if (item.macro) {
+          this.encode(this.macros[item.macro], value);
         }
         else {
           this.encode(item.structure, value);
