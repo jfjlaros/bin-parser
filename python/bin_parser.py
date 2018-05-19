@@ -41,7 +41,6 @@ class BinParser(object):
             'name': '',
             'size': 0,
             'trim': None,
-            'order': 1,
             'type': 'text',
             'unknown_destination': '__raw__',
             'unknown_function': 'raw'
@@ -117,12 +116,11 @@ class BinParser(object):
         :arg dict item: Data structure.
         :arg str dtype: Name of the data type.
 
-        :returns tuple: (`delim`, `size`, `trim`, `order`, `func`, `kwargs`).
+        :returns tuple: (`delim`, `size`, `trim`, `func`, `kwargs`).
         """
         delim = self._get_default(item, dtype, 'delimiter')
         size = self._get_value(self._get_default(item, dtype, 'size'))
         trim = self._get_default(item, dtype, 'trim')
-        order = self._get_default(item, dtype, 'order')
         if not (delim or size):
             size = 1
 
@@ -135,7 +133,7 @@ class BinParser(object):
             if 'args' in self.types[dtype]['function']:
                 kwargs = self.types[dtype]['function']['args']
 
-        return delim, size, trim, order, func, kwargs
+        return delim, size, trim, func, kwargs
 
     def _evaluate(self, expression):
         """Evaluate an expression.
@@ -199,14 +197,13 @@ class BinReader(BinParser):
         except StopIteration:
             pass
 
-    def _get_field(self, size=0, delimiter=[], trim=None, order=1):
+    def _get_field(self, size=0, delimiter=[], trim=None):
         """Extract a field from {self.data} using either a fixed size, or a
         delimiter. After reading, {self._offset} is set to the next field.
 
         :arg int size: Size of fixed size field.
         :arg list(char) delimiter: Delimiter for variable sized fields.
         :arg byte trim: Padding character.
-        :arg int order: Byte order.
 
         :return str: Content of the requested field.
         """
@@ -226,9 +223,6 @@ class BinReader(BinParser):
             # Variable sized field.
             field = self.data[self._offset:].split(separator)[0]
             extracted = len(field) + 1 # FIXME: len(separator)
-
-        # Endianness.
-        field = field[::order]
 
         if trim:
             # Strip trailing characters.
@@ -256,10 +250,8 @@ class BinReader(BinParser):
         # Read and process the data.
         if not name:
             dtype = self._get_default(item, '', 'unknown_function')
-        delim, size, trim, order, func, kwargs = self._get_function(
-            item, dtype)
-        result = self._call(
-            func, self._get_field(size, delim, trim, order), **kwargs)
+        delim, size, trim, func, kwargs = self._get_function(item, dtype)
+        result = self._call(func, self._get_field(size, delim, trim), **kwargs)
 
         if name:
             # Store the data.
@@ -408,7 +400,7 @@ class BinWriter(BinParser):
 
         self._encode(self._structure, self.parsed)
 
-    def _set_field(self, data, size=0, delimiter=[], trim=None, order=1):
+    def _set_field(self, data, size=0, delimiter=[], trim=None):
         """Append a field to {self.data} using either a fixed size, or a
         delimiter.
 
@@ -416,15 +408,11 @@ class BinWriter(BinParser):
         :arg int size: Size of fixed size field.
         :arg list(char) delimiter: Delimiter for variable sized fields.
         :arg byte trim: Padding character.
-        :arg int order: Byte order.
         """
         field = data
 
         # Pad the field if necessary.
         field += chr(trim or 0x00) * (size - len(field))
-
-        # Endianness.
-        field = field[::order]
 
         if delimiter:
             # Add the delimiter for variable length fields.
@@ -444,8 +432,7 @@ class BinWriter(BinParser):
         :arg unknown value: Value to be stored.
         :arg str name: Field name used in the destination dictionary.
         """
-        delim, size, trim, order, func, kwargs = self._get_function(
-            item, dtype)
+        delim, size, trim, func, kwargs = self._get_function( item, dtype)
 
         if type(value) == dict:
             # Unpack dictionaries in order to use the items in evaluations.
@@ -454,8 +441,7 @@ class BinWriter(BinParser):
         else:
             self._internal[name] = value
 
-        self._set_field(
-            self._call(func, value, **kwargs), size, delim, trim, order)
+        self._set_field(self._call(func, value, **kwargs), size, delim, trim)
 
     def _get_item(self, item):
         """Resolve the `term` field in the `while` structure.

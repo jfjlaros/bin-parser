@@ -143,13 +143,12 @@ function BinParser(structure, types, functions, kwargs) {
    * @arg {Object} item - Data structure.
    * @arg {string} dtype - Name of the data type.
    *
-   * @return {Array} - (`delim`, `size`, `trim`, `order`, `func`, `kwargs`).
+   * @return {Array} - (`delim`, `size`, `trim`, `func`, `kwargs`).
    */
   this.getFunction = function(item, dtype) {
     var delim = this.getDefault(item, dtype, "delimiter"),
         size = this.getValue(this.getDefault(item, dtype, "size")),
         trim = this.getDefault(item, dtype, "trim"),
-        order = this.getDefault(item, dtype, "order"),
         func = dtype,
         kwargs = {};
 
@@ -166,7 +165,7 @@ function BinParser(structure, types, functions, kwargs) {
         kwargs = this.types[dtype].function.args;
       }
     }
-    return [delim, size, trim, order, func, kwargs];
+    return [delim, size, trim, func, kwargs];
   };
 
   /**
@@ -229,7 +228,6 @@ function BinParser(structure, types, functions, kwargs) {
     "name": "",
     "size": 0,
     "trim": undefined,
-    "order": 1,
     "type": "text",
     "unknown_destination": "__raw__",
     "unknown_function": "raw"
@@ -284,11 +282,10 @@ function BinReader(data, structure, types, kwargs) {
    * @arg {number} size - Size of fixed size field.
    * @arg {Array} delimiter - Delimiter for variable sized fields.
    * @arg {string} trim - Padding character.
-   * @arg {number} order - Byte order.
    *
    * @return {string} - Content of the requested field.
    */
-  this.getField = function(size, delimiter, trim, order) {
+  this.getField = function(size, delimiter, trim) {
     var field,
         extracted,
         separator;
@@ -312,11 +309,6 @@ function BinReader(data, structure, types, kwargs) {
       // Variable sized field.
       field = this.data.slice(offset, -1).split(separator)[0];
       extracted = field.length + 1; // FIXME: len(separator)
-    }
-
-    if (order === -1) {
-      // Endianness.
-      field = field.reverse();
     }
 
     if (trim) {
@@ -351,7 +343,6 @@ function BinReader(data, structure, types, kwargs) {
         func,
         kwargs,
         member,
-        order,
         result,
         size,
         temp,
@@ -366,11 +357,9 @@ function BinReader(data, structure, types, kwargs) {
     delim = temp[0];
     size = temp[1];
     trim = temp[2];
-    order = temp[3];
-    func = temp[4];
-    kwargs = temp[5];
-    result = this.functions[func](
-      this.getField(size, delim, trim, order), kwargs);
+    func = temp[3];
+    kwargs = temp[4];
+    result = this.functions[func](this.getField(size, delim, trim), kwargs);
 
     if (name) {
       // Store the data.
@@ -581,9 +570,8 @@ function BinWriter(parsed, structure, types, kwargs) {
    * @arg {number} size - Size of fixed size field.
    * @arg {Array} delimiter - Delimiter for variable sized fields.
    * @arg {string} trim - Padding character.
-   * @arg {number} order - Byte order.
    */
-  this.setField = function(data, size, delimiter, trim, order) {
+  this.setField = function(data, size, delimiter, trim) {
     var field = data,
         index;
 
@@ -591,11 +579,6 @@ function BinWriter(parsed, structure, types, kwargs) {
       // Pad the field if necessary.
       field = Buffer.concat(
         [field, new Buffer(String.fromCharCode(trim || 0x00))]);
-    }
-
-    if (order === -1) {
-      // Endianness.
-      field = field.reverse();
     }
 
     if (delimiter) {
@@ -625,9 +608,8 @@ function BinWriter(parsed, structure, types, kwargs) {
         delim = temp[0],
         size = temp[1],
         trim = temp[2],
-        order = temp[3],
-        func = temp[4],
-        kwargs = temp[5],
+        func = temp[3],
+        kwargs = temp[4],
         member;
 
     if (value.constructor === Object) {
@@ -640,8 +622,7 @@ function BinWriter(parsed, structure, types, kwargs) {
       this.internal[name] = value;
     }
 
-    this.setField(
-      this.functions[func](value, kwargs), size, delim, trim, order);
+    this.setField(this.functions[func](value, kwargs), size, delim, trim);
   };
 
   /**
