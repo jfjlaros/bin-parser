@@ -77,7 +77,8 @@ class BinParser(object):
         of constants. If nothing can be found, the variable is considered to be
         a literal.
 
-        :arg any name: The name or value of a variable.
+        :arg any name: The name of a variable or a value.
+
         :returns any: The resolved value.
         """
         if name in self._internal:
@@ -147,6 +148,7 @@ class BinParser(object):
             }
 
         :arg dict expression: An expression.
+
         :returns any: Result of the evaluation.
         """
         operands = map(lambda x: self._get_value(x), expression['operands'])
@@ -279,9 +281,7 @@ class BinReader(BinParser):
         :arg dict dest: Destination dictionary.
         :arg str name: Field name used in the destination dictionary.
         """
-        length = item['for']
-        if type(length) != int:
-            length = self._internal[length]
+        length = self._get_value(item['for'])
 
         for _ in range(length):
             structure_dict = {}
@@ -496,6 +496,11 @@ class BinWriter(BinParser):
                     self._log.write('-- {}\n'.format(name))
 
                 if set(['for', 'do_while', 'while']) & set(item):
+                    if 'for' in item and self._get_value(
+                            item['for']) != len(value):
+                        self._log.write(
+                            'Warning: size of `{}` and `{}` differ.\n'.format(
+                                item['name'], item['for']))
                     for subitem in value:
                         self._encode(item['structure'], subitem)
                     if 'while' in item:

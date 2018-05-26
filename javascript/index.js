@@ -93,7 +93,7 @@ function BinParser(structure, types, functions, kwargs) {
    * constants. If nothing can be found, the variable is considered to be a
    * literal.
    *
-   * @arg {} name - The name or value of a variable.
+   * @arg {} name - The name of a variable or a value.
    *
    * @return {} - The resolved value.
    */
@@ -395,13 +395,9 @@ function BinReader(data, structure, types, kwargs) {
    * @arg {string} name - Field name used in the destination dictionary.
    */
   this.parseFor = function(item, dest, name) {
-    var length = item.for,
+    var length = this.getValue(item.for),
         structureDict,
         _;
-
-    if (length.constructor !== Number) {
-      length = this.internal[length];
-    }
 
     for (_ = 0; _ < length; _++) {
       structureDict = {};
@@ -703,6 +699,11 @@ function BinWriter(parsed, structure, types, kwargs) {
           this.log.write("-- " + name + "\n");
         }
         if (item.for || item.do_while || item.while) {
+          if (item.for && this.getValue(item.for) !== value.length) {
+            this.log.write(
+              "Warning: size of `" + item.name + "` and `" + item.for +
+              "` differ.\n");
+          }
           for (j = 0; j < value.length; j++) {
             this.encode(item.structure, value[j]);
           }
