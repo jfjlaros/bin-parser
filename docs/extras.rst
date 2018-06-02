@@ -1,6 +1,10 @@
 Extras
 ======
 
+In this section we discuss a number of additional programs included in this
+project. 
+
+
 ``make_skeleton``
 -----------------
 

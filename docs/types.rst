@@ -51,7 +51,7 @@ example, a 4-byte little-endian integer uses the formatting string ``<i`` and a
 big-endian unsigned long uses the formatting string ``>L``.
 
 For a complete overview of the supported basic types, see the Python struct_
-documentation.
+documentation or our extensive list of examples_.
 
 Examples
 ~~~~~~~~
@@ -232,7 +232,7 @@ our binary file. We have two persons, of which the name, age, weight and height
 are stored. Using a flat file structure will result in something similar to
 this:
 
-.. include:: ../src/macro/structure_plain.yml
+.. include:: ../examples/macro/structure_plain.yml
    :code: yaml
 
 Note that we have to choose new variable names for every instance of a person.
@@ -243,18 +243,21 @@ The ``structure`` directive can be used to group variables in a substructure.
 This solves the variable naming issue, but it does not solve the maintenance
 issue.
 
-.. include:: ../src/macro/structure_nested.yml
+.. include:: ../examples/macro/structure_nested.yml
    :code: yaml
 
 We can define a macro in the ``types.yml`` file by adding a section named
 ``macros`` where we describe the structure of the group of variables.
 
-.. include:: ../src/macro/types.yml
+.. include:: ../examples/macro/types.yml
    :code: yaml
 
 This macro can then be used in the ``structure.yml`` file in almost the same we
 we use a basic type.
 
-.. include:: ../src/macro/structure.yml
+.. include:: ../examples/macro/structure.yml
    :code: yaml
+
+
 .. _struct: https://docs.python.org/2/library/struct.html#format-characters
+.. _examples: https://github.com/jfjlaros/bin-parser/blob/master/examples/types/types.yml

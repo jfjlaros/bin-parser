@@ -7,6 +7,16 @@ This file, usually named ``structure.yml`` contains the general structure of
 the binary file.
 
 
+Flat structure
+--------------
+
+A simple flat structure is recorded as a list in which, for every variable, we
+supply a name and a type. In the following example we see the definition of a
+simple flat structure containing two short integers and one text field.
+
+.. include:: ../examples/balance/structure.yml
+
+
 Loops and conditionals
 ----------------------
 
@@ -134,10 +144,14 @@ A variable or structure can be read conditionally using the ``if`` statement.
         operator: eq
 
 
-Evaluation
-----------
+Notes on evaluation
+-------------------
 
-The following statements are equal:
+Since we use a general way of evaluating expressions, there are usually
+multiple ways of writing such an expression. For example, the following
+statements are equal:
+
+Implicit truth test.
 
 .. code:: yaml
 
@@ -145,6 +159,8 @@ The following statements are equal:
       if:
         operands:
           - something
+
+Explicit truth test.
 
 .. code:: yaml
 
@@ -154,6 +170,8 @@ The following statements are equal:
           - something
           - true
         operator: eq
+
+Explicit non-false test.
 
 .. code:: yaml
 
