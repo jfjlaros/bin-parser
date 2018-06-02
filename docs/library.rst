@@ -21,6 +21,7 @@ Python
 To use the library from our own code, we need to use the following:
 
 .. include:: ../examples/balance/parser.py
+   :code: python
 
 The ``BinReader`` object stores the original data in the ``data`` member
 variable and the parsed data in the ``parsed`` member variable.
@@ -31,6 +32,7 @@ JavaScript
 Similarly, in JavaScript, we use the following:
 
 .. include:: ../examples/balance/parser.js
+   :code: javascript
 
 
 Defining new types

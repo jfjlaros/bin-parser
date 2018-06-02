@@ -15,6 +15,7 @@ supply a name and a type. In the following example we see the definition of a
 simple flat structure containing two short integers and one text field.
 
 .. include:: ../examples/balance/structure.yml
+   :code: yaml
 
 
 Loops and conditionals
