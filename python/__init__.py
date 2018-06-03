@@ -9,12 +9,12 @@ from .bin_parser import BinReader, BinWriter
 from .functions import BinReadFunctions, BinWriteFunctions
 
 
-__version_info__ = ('0', '0', '15')
+__version_info__ = ('0', '0', '20')
 
 __version__ = '.'.join(__version_info__)
 __author__ = 'Jeroen F.J. Laros'
 __contact__ = 'J.F.J.Laros@lumc.nl'
-__homepage__ = 'https://git.lumc.nl/j.f.j.laros/bin-parser'
+__homepage__ = 'https://github.com/jfjlaros/bin-parser'
 
 
 usage = __doc__.split('\n\n\n')
