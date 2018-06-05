@@ -13,7 +13,8 @@ authors:
 affiliations:
   - name: Leiden University Medical Center,
     index: 1
-date: 5 May 2018
+date: 5 June 2018
+bibliography: paper.bib
 ---
 
 # Summary
@@ -28,11 +29,11 @@ way for it to be used directly in a parser, a writer and as documentation.
 General binary file parsing and writing is implemented by interpretation of
 human readable documentation of the file structure and data types. Basic types
 like variable length strings, maps and bit fields (flags), as well as
-elementary data types provided by the [struct][struct] library are supported
-and other data types are easily added. Apart from basic types, nested
-structures and various kinds of iterators are supported to accommodate for
-complicated file formats. Numerous character encodings are supported via the
-[iconv][iconv] library.
+elementary data types provided by the struct library [@structPython, @structJs]
+are supported and other data types are easily added. Apart from basic types,
+nested structures and various kinds of iterators are supported to accommodate
+for complicated file formats. Numerous character encodings are supported via
+the iconv library [@iconvJs].
 
 Since all operations needed for parsing a binary file can be reversed, fully
 functional binary editing is possible using this library. A binary file can be
@@ -40,5 +41,9 @@ converted to a serialised dictionary representation, edited and be converted
 back to its binary form.
 
 We have made two implementations of this library: one in Python and one in
-JavaScript. We chose YAML as our preferred serialised dictionary format, but
-other serialisation formats (JSON for example) can be used too.
+JavaScript. We chose YAML [@yamlPython, @yamlJs] as our preferred serialised
+dictionary format, but other serialisation formats (JSON for example) can be
+used too.
+
+
+# References
