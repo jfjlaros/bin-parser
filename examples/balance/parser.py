@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import sys
-
 import yaml
 
 from bin_parser import BinReader
