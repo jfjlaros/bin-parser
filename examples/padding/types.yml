@@ -2,4 +2,5 @@
 types:
   text:
     size: 6
-    trim: 0x20
+    delimiter:
+      - 0x00
