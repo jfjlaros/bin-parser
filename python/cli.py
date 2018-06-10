@@ -94,9 +94,9 @@ def main():
         parser.error(error)
 
     try:
-        arguments.func(**dict(
-            (k, v) for k, v in vars(arguments).items()
-            if k not in ('func', 'subcommand')))
+        arguments.func(**{
+            k: v for k, v in vars(arguments).items()
+            if k not in ('func', 'subcommand')})
     except ValueError as error:
         parser.error(error)
 

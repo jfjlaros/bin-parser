@@ -220,7 +220,7 @@ class BinReader(BinParser):
         if self._offset >= len(self.data):
             raise StopIteration
 
-        separator = ''.join(map(chr, delimiter))
+        separator = ''.join(chr(c) for c in delimiter)
 
         if size:
             # Fixed sized field.
@@ -417,7 +417,7 @@ class BinWriter(BinParser):
 
         if delimiter:
             # Add the delimiter for variable length fields.
-            field += ''.join(map(chr, delimiter))
+            field += ''.join(chr(c) for c in delimiter)
 
         # Pad the field if necessary.
         field += chr(0x00) * (size - len(field))
