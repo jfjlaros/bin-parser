@@ -113,15 +113,20 @@ function main() {
 
   args = parser.parseArgs();
 
-  if (args.subcommand_name === "read") {
-    binReader(
-      args.inputFile, args.structureFile, args.typesFile, args.outputFile,
-      {"prune": args.prune, "debug": args.debug});
+  try {
+    if (args.subcommand_name === "read") {
+      binReader(
+        args.inputFile, args.structureFile, args.typesFile, args.outputFile,
+        {"prune": args.prune, "debug": args.debug});
+    }
+    if (args.subcommand_name === "write") {
+      binWriter(
+        args.inputFile, args.structureFile, args.typesFile, args.outputFile,
+        {"debug": args.debug});
+    }
   }
-  if (args.subcommand_name === "write") {
-    binWriter(
-      args.inputFile, args.structureFile, args.typesFile, args.outputFile,
-      {"debug": args.debug});
+  catch(err) {
+    parser.error(err);
   }
 }
 

@@ -252,6 +252,9 @@ function BinParser(structure, types, functions, kwargs) {
 
   this.structure = structure;
 
+  if (this.debug & ~0x03) {
+    throw("Invalid debug level.")
+  }
   if (this.debug & 0x02) {
     this.log.write("--- PARSING DETAILS ---\n\n");
   }
@@ -517,7 +520,7 @@ function BinReader(data, structure, types, kwargs) {
       "Reached byte " + offset + " out of " + this.data.length + ".\n");
     this.log.write(
       parsed + " bytes parsed (" +
-      Math.round(parsed * 100 / this.data.length) + ").\n");
+      Math.round(parsed * 100 / this.data.length) + "%).\n");
   };
 
   /* Initialisation. */

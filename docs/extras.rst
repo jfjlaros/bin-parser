@@ -1,8 +1,102 @@
 Extras
 ======
 
-In this section we discuss a number of additional programs included in this
-project. 
+In this section we discuss a number of additional features and programs
+included in this project.
+
+
+Debugging
+---------
+
+The parser and the writer support four debug levels, controlled via the ``-d``
+option of the command line interface.
+
++---------+--------------------------------------------------------------+
+| level   | description                                                  |
++---------+--------------------------------------------------------------+
+| 0       | No debugging.                                                |
++---------+--------------------------------------------------------------+
+| 1       | Show general debugging information and internal variables.   |
++---------+--------------------------------------------------------------+
+| 2       | Show general debugging information and parsing details.      |
++---------+--------------------------------------------------------------+
+| 3       | Show all debugging information.                              |
++---------+--------------------------------------------------------------+
+
+General debugging information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The section ``DEBUG INFO`` contains some general debugging information.
+
+For the parser it contains:
+
+- The file position after the parsing has finished and the size of the file.
+  Something is wrong if these two values are not equal.
+- The number of bytes that have been parsed and assigned to variables. This is
+  all the data that has not been assigned to the ``__raw__`` list.
+
+For the writer this section only contains the number of bytes written.
+
+Internal variables
+~~~~~~~~~~~~~~~~~~
+The section ``INTERNAL VARIABLES`` contains the internal key-value store used
+for referencing previously read variables.
+
+Parsing details
+~~~~~~~~~~~~~~~
+
+The section named ``PARSING DETAILS`` contains a detailed trace of the parsing
+or writing process. Every line represents either a conversion or information
+about substructures.
+
+For the parser, a conversion line contains the following fields:
+
++-----------------+--------------------------------------+
+| field           | description                          |
++-----------------+--------------------------------------+
+| 1 ``:``         | File position.                       |
++-----------------+--------------------------------------+
+| 2               | Field content.                       |
++-----------------+--------------------------------------+
+| ``(`` 3 ``)``   | Field size (not used for strings).   |
++-----------------+--------------------------------------+
+| ``-->`` 4       | Variable name.                       |
++-----------------+--------------------------------------+
+
+In the following example, we see how the file from our balance_ example is
+parsed.
+
+::
+
+    0x000000: cf 07 (2) --> year_of_birth
+    0x000002: John Doe --> name
+    0x00000b: 8a 0c (2) --> balance
+
+
+For the writer, a conversion line contains the following fields:
+
++-----------------+------------------+
+| field           | description      |
++-----------------+------------------+
+| 1 ``:``         | File position.   |
++-----------------+------------------+
+| 2               | Variable name.   |
++-----------------+------------------+
+| ``-->`` 3       | Field content.   |
++-----------------+------------------+
+
+In the following example, we see how the file from our balance_ example is
+written.
+
+::
+
+    0x000000: year_of_birth --> 1999
+    0x000002: name --> John Doe
+    0x00000b: balance --> 3210
+
+The start of a substructure is indicated by ``--`` followed by the name of the
+substructure, the end of a substructure is indicated by ``-->`` followed by the
+name of the substructure.
 
 
 ``make_skeleton``
@@ -174,4 +268,5 @@ back. This is the case when variable length strings within fixed sized fields
 are used.
 
 
-.. _balance: examples/balance
+.. _balance: https://github.com/jfjlaros/bin-parser/blob/master/examples/balance
+

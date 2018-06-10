@@ -63,6 +63,8 @@ class BinParser(object):
 
         self._structure = structure
 
+        if self._debug & ~0x03:
+            raise ValueError('Invalid debug level.')
         if self._debug & 0x02:
             self._log.write('--- PARSING DETAILS ---\n\n')
 
