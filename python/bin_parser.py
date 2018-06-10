@@ -318,9 +318,7 @@ class BinReader(BinParser):
 
         dest[name] = [{}]
         self._parse([delim], dest[name][0])
-        while True:
-            if not self._evaluate(item['while']):
-                break
+        while self._evaluate(item['while']):
             self._parse(item['structure'][1:], dest[name][-1])
             dest[name].append({})
             self._parse([delim], dest[name][-1])
