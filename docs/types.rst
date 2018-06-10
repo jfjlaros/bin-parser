@@ -226,7 +226,7 @@ Macros
 ------
 
 Macros were introduced in version 0.0.15 to define complex compound types. A
-macro is equivalent to a sub stucture, which are also used in the structure
+macro is equivalent to a sub structure, which are also used in the structure
 definition either as is, or as the body of a loop or conditional statement.
 
 In the following example, we have a substructure that occurs more than once in
