@@ -36,7 +36,7 @@ To convert a YAML file to binary, use the ``write`` subcommand:
 
 ::
 
-    ./node_modules/.bin/bin_parser write input.yml structure.yml types.yml \
+    ./node_modules/.bin/bin-parser write input.yml structure.yml types.yml \
       output.bin
 
 Please note that when installing from source, the ``bin_parser`` executable is
