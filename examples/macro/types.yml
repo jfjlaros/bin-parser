@@ -4,7 +4,7 @@ types:
     function:
       name: struct
       args:
-        fmt: B
+        fmt: 'B'
   text:
     delimiter:
       - 0x00

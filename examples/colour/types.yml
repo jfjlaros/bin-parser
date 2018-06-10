@@ -5,7 +5,7 @@ types:
     function:
       name: struct
       args:
-        fmt: BBB
-        labels: ['r', 'g', 'b']
+        fmt: 'BBB'
+        labels: [r, g, b]
         annotation:
           0xff: full

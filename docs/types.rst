@@ -47,8 +47,10 @@ Basic types
 In version 0.0.14 the ``struct`` type was introduced to replace basic types
 like ``int``, ``float``, etc. and simple compound data types. The formatting
 parameter ``fmt`` is used to control how a value is packed or unpacked. For
-example, a 4-byte little-endian integer uses the formatting string ``<i`` and a
-big-endian unsigned long uses the formatting string ``>L``.
+example, a 4-byte little-endian integer uses the formatting string ``'<i'`` and
+a big-endian unsigned long uses the formatting string ``'>L'``. To avoid any
+issues with serialisation to YAML (the ``>`` sign may cause problems), it is
+recommended to quote the string.
 
 For a complete overview of the supported basic types, see the Python struct_
 documentation or our extensive list of examples_.
@@ -133,8 +135,8 @@ dictionary will be: ``{'r': 0, 'g': 255, 'b': 128}``.
         function:
           name: struct
           args:
-            fmt: BBB
-            labels: ['r', 'g', 'b']
+            fmt: 'BBB'
+            labels: [r, g, b]
 
 Values can also be mapped using an annotation list to improve readability. This
 procedure replaces specific values by their annotation and leaves other values
@@ -152,7 +154,7 @@ result will be ``unknown``, if the value is 10, the result will be 10 as well.
         function:
           name: struct
           args:
-            fmt: <I
+            fmt: '<I'
             annotation:
               0xffffffff: defined
               0x00000000: unknown

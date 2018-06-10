@@ -5,7 +5,7 @@ types:
     function:
       name: struct
       args:
-        fmt: c
+        fmt: 'c'
   s_char:
     # One byte signed integer.
     function:
@@ -15,153 +15,153 @@ types:
     function:
       name: struct
       args:
-        fmt: B
+        fmt: 'B'
   bool:
     # Boolean.
     function:
       name: struct
       args:
-        fmt: ?
+        fmt: '?'
   le_s_short:
     # Little-endian two byte signed integer.
     size: 2
     function:
       name: struct
       args:
-        fmt: <h
+        fmt: '<h'
   be_s_short:
     # Big-endian two byte signed integer.
     size: 2
     function:
       name: struct
       args:
-        fmt: >h
+        fmt: '>h'
   le_u_short:
     # Little-endian two byte unsigned integer.
     size: 2
     function:
       name: struct
       args:
-        fmt: <H
+        fmt: '<H'
   be_u_short:
     # Big-endian two byte unsigned integer.
     size: 2
     function:
       name: struct
       args:
-        fmt: >H
+        fmt: '>H'
   le_s_int:
     # Little-endian four byte signed integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: <i
+        fmt: '<i'
   be_s_int:
     # Big-endian four byte signed integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: >i
+        fmt: '>i'
   le_u_int:
     # Little-endian four byte unsigned integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: <I
+        fmt: '<I'
   be_u_int:
     # Big-endian four byte unsigned integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: >I
+        fmt: '>I'
   le_s_long:
     # Little-endian four byte signed integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: <l
+        fmt: '<l'
   be_s_long:
     # Big-endian four byte signed integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: >l
+        fmt: '>l'
   le_u_long:
     # Little-endian four byte unsigned integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: <L
+        fmt: '<L'
   be_u_long:
     # Big-endian four byte unsigned integer.
     size: 4
     function:
       name: struct
       args:
-        fmt: >L
+        fmt: '>L'
   le_s_long_long:
     # Little-endian eight byte signed integer.
     size: 8
     function:
       name: struct
       args:
-        fmt: <q
+        fmt: '<q'
   be_s_long_long:
     # Big-endian eight byte signed integer.
     size: 8
     function:
       name: struct
       args:
-        fmt: >q
+        fmt: '>q'
   le_u_long_long:
     # Little-endian eight byte unsigned integer.
     size: 8
     function:
       name: struct
       args:
-        fmt: <Q
+        fmt: '<Q'
   be_u_long_long:
     # Big-endian eight byte unsigned integer.
     size: 8
     function:
       name: struct
       args:
-        fmt: >Q
+        fmt: '>Q'
   le_float:
     # Little-endian four byte float.
     size: 4
     function:
       name: struct
       args:
-        fmt: <f
+        fmt: '<f'
   be_float:
     # Big-endian four byte float.
     size: 4
     function:
       name: struct
       args:
-        fmt: >f
+        fmt: '>f'
   le_double:
     # Little-endian eight byte float.
     size: 8
     function:
       name: struct
       args:
-        fmt: <d
+        fmt: '<d'
   be_double:
     # Big-endian eight byte float.
     size: 8
     function:
       name: struct
       args:
-        fmt: >d
+        fmt: '>d'
   text:
     # Zero delimited byte string.
     delimiter:
