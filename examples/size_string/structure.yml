@@ -1,0 +1,5 @@
+---
+- name: string_1
+  macro: size_string
+- name: string_2
+  macro: size_string

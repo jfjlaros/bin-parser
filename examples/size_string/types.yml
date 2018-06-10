@@ -1,0 +1,15 @@
+---
+types:
+  le_s_int:
+    size: 4
+    function:
+      name: struct
+      args:
+        fmt: '<i'
+macros:
+  size_string:
+    - name: size_of_string
+      type: le_s_int
+    - name: string
+      size: size_of_string
+      type: text
