@@ -1,4 +1,5 @@
 """Field packing and unpacking functions for the general binary parser."""
+import collections
 import operator
 import struct
 
@@ -189,9 +190,9 @@ class BinWriteFunctions(object):
     encoding. Documentation of these functions is omitted.
     """
     def struct(self, data, fmt='b', labels=None, annotation=None):
-        if type(data) == dict:
+        if isinstance(data, collections.Mapping):
             data_list = map(lambda x: data[x], labels)
-        elif type(data) == list:
+        elif isinstance(data, list):
             data_list = data
         else:
             data_list = [data]
