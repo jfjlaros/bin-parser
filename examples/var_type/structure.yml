@@ -1,0 +1,5 @@
+---
+- name: value_1
+  macro: var_type
+- name: value_2
+  macro: var_type

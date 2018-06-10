@@ -345,7 +345,7 @@ function BinReader(data, structure, types, kwargs) {
 
     // Read and process the data.
     if (!name) {
-      dtype = this.getDefault(item, "", "unknown_function");
+      dtype = this.getValue(this.getDefault(item, "", "unknown_function"));
     }
     temp = this.getFunction(item, dtype);
     delim = temp[0];
@@ -464,7 +464,7 @@ function BinReader(data, structure, types, kwargs) {
         }
       }
 
-      dtype = this.getDefault(item, "", "type");
+      dtype = this.getValue(this.getDefault(item, "", "type"));
       name = this.getDefault(item, dtype, "name");
 
       if (!(item.macro || item.structure)) {
@@ -662,12 +662,13 @@ function BinWriter(parsed, structure, types, kwargs) {
         }
       }
 
-      dtype = this.getDefault(item, "", "type");
+      dtype = this.getValue(this.getDefault(item, "", "type"));
       name = this.getDefault(item, dtype, "name");
 
       if (!name) {
         // NOTE: Not sure if this is correct.
-        dtype = this.getDefault(item, dtype, "unknown_function");
+        dtype = this.getValue(
+          this.getDefault(item, dtype, "unknown_function"));
         value = source[this.getDefault(
           item, dtype, "unknown_destination")][rawCounter];
         rawCounter++;

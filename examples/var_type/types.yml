@@ -1,0 +1,28 @@
+---
+types:
+  char:
+    function:
+      name: struct
+      args:
+        fmt: 'c'
+  le_s_short:
+    size: 2
+    function:
+      name: struct
+      args:
+        fmt: '<h'
+  typer:
+    size: 1
+    function:
+      name: struct
+      args:
+        fmt: 'B'
+        annotation:
+          0x00: char
+          0x01: le_s_short
+macros:
+  var_type:
+    - name: type_name
+      type: typer
+    - name: content
+      type: type_name

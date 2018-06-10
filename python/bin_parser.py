@@ -246,7 +246,8 @@ class BinReader(BinParser):
         """
         # Read and process the data.
         if not name:
-            dtype = self._get_default(item, '', 'unknown_function')
+            dtype = self._get_value(
+                self._get_default(item, '', 'unknown_function'))
         delim, size, func, kwargs = self._get_function(item, dtype)
         result = self._call(func, self._get_field(size, delim), **kwargs)
 
@@ -329,7 +330,7 @@ class BinReader(BinParser):
                 if not self._evaluate(item['if']):
                     continue
 
-            dtype = self._get_default(item, '', 'type')
+            dtype = self._get_value(self._get_default(item, '', 'type'))
             name = self._get_default(item, dtype, 'name')
 
             if not set(['macro', 'structure']) & set(item):
@@ -427,7 +428,7 @@ class BinWriter(BinParser):
         :arg unknown value: Value to be stored.
         :arg str name: Field name used in the destination dictionary.
         """
-        delim, size, func, kwargs = self._get_function( item, dtype)
+        delim, size, func, kwargs = self._get_function(item, dtype)
 
         if type(value) == dict:
             # Unpack dictionaries in order to use the items in evaluations.
@@ -466,12 +467,13 @@ class BinWriter(BinParser):
                 if not self._evaluate(item['if']):
                     continue
 
-            dtype = self._get_default(item, '', 'type')
+            dtype = self._get_value(self._get_default(item, '', 'type'))
             name = self._get_default(item, dtype, 'name')
 
             if not name:
                 # NOTE: Not sure if this is correct.
-                dtype = self._get_default(item, dtype, 'unknown_function')
+                dtype = self._get_value(
+                    self._get_default(item, dtype, 'unknown_function'))
                 value = source[self._get_default(
                     item, dtype, 'unknown_destination')][raw_counter]
                 raw_counter += 1
