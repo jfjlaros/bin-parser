@@ -29,17 +29,17 @@ To convert a binary file to YAML, use the ``read`` subcommand:
 
 ::
 
-    ./node_modules/.bin/bin-parser read input.bin structure.yml types.yml \
+    ./node_modules/.bin/bin_parser read input.bin structure.yml types.yml \
       output.yml
 
 To convert a YAML file to binary, use the ``write`` subcommand:
 
 ::
 
-    ./node_modules/.bin/bin-parser write input.yml structure.yml types.yml \
+    ./node_modules/.bin/bin_parser write input.yml structure.yml types.yml \
       output.bin
 
-Please note that when installing from source, the ``bin-parser`` executable is
+Please note that when installing from source, the ``bin_parser`` executable is
 not installed. Instead run the script ``cli.js`` as follows:
 
 ::

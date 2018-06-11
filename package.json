@@ -8,7 +8,7 @@
   ],
   "main": "javascript/index.js",
   "bin": {
-    "bin-parser": "javascript/cli.js"
+    "bin_parser": "javascript/cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
