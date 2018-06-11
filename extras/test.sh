@@ -70,6 +70,12 @@ test_cli examples/macro/macro.dat examples/macro/structure_nested.yml \
   examples/macro/types.yml
 test_cli examples/macro/macro.dat examples/macro/structure.yml \
   examples/macro/types.yml
+test_cli examples/complex_eval/complex_eval.dat \
+  examples/complex_eval/structure.yml examples/complex_eval/types.yml
+test_cli examples/size_string/size_string.dat \
+  examples/size_string/structure.yml examples/size_string/types.yml
+test_cli examples/var_type/var_type.dat examples/var_type/structure.yml \
+  examples/var_type/types.yml
 
 echo
 echo 'Writer tests:'
@@ -105,6 +111,12 @@ test_writer examples/macro/macro.dat examples/macro/structure_nested.yml \
   examples/macro/types.yml
 test_writer examples/macro/macro.dat examples/macro/structure.yml \
   examples/macro/types.yml
+test_writer examples/complex_eval/complex_eval.dat \
+  examples/complex_eval/structure.yml examples/complex_eval/types.yml
+test_writer examples/size_string/size_string.dat \
+  examples/size_string/structure.yml examples/size_string/types.yml
+test_writer examples/var_type/var_type.dat examples/var_type/structure.yml \
+  examples/var_type/types.yml
 
 echo
 echo 'Interface test:'
