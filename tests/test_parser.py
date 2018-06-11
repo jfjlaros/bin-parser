@@ -1,6 +1,4 @@
-"""
-Tests for the bin_parser.bin_parser module.
-"""
+"""Tests for the bin_parser.bin_parser module."""
 import yaml
 
 from bin_parser import BinReader, BinWriter
@@ -28,9 +26,7 @@ def _idempotence(path, input_file, structure_file, types_file):
 
 
 class TestReader(object):
-    """
-    Test the python.bin_parser module.
-    """
+    """Test the python.bin_parser module."""
     def setup(self):
         self._data = {
             'balance': [
@@ -48,7 +44,6 @@ class TestReader(object):
             'padding': [
                 'padding', 'padding.dat', 'structure.yml', 'types.yml'],
             'order': ['order', 'order.dat', 'structure.yml', 'types.yml'],
-
             'colour': ['colour', 'colour.dat', 'structure.yml', 'types.yml'],
             'complex_eval': [
                 'complex_eval', 'complex_eval.dat', 'structure.yml',

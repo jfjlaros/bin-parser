@@ -1,6 +1,4 @@
 """Tests for the bin_parser.functions module."""
-
-
 from bin_parser import functions
 
 
