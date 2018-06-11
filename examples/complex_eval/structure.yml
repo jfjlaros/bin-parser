@@ -1,0 +1,27 @@
+---
+- name: item_1
+  if:
+    operands:
+      - operands:
+          - 1
+          - 1
+        operator: eq
+      - operands:
+          - 2
+          - 2
+        operator: ne
+    operator: and
+  type: char
+- name: item_2
+  if:
+    operands:
+      - operands:
+          - 1
+          - 1
+        operator: eq
+      - operands:
+          - 2
+          - 3
+        operator: ne
+    operator: and
+  type: char

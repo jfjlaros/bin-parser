@@ -186,7 +186,12 @@ function BinParser(structure, types, functions, kwargs) {
         index;
 
     for (index = 0; index < expression.operands.length; index++) {
-      operands.push(this.getValue(expression.operands[index]));
+      if (typeof(expression.operands[index]) === "object") {
+        operands.push(this.evaluate(expression.operands[index]));
+      }
+      else {
+        operands.push(this.getValue(expression.operands[index]));
+      }
     }
 
     if ((operands.length === 1) && (expression.operator === undefined)) {
@@ -198,7 +203,6 @@ function BinParser(structure, types, functions, kwargs) {
   /* Write additional debugging information to the log. */
   this._logDebugInfo = function() {
     var item;
-
 
     if (this.debug & 0x01) {
       if (this.debug & 0x02) {

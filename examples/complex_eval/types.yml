@@ -1,0 +1,8 @@
+---
+types:
+  char:
+    size: 1
+    function:
+      name: struct
+      args:
+        fmt: 'c'

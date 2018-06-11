@@ -151,10 +151,17 @@ class BinParser(object):
 
         :returns any: Result of the evaluation.
         """
-        operands = map(lambda x: self._get_value(x), expression['operands'])
+        operands = []
+
+        for operand in expression['operands']:
+            if type(operand) == dict:
+                operands.append(self._evaluate(operand))
+            else:
+                operands.append(self._get_value(operand))
 
         if len(operands) == 1 and 'operator' not in expression:
             return operands[0]
+
         return operators[expression['operator']](*operands)
 
     def _log_debug_info(self):
