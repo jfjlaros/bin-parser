@@ -70,20 +70,20 @@ A simple ``for`` loop can be made as follows.
       structure:
         - name: item
         - name: value
-          type: short
+          type: s_char
 
 The size can also be given by a variable.
 
 .. code:: yaml
 
     - name: size_of_list
-      type: short
+      type: s_char
     - name: variable_size_list
       for: size_of_list
       structure:
         - name: item
         - name: value
-          type: short
+          type: s_char
 
 
 ``while`` loops
@@ -104,7 +104,7 @@ therefore at least of size 1.
       structure:
         - name: item
         - name: value
-          type: short
+          type: s_char
 
 The ``while`` loop first reads the first element of the structure and if the
 specified condition is met, the rest of the structure is read. Evaluation is
@@ -124,8 +124,20 @@ specified by the ``term`` keyword.
         term: list_term
       structure:
         - name: value
-          type: short
+          type: s_char
         - name: item
+
+When using this structure on the input ``\x01hello\x00\x03world\x00\x02``, the
+result will be as follows.
+
+.. code:: yaml
+
+    list_term: 2
+    variable_size_list:
+    - item: hello
+      value: 1
+    - item: world
+      value: 3
 
 
 Conditionals
@@ -136,7 +148,7 @@ A variable or structure can be read conditionally using the ``if`` statement.
 .. code:: yaml
 
     - name: something
-      type: short
+      type: s_char
     - name: item
       if:
         operands:
