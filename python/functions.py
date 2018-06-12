@@ -1,4 +1,5 @@
 """Field packing and unpacking functions for the general binary parser."""
+import collections
 import operator
 import struct
 
@@ -22,7 +23,7 @@ operators = {
 
 
 def _inverse_dict(dictionary):
-    return dict(map(lambda x: x[::-1], dictionary.items()))
+    return {v: k for k, v in dictionary.items()}
 
 
 class BinReadFunctions(object):
@@ -87,8 +88,7 @@ class BinReadFunctions(object):
         """
         # TODO: Deprecated, remove.
         deprecation_warning('int')
-        return reduce(
-            lambda x, y: x * 0x100 + y, map(lambda x: ord(x), data[::-1]))
+        return sum(ord(x) * 0x100 ** i for i, x in enumerate(data))
 
     def float(self, data):
         """Decode an IEEE 754 single precision encoded floating-point.
@@ -118,7 +118,7 @@ class BinReadFunctions(object):
         decoded_text = data.decode(encoding)
 
         if split:
-            return '\n'.join(decoded_text.split(''.join(map(chr, split))))
+            return '\n'.join(decoded_text.split(''.join(chr(x) for x in split)))
         return decoded_text
 
     def date(self, data, annotation):
@@ -170,7 +170,7 @@ class BinReadFunctions(object):
         bitfield = ord(data)
         flags_dict = {}
 
-        for flag in map(lambda x: 2 ** x, range(8)):
+        for flag in (2 ** x for x in range(8)):
             value = bool(flag & bitfield)
 
             if flag not in annotation:
@@ -189,9 +189,9 @@ class BinWriteFunctions(object):
     encoding. Documentation of these functions is omitted.
     """
     def struct(self, data, fmt='b', labels=None, annotation=None):
-        if type(data) == dict:
-            data_list = map(lambda x: data[x], labels)
-        elif type(data) == list:
+        if isinstance(data, collections.Mapping):
+            data_list = [data[x] for x in labels]
+        elif isinstance(data, list):
             data_list = data
         else:
             data_list = [data]
@@ -237,7 +237,7 @@ class BinWriteFunctions(object):
         decoded_text = text_string
 
         if split:
-            decoded_text = ''.join(map(chr, split)).join(
+            decoded_text = ''.join(chr(x) for x in split).join(
                 text_string.split('\n'))
         return decoded_text.encode(encoding)
 

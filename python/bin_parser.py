@@ -1,4 +1,5 @@
 """General binary file parser."""
+import collections
 import sys
 
 from .functions import BinReadFunctions, BinWriteFunctions, operators
@@ -11,7 +12,8 @@ def deep_update(target, source):
     :arg dict source: Source dictionary.
     """
     for key in source:
-        if key in target and type(target[key]) == type(source[key]) == dict:
+        if key in target and isinstance(target[key], collections.Mapping) and \
+          isinstance(source[key], collections.Mapping):
             deep_update(target[key], source[key])
         else:
             target[key] = source[key]
@@ -154,7 +156,7 @@ class BinParser(object):
         operands = []
 
         for operand in expression['operands']:
-            if type(operand) == dict:
+            if isinstance(operand, collections.Mapping):
                 operands.append(self._evaluate(operand))
             else:
                 operands.append(self._get_value(operand))
@@ -218,7 +220,7 @@ class BinReader(BinParser):
         if self._offset >= len(self.data):
             raise StopIteration
 
-        separator = ''.join(map(chr, delimiter))
+        separator = ''.join(chr(c) for c in delimiter)
 
         if size:
             # Fixed sized field.
@@ -260,7 +262,7 @@ class BinReader(BinParser):
 
         if name:
             # Store the data.
-            if type(result) == dict:
+            if isinstance(result, collections.Mapping):
                 # Unpack dictionaries in order to use the items in evaluations.
                 for member in result:
                     self._internal[member] = result[member]
@@ -316,9 +318,7 @@ class BinReader(BinParser):
 
         dest[name] = [{}]
         self._parse([delim], dest[name][0])
-        while True:
-            if not self._evaluate(item['while']):
-                break
+        while self._evaluate(item['while']):
             self._parse(item['structure'][1:], dest[name][-1])
             dest[name].append({})
             self._parse([delim], dest[name][-1])
@@ -415,7 +415,7 @@ class BinWriter(BinParser):
 
         if delimiter:
             # Add the delimiter for variable length fields.
-            field += ''.join(map(chr, delimiter))
+            field += ''.join(chr(c) for c in delimiter)
 
         # Pad the field if necessary.
         field += chr(0x00) * (size - len(field))
@@ -437,7 +437,7 @@ class BinWriter(BinParser):
         """
         delim, size, func, kwargs = self._get_function(item, dtype)
 
-        if type(value) == dict:
+        if isinstance(value, collections.Mapping):
             # Unpack dictionaries in order to use the items in evaluations.
             for member in value:
                 self._internal[member] = value[member]
