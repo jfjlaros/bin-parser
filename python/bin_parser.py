@@ -12,8 +12,8 @@ def deep_update(target, source):
     :arg dict source: Source dictionary.
     """
     for key in source:
-        if key in target and isinstance(target[key], collections.Mapping) and \
-          isinstance(source[key], collections.Mapping):
+        if (key in target and isinstance(target[key], collections.Mapping) and
+                isinstance( source[key], collections.Mapping)):
             deep_update(target[key], source[key])
         else:
             target[key] = source[key]

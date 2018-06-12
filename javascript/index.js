@@ -435,10 +435,7 @@ function BinReader(data, structure, types, kwargs) {
 
     dest[name] = [{}];
     this.parse([delim], dest[name][0]);
-    while (true) {
-      if (!this.evaluate(item.while)) {
-        break;
-      }
+    while (this.evaluate(item.while)) {
       this.parse(item.structure.slice(1), dest[name].slice(-1)[0]);
       dest[name].push({});
       this.parse([delim], dest[name].slice(-1)[0]);
