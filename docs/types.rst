@@ -260,6 +260,17 @@ we use a basic type.
 .. include:: ../examples/macro/structure.yml
    :code: yaml
 
+A common substructure in binary formats is a data field preceded by its length,
+e.g., a string preceded by its length as a little endian 32-bit unsigned
+integer: ``\x0b\x00\x00\x00hello world``. In the size_string_ example we show
+how we can use a macro to facilitate this.
 
-.. _struct: https://docs.python.org/2/library/struct.html#format-characters
+Macros can also be used to define variable types, i.e., a type that depends on
+the value of a previously defined variable. In the var_type_ example, we show
+how this can be accomplished.
+
+
 .. _examples: https://github.com/jfjlaros/bin-parser/blob/master/examples/types/types.yml
+.. _size_string: https://github.com/jfjlaros/bin-parser/tree/master/examples/size_string
+.. _struct: https://docs.python.org/2/library/struct.html#format-characters
+.. _var_type: https://github.com/jfjlaros/bin-parser/tree/master/examples/var_type

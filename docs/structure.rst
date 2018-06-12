@@ -157,6 +157,27 @@ A variable or structure can be read conditionally using the ``if`` statement.
         operator: eq
 
 
+Complex conditionals
+--------------------
+
+More complex conditional statements can be built by using nesting. The
+following example evaluates the expression ``(1 == 2) or True``.
+
+.. code:: yaml
+
+    - name: item
+      if:
+        operands:
+          - operands:
+              - 1
+              - 2
+            operator: eq
+          - true
+        operator: or
+
+Also see complex_eval_ for a working example.
+
+
 Notes on evaluation
 -------------------
 
@@ -194,3 +215,6 @@ Explicit non-false test.
           - something
           - false
         operator: ne
+
+
+.. _complex_eval: https://github.com/jfjlaros/bin-parser/blob/master/examples/complex_eval
