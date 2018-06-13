@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test whether the YAML produced by the JavaScript version equals that of the
 # Python version.
