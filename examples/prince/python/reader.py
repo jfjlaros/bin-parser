@@ -8,7 +8,7 @@ from functions import PrinceReadFunctions
 
 
 parser = BinReader(
-    open('../prince.hof').read(),
+    open('../prince.hof', 'rb').read(),
     yaml.safe_load(open('../structure.yml')),
     yaml.safe_load(open('../types.yml')),
     functions=PrinceReadFunctions())

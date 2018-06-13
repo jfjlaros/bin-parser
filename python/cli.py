@@ -24,7 +24,7 @@ def bin_reader(
         yaml.safe_load(structure_handle),
         yaml.safe_load(types_handle),
         prune=prune, debug=debug)
-    output_handle.write(u'---\n')
+    output_handle.write('---\n')
     yaml.safe_dump(
         parser.parsed, output_handle, width=76, default_flow_style=False)
     if debug:
@@ -53,19 +53,32 @@ def bin_writer(
 
 def main():
     """Command line argument parsing."""
-    opt_parser = argparse.ArgumentParser(add_help=False)
-    opt_parser.add_argument(
+    bin_input_parser = argparse.ArgumentParser(add_help=False)
+    bin_input_parser.add_argument(
+        'input_handle', metavar='INPUT', type=argparse.FileType('rb'),
+        help='input file')
+
+    input_parser = argparse.ArgumentParser(add_help=False)
+    input_parser.add_argument(
         'input_handle', metavar='INPUT', type=argparse.FileType('r'),
         help='input file')
+
+    bin_output_parser = argparse.ArgumentParser(add_help=False)
+    bin_output_parser.add_argument(
+        'output_handle', metavar='OUTPUT', type=argparse.FileType('wb'),
+        help='output file')
+    output_parser = argparse.ArgumentParser(add_help=False)
+    output_parser.add_argument(
+        'output_handle', metavar='OUTPUT', type=argparse.FileType('w'),
+        help='output file')
+
+    opt_parser = argparse.ArgumentParser(add_help=False)
     opt_parser.add_argument(
         'structure_handle', metavar='STRUCTURE', type=argparse.FileType('r'),
         help='structure definition file')
     opt_parser.add_argument(
         'types_handle', metavar='TYPES', type=argparse.FileType('r'),
         help='type definition file')
-    opt_parser.add_argument(
-        'output_handle', metavar='OUTPUT', type=argparse.FileType('w'),
-        help='output file')
     opt_parser.add_argument(
         '-d', dest='debug', type=int, default=0,
         help='debugging level (%(type)s default=%(default)s)')
@@ -75,17 +88,20 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         '-v', action='version', version=version(parser.prog))
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(dest='subcommand')
+    subparsers.required = True
 
     read_parser = subparsers.add_parser(
-        'read', parents=[opt_parser], description=doc_split(bin_reader))
+        'read', parents=[bin_input_parser, opt_parser, output_parser],
+        description=doc_split(bin_reader))
     read_parser.add_argument(
         '-p', dest='prune', default=False, action='store_true',
         help='remove unknown data fields')
     read_parser.set_defaults(func=bin_reader)
 
     write_parser = subparsers.add_parser(
-        'write', parents=[opt_parser], description=doc_split(bin_writer))
+        'write', parents=[input_parser, opt_parser, bin_output_parser],
+        description=doc_split(bin_writer))
     write_parser.set_defaults(func=bin_writer)
 
     try:

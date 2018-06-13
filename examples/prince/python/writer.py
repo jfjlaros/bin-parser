@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import sys
 
 import yaml
@@ -12,4 +13,6 @@ parser = BinWriter(
     yaml.safe_load(open('../structure.yml')),
     yaml.safe_load(open('../types.yml')),
     functions=PrinceWriteFunctions())
-sys.stdout.write(parser.data)
+
+fp = os.fdopen(sys.stdout.fileno(), 'wb')
+fp.write(parser.data)
