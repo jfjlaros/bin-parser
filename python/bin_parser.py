@@ -220,7 +220,7 @@ class BinReader(BinParser):
         if self._offset >= len(self.data):
             raise StopIteration
 
-        separator = ''.join(chr(c) for c in delimiter)
+        separator = ''.join(chr(c) for c in delimiter).encode('utf-8')
 
         if size:
             # Fixed sized field.
@@ -323,7 +323,7 @@ class BinReader(BinParser):
             dest[name].append({})
             self._parse([delim], dest[name][-1])
 
-        dest[item['while']['term']] = dest[name].pop(-1).values()[0]
+        dest[item['while']['term']] = list(dest[name].pop(-1).values())[0]
 
     def _parse(self, structure, dest):
         """Parse a binary file.
@@ -398,7 +398,7 @@ class BinWriter(BinParser):
         super(BinWriter, self).__init__(
             structure, types, functions, debug, log)
 
-        self.data = ''
+        self.data = b''
         self.parsed = parsed
 
         self._encode(self._structure, self.parsed)
@@ -415,10 +415,10 @@ class BinWriter(BinParser):
 
         if delimiter:
             # Add the delimiter for variable length fields.
-            field += ''.join(chr(c) for c in delimiter)
+            field += ''.join(chr(c) for c in delimiter).encode('utf-8')
 
         # Pad the field if necessary.
-        field += chr(0x00) * (size - len(field))
+        field += b'\x00' * (size - len(field))
 
         if size:
             # Clip the field if it is too large.

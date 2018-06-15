@@ -226,7 +226,7 @@ the list reported differences is not guaranteed to be complete. Conversely, if
 no differences are reported, then the YAML files are guaranteed to have the
 same content.
 
-``test.sh``
+``sync_test``
 -----------
 
 To keep the Python- and JavaScript implementations in sync, we use a shell
@@ -235,7 +235,7 @@ examples.
 
 ::
 
-    bash extras/test.sh
+    ./extras/sync_test
 
 This will perform a parser test and an invariance test for all examples.
 

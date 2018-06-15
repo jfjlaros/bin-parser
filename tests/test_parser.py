@@ -6,23 +6,29 @@ from bin_parser import BinReader, BinWriter
 
 def _bin_reader(path, input_file, structure_file, types_file):
     return BinReader(
-        open('examples/{}/{}'.format(path, input_file)).read(),
-        yaml.safe_load(open('examples/{}/{}'.format(path, structure_file))),
-        yaml.safe_load(open('examples/{}/{}'.format(path, types_file)))).parsed
+        open('examples/{}/{}'.format(path, input_file), 'rb').read(),
+        yaml.safe_load(
+            open('examples/{}/{}'.format(path, structure_file), 'rb')),
+        yaml.safe_load(
+            open('examples/{}/{}'.format(path, types_file), 'rb'))).parsed
 
 
 def _idempotence(path, input_file, structure_file, types_file):
-    data = open('examples/{}/{}'.format(path, input_file)).read()
+    data = open('examples/{}/{}'.format(path, input_file), 'rb').read()
 
     parsed = BinReader(
         data,
-        yaml.safe_load(open('examples/{}/{}'.format(path, structure_file))),
-        yaml.safe_load(open('examples/{}/{}'.format(path, types_file)))).parsed
+        yaml.safe_load(
+            open('examples/{}/{}'.format(path, structure_file), 'rb')),
+        yaml.safe_load(
+            open('examples/{}/{}'.format(path, types_file), 'rb'))).parsed
 
     assert data == BinWriter(
         parsed,
-        yaml.safe_load(open('examples/{}/{}'.format(path, structure_file))),
-        yaml.safe_load(open('examples/{}/{}'.format(path, types_file)))).data
+        yaml.safe_load(
+            open('examples/{}/{}'.format(path, structure_file), 'rb')),
+        yaml.safe_load(
+            open('examples/{}/{}'.format(path, types_file), 'rb'))).data
 
 
 class TestReader(object):
@@ -190,6 +196,6 @@ class TestReader(object):
         assert _bin_reader(
             *self._data['var_type'])['value_2']['content'] == 123
 
-    def test_var_type_2(self):
+    def test_var_type_4(self):
         assert _bin_reader(
             *self._data['var_type'])['value_2']['type_name'] == 'le_s_short'

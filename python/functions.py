@@ -1,4 +1,5 @@
 """Field packing and unpacking functions for the general binary parser."""
+import codecs
 import collections
 import operator
 import struct
@@ -57,6 +58,8 @@ class BinReadFunctions(object):
             if labels:
                 return dict(zip(labels, decoded))
             return list(decoded)
+        if fmt == 'c':
+            return decoded[0].decode('utf-8')
         return decoded[0]
 
     def raw(self, data):
@@ -66,10 +69,11 @@ class BinReadFunctions(object):
 
         :returns str: Hexadecimal representation of {data}.
         """
-        raw_data = data.encode('hex')
+        raw_data = codecs.encode(data, 'hex')
 
-        return ' '.join(
-            [raw_data[x:x + 2] for x in range(0, len(raw_data), 2)])
+        return b' '.join(
+            [raw_data[x:x + 2] for x in range(0, len(raw_data), 2)]).decode(
+                'utf-8')
 
     def bit(self, data):
         return '{:08b}'.format(ord(data))
@@ -193,6 +197,8 @@ class BinWriteFunctions(object):
             data_list = [data[x] for x in labels]
         elif isinstance(data, list):
             data_list = data
+        elif fmt == 'c':
+            data_list = [data.encode('utf-8')]
         else:
             data_list = [data]
 
@@ -206,10 +212,10 @@ class BinWriteFunctions(object):
         return struct.pack(fmt, *data_list)
 
     def raw(self, hex_string):
-        return ''.join(hex_string.split()).decode('hex')
+        return codecs.decode(''.join(hex_string.split()), 'hex')
 
     def bit(self, bit_string):
-        return chr(int('0b{}'.format(bit_string), 2))
+        return chr(int('0b{}'.format(bit_string), 2)).encode('utf-8')
 
     def int(self, integer):
         # TODO: Deprecated, remove.
@@ -271,4 +277,4 @@ class BinWriteFunctions(object):
                 else:
                     values += int(key[prefix_len:], 0x10)
 
-        return chr(values)
+        return chr(values).encode('utf-8')

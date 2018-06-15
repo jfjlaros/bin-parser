@@ -64,7 +64,7 @@ Now we can initialise the parser using an instance of the new class:
 .. code:: python
 
     parser = bin_parser.BinReader(
-        open('something.dat').read(),
+        open('something.dat', 'rb').read(),
         yaml.safe_load(open('structure.yml')),
         yaml.safe_load(open('types.yml')),
         functions=Invert())
