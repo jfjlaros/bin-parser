@@ -9,7 +9,7 @@ from .bin_parser import BinReader, BinWriter
 from .functions import BinReadFunctions, BinWriteFunctions
 
 
-__version_info__ = ('0', '0', '20')
+__version_info__ = ('1', '0', '0')
 
 __version__ = '.'.join(__version_info__)
 __author__ = 'Jeroen F.J. Laros'
