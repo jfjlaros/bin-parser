@@ -196,6 +196,6 @@ class TestReader(object):
         assert _bin_reader(
             *self._data['var_type'])['value_2']['content'] == 123
 
-    def test_var_type_2(self):
+    def test_var_type_4(self):
         assert _bin_reader(
             *self._data['var_type'])['value_2']['type_name'] == 'le_s_short'
