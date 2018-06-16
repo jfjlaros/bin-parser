@@ -13,3 +13,4 @@
    structure
    library
    extras
+   credits
