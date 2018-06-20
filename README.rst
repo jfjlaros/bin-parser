@@ -5,6 +5,12 @@ General binary file parser
    :target: https://travis-ci.org/jfjlaros/bin-parser
 .. image:: https://readthedocs.org/projects/bin-parser/badge/?version=latest
    :target: https://bin-parser.readthedocs.io/en/latest
+.. image:: https://img.shields.io/pypi/v/bin-parser.svg
+   :target: https://pypi.org/project/bin-parser/
+.. image:: https://img.shields.io/npm/v/bin-parser.svg
+   :target: https://www.npmjs.com/package/bin-parser
+.. image:: https://img.shields.io/pypi/l/bin-parser.svg
+   :target: https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md
 
 ----
 
