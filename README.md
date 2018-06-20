@@ -2,6 +2,9 @@ General binary file parser
 ==========================
 
 [![Build Status](https://travis-ci.org/jfjlaros/bin-parser.svg?branch=master)](https://travis-ci.org/jfjlaros/bin-parser)
+[![Docs Status](https://readthedocs.org/projects/bin-parser/badge/?version=latest)](https://bin-parser.readthedocs.io/en/latest)
+
+---
 
 This library provides general binary file parsing by interpreting
 documentation of a file structure and data types. By default, it
