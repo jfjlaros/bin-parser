@@ -1,6 +1,8 @@
 General binary file parser
 ==========================
 
+[![Build Status](https://travis-ci.org/jfjlaros/bin-parser.svg?branch=master)](https://travis-ci.org/jfjlaros/bin-parser)
+
 This library provides general binary file parsing by interpreting
 documentation of a file structure and data types. By default, it
 supports basic data types like big-endian and little-endian integers,
