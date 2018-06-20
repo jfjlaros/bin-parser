@@ -26,4 +26,4 @@ used too.
 Please see ReadTheDocs_ for the latest documentation.
 
 
-.. _ReadTheDocs: http://bin-parser.readthedocs.io/en/latest/index.html
+.. _ReadTheDocs: https://bin-parser.readthedocs.io/en/latest/index.html
