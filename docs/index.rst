@@ -1,4 +1,4 @@
-.. doc_test documentation.
+.. bin-parser documentation.
 
 .. include:: ../README.rst
 

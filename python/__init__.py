@@ -14,7 +14,7 @@ __version_info__ = ('1', '0', '0')
 __version__ = '.'.join(__version_info__)
 __author__ = 'Jeroen F.J. Laros'
 __contact__ = 'J.F.J.Laros@lumc.nl'
-__homepage__ = 'https://github.com/jfjlaros/bin-parser'
+__homepage__ = 'http://bin-parser.readthedocs.io/en/latest/'
 
 
 usage = __doc__.split('\n\n\n')
