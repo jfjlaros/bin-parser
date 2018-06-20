@@ -11,7 +11,7 @@ General binary file parser
    :target: https://www.npmjs.com/package/bin-parser
 .. image:: https://img.shields.io/github/release/jfjlaros/bin-parser.svg
    :target: https://github.com/jfjlaros/bin-parser/releases
-.. image:: https://img.shields.io/pypi/l/bin-parser.svg
+.. image:: https://img.shields.io/github/license/jfjlaros/bin-parser.svg
    :target: https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md
 
 ----

@@ -6,7 +6,7 @@ General binary file parser
 [![PyPI Version](https://img.shields.io/pypi/v/bin-parser.svg)](https://pypi.org/project/bin-parser/)
 [![NPM Version](https://img.shields.io/npm/v/bin-parser.svg)](https://www.npmjs.com/package/bin-parser)
 [![Release](https://img.shields.io/github/release/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser/releases)
-[![License](https://img.shields.io/pypi/l/bin-parser.svg)](https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md)
+[![License](https://img.shields.io/github/license/jfjlaros/bin-parser.svg)](https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md)
 
 ---
 
