@@ -1,16 +1,24 @@
 General binary file parser
 ==========================
 
+.. image:: https://img.shields.io/github/last-commit/jfjlaros/bin-parser.svg
+   :target: https://github.com/jfjlaros/bin-parser/graphs/commit-activity
 .. image:: https://travis-ci.org/jfjlaros/bin-parser.svg?branch=master
    :target: https://travis-ci.org/jfjlaros/bin-parser
 .. image:: https://readthedocs.org/projects/bin-parser/badge/?version=latest
    :target: https://bin-parser.readthedocs.io/en/latest
-.. image:: https://img.shields.io/pypi/v/bin-parser.svg
-   :target: https://pypi.org/project/bin-parser/
-.. image:: https://img.shields.io/npm/v/bin-parser.svg
-   :target: https://www.npmjs.com/package/bin-parser
+.. image:: https://img.shields.io/github/release-date/jfjlaros/bin-parser.svg
+   :target: https://github.com/jfjlaros/bin-parser/releases
 .. image:: https://img.shields.io/github/release/jfjlaros/bin-parser.svg
    :target: https://github.com/jfjlaros/bin-parser/releases
+.. image:: https://img.shields.io/pypi/v/bin-parser.svg
+   :target: https://pypi.org/project/bin-parser/
+.. image:: https://img.shields.io/github/languages/code-size/jfjlaros/bin-parser.svg
+   :target: https://github.com/jfjlaros/bin-parser
+.. image:: https://img.shields.io/github/languages/count/jfjlaros/bin-parser.svg
+   :target: https://github.com/jfjlaros/bin-parser
+.. image:: https://img.shields.io/github/languages/top/jfjlaros/bin-parser.svg
+   :target: https://github.com/jfjlaros/bin-parser
 .. image:: https://img.shields.io/github/license/jfjlaros/bin-parser.svg
    :target: https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md
 

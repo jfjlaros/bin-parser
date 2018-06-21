@@ -1,14 +1,27 @@
 General binary file parser
 ==========================
 
-[![Build Status](https://travis-ci.org/jfjlaros/bin-parser.svg?branch=master)](https://travis-ci.org/jfjlaros/bin-parser)
-[![Docs Status](https://readthedocs.org/projects/bin-parser/badge/?version=latest)](https://bin-parser.readthedocs.io/en/latest)
-[![PyPI Version](https://img.shields.io/pypi/v/bin-parser.svg)](https://pypi.org/project/bin-parser/)
-[![NPM Version](https://img.shields.io/npm/v/bin-parser.svg)](https://www.npmjs.com/package/bin-parser)
-[![Release](https://img.shields.io/github/release/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser/releases)
-[![License](https://img.shields.io/github/license/jfjlaros/bin-parser.svg)](https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md)
+[![image](https://img.shields.io/github/last-commit/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser/graphs/commit-activity)
 
----
+[![image](https://travis-ci.org/jfjlaros/bin-parser.svg?branch=master)](https://travis-ci.org/jfjlaros/bin-parser)
+
+[![image](https://readthedocs.org/projects/bin-parser/badge/?version=latest)](https://bin-parser.readthedocs.io/en/latest)
+
+[![image](https://img.shields.io/github/release-date/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser/releases)
+
+[![image](https://img.shields.io/github/release/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser/releases)
+
+[![image](https://img.shields.io/pypi/v/bin-parser.svg)](https://pypi.org/project/bin-parser/)
+
+[![image](https://img.shields.io/github/languages/code-size/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser)
+
+[![image](https://img.shields.io/github/languages/count/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser)
+
+[![image](https://img.shields.io/github/languages/top/jfjlaros/bin-parser.svg)](https://github.com/jfjlaros/bin-parser)
+
+[![image](https://img.shields.io/github/license/jfjlaros/bin-parser.svg)](https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md)
+
+------------------------------------------------------------------------
 
 This library provides general binary file parsing by interpreting
 documentation of a file structure and data types. By default, it
@@ -35,5 +48,5 @@ serialised dictionary format, but other serialisation formats (JSON for
 example) can be used too.
 
 Please see
-[ReadTheDocs](http://bin-parser.readthedocs.io/en/latest/index.html) for
-the latest documentation.
+[ReadTheDocs](https://bin-parser.readthedocs.io/en/latest/index.html)
+for the latest documentation.
