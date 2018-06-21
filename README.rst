@@ -23,6 +23,8 @@ General binary file parser
    :target: https://github.com/jfjlaros/bin-parser
 .. image:: https://img.shields.io/github/license/jfjlaros/bin-parser.svg
    :target: https://raw.githubusercontent.com/jfjlaros/bin-parser/master/LICENSE.md
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1295625.svg
+   :target: https://zenodo.org/record/1295625
 
 ----
 
