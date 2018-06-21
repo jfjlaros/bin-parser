@@ -13,6 +13,8 @@ General binary file parser
    :target: https://github.com/jfjlaros/bin-parser/releases
 .. image:: https://img.shields.io/pypi/v/bin-parser.svg
    :target: https://pypi.org/project/bin-parser/
+.. image:: https://img.shields.io/npm/v/bin-parser.svg
+   :target: https://www.npmjs.com/package/bin-parser
 .. image:: https://img.shields.io/github/languages/code-size/jfjlaros/bin-parser.svg
    :target: https://github.com/jfjlaros/bin-parser
 .. image:: https://img.shields.io/github/languages/count/jfjlaros/bin-parser.svg
