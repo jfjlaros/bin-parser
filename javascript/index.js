@@ -453,7 +453,12 @@ function BinReader(data, structure, types, kwargs) {
     var item,
         name,
         dtype,
+        dmacro,
         index;
+
+    if (structure === undefined) {
+      return;
+    }
 
     for (index = 0; index < structure.length; index++) {
       item = structure[index];
@@ -497,7 +502,8 @@ function BinReader(data, structure, types, kwargs) {
           this.parseWhile(item, dest, name);
         }
         else if (item.macro) {
-          this.parse(this.macros[item.macro], dest[name]);
+          dmacro = this.getValue(this.getDefault(item, "", "macro"));
+          this.parse(this.macros[dmacro], dest[name]);
         }
         else {
           this.parse(item.structure, dest[name]);
@@ -646,12 +652,17 @@ function BinWriter(parsed, structure, types, kwargs) {
     var rawCounter = 0,
         item,
         dtype,
+        dmacro,
         name,
         value,
         term,
         termItem,
         i,
         j;
+
+    if (structure === undefined) {
+      return;
+    }
 
     for (i = 0; i < structure.length; i++) {
       item = structure[i];
@@ -709,7 +720,8 @@ function BinWriter(parsed, structure, types, kwargs) {
           }
         }
         else if (item.macro) {
-          this.encode(this.macros[item.macro], value);
+          dmacro = this.getValue(this.getDefault(item, "", "macro"));
+          this.encode(this.macros[dmacro], value);
         }
         else {
           this.encode(item.structure, value);

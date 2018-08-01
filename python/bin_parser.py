@@ -331,6 +331,9 @@ class BinReader(BinParser):
         :arg dict structure: Structure of the binary file.
         :arg dict dest: Destination dictionary.
         """
+        if not structure:
+            return
+
         for item in structure:
             if 'if' in item:
                 # Conditional statement.
@@ -361,7 +364,9 @@ class BinReader(BinParser):
                 elif 'while' in item:
                     self._parse_while(item, dest, name)
                 elif 'macro' in item:
-                    self._parse(self.macros[item['macro']], dest[name])
+                    dmacro = self._get_value(
+                        self._get_default(item, '', 'macro'))
+                    self._parse(self.macros[dmacro], dest[name])
                 else:
                     self._parse(item['structure'], dest[name])
 
@@ -466,6 +471,9 @@ class BinWriter(BinParser):
         :arg dict structure: Structure of the binary file.
         :arg dict source: Source dictionary.
         """
+        if not structure:
+            return
+
         raw_counter = 0
 
         for item in structure:
@@ -514,7 +522,9 @@ class BinWriter(BinParser):
                             [term],
                             {term['name']: source[item['while']['term']]})
                 elif 'macro' in item:
-                    self._encode(self.macros[item['macro']], value)
+                    dmacro = self._get_value(
+                        self._get_default(item, '', 'macro'))
+                    self._encode(self.macros[dmacro], value)
                 else:
                     self._encode(item['structure'], value)
 
